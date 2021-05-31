@@ -1,0 +1,34 @@
+{
+  "is-c3-addon": true,
+  "type": "plugin",
+  "name": "3DObject",
+  "id": "Mikal_3DObject",
+  "version": "1.0.0.0",
+  "author": "Mikal",
+  "website": "https://www.construct.net",
+  "documentation": "https://www.construct.net",
+  "description": "3D Object created using the obj/mtl 3D format.",
+  "editor-scripts": [
+    "plugin.js",
+    "type.js",
+    "instance.js"
+  ],
+  "file-list": [
+    "c3runtime/plugin.js",
+    "c3runtime/type.js",
+    "c3runtime/instance.js",
+    "c3runtime/conditions.js",
+    "c3runtime/actions.js",
+    "c3runtime/expressions.js",
+    "lang/en-US.json",
+    "aces.json",
+    "addon.json",
+    "icon.svg",
+    "instance.js",
+    "plugin.js",
+    "type.js",
+    "gl-matrix.js",
+    "c3runtime/model.js",
+    "c3runtime/modelData.js"
+  ]
+}

@@ -1,2 +1,2 @@
 # 3dobject
- 3dObject for Construct 3
+ 3dObject plugin for Construct 3

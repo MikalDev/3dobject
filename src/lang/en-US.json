@@ -1,0 +1,36 @@
+{
+  "languageTag": "en-US",
+  "fileDescription": "Strings for 3DObject Plugin",
+  "text": {
+    "plugins": {
+      "mikal_3dobject": {
+        "name": "3DObject",
+        "description": "3D Object created using the obj/mtl 3D format.",
+        "help-url": "https://github.com/armandoalonso/c3IDE",
+        "properties": {
+          "obj-path": {
+            "name": "obj path",
+            "desc": "obj file path"
+          },
+          "mtl-path": {
+            "name": "mtl path",
+            "desc": "mtl file path"
+          },
+          "scale": {
+            "name": "Scale",
+            "desc": "Scale object"
+          },
+          "edit-image": {
+            "name": "Edit image",
+            "desc": "Edit image",
+            "link-text": "Edit image"
+          }
+        },
+        "aceCategories": {},
+        "conditions": {},
+        "actions": {},
+        "expressions": {}
+      }
+    }
+  }
+}
