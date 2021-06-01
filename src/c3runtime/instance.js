@@ -19,7 +19,12 @@
                 this.objPath = properties[0];
                 this.mtlPath = properties[1];
                 this.scale = properties[2];
+                const wi = inst.GetWorldInfo();
+                wi.SetZElevation(properties[3]);
+                wi._UpdateZElevation();
             }
+
+            this.localCenter = [0,0,0]
 
             // Initialization, once per group of instances
             let sdkType = this.sdkType;
@@ -39,7 +44,7 @@
                 if (this.sdkType.loaded)
                 {
                     // Create local version here
-                    this.model3D = new globalThis.Model3D(this._runtime, this.sdkType);
+                    this.model3D = new globalThis.Model3D(this._runtime, this.sdkType, this);
                     this.loaded = true;
                     console.log('[3dObject] instance loaded');
                 }
@@ -73,14 +78,14 @@
             const rcTex = imageInfo.GetTexRect();
             const x = wi.GetX();
             const y = wi.GetY();
-            // Add z elevation offset
+            // z elevation handles offset on draw
             const z = 0;
 
             renderer.SetTexture(texture);
 
             const tempQuad = C3.New(C3.Quad);
 
-
+            // Create function, to share with editor
             let i=0;
             while(i < fs.length)
             {
@@ -100,12 +105,13 @@
                     // Set face to color if possible
                     tempQuad.set(0,0,1,0,0,1,1,1);
                 }
-                debugger    
+                let center = this.localCenter;
+                // Could precalculate based on actions (e.g. scale, change localCenter)
                 renderer.Quad3D2(
-                    x+p[f[0].v][0]*this.scale, y-p[f[0].v][1]*this.scale, z+p[f[0].v][2]*this.scale/10,
-                    x+p[f[1].v][0]*this.scale, y-p[f[1].v][1]*this.scale, z+p[f[1].v][2]*this.scale/10,
-                    x+p[f[2].v][0]*this.scale, y-p[f[2].v][1]*this.scale, z+p[f[2].v][2]*this.scale/10,
-                    x+p[f[3].v][0]*this.scale, y-p[f[3].v][1]*this.scale, z+p[f[3].v][2]*this.scale/10,
+                    x+(p[f[0].v][0]-center[0])*this.scale, y-(p[f[0].v][1]-center[1])*this.scale, z+(p[f[0].v][2]-center[2])*this.scale/10,
+                    x+(p[f[1].v][0]-center[0])*this.scale, y-(p[f[1].v][1]-center[1])*this.scale, z+(p[f[1].v][2]-center[2])*this.scale/10,
+                    x+(p[f[2].v][0]-center[0])*this.scale, y-(p[f[2].v][1]-center[1])*this.scale, z+(p[f[2].v][2]-center[2])*this.scale/10,
+                    x+(p[f[3].v][0]-center[0])*this.scale, y-(p[f[3].v][1]-center[1])*this.scale, z+(p[f[3].v][2]-center[2])*this.scale/10,
                     tempQuad
                     );                
                 i++;

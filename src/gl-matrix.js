@@ -10669,5 +10669,6 @@ THE SOFTWARE.
 
 })));
 
-globalThis.ObjectGlMatrix3D = glMatrix;
+globalThis.glMatrix3D = glMatrix;
+globalThis.glMatrix3D.glMatrix.setMatrixArrayType(Array)
 

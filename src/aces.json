@@ -1,1 +1,64 @@
-{}
+{
+    "3dobject": {
+      "conditions": [],
+      "actions": [
+        {
+        "id": "rotate",
+        "scriptName": "Rotate",
+        "highlight": false,
+        "params": [
+        {
+            "id": "angle",
+            "type": "number",
+            "initialValue": "0"
+        },
+        {
+            "id": "axis",
+            "type": "combo",
+            "initialValue": "X",
+            "items": [
+            "X",
+            "Y",
+            "Z"
+            ]
+        }
+        ]
+        },
+        {
+            "id": "set-z-elevation",
+            "scriptName": "SetZElevation",
+            "highlight": false,
+            "params": [
+                {
+                "id": "z-elevation",
+                "type": "number",
+                "initialValue": "0"
+                }
+            ]
+        },
+        {
+            "id": "set-local-center",
+            "scriptName": "SetLocalCenter",
+            "highlight": false,
+            "params": [
+              {
+                "id": "x",
+                "type": "number",
+                "initialValue": "0"
+              },
+              {
+                "id": "y",
+                "type": "number",
+                "initialValue": "0"
+              },
+              {
+                "id": "z",
+                "type": "number",
+                "initialValue": "0"
+              }
+            ]
+        }               
+      ],
+      "expressions": []
+    }
+  }

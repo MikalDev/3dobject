@@ -3,7 +3,7 @@
     const SDK = self.SDK;
 
     const PLUGIN_ID = "Mikal_3DObject";
-    const PLUGIN_VERSION = "1.0.0.0";
+    const PLUGIN_VERSION = "1.1.0";
     const PLUGIN_CATEGORY = "general";
 
     const PLUGIN_CLASS = SDK.Plugins.Mikal_3DObject = class Object3DPlugin extends SDK.IPluginBase
@@ -22,11 +22,11 @@
             this._info.SetHelpUrl(lang(".help-url"));
             this._info.SetPluginType("world"); // mark as world plugin, which can draw
             this._info.SetIsResizable(true); // allow to be resized
-            this._info.SetIsRotatable(true); // allow to be rotated
+            this._info.SetIsRotatable(false); // allow to be rotated
             this._info.SetHasImage(true);
-            this._info.SetSupportsEffects(false); // allow effects
+            this._info.SetSupportsEffects(true); // allow effects
             this._info.SetMustPreDraw(false);
-            this._info.SetCanBeBundled(true);
+            this._info.SetCanBeBundled(false);
             this._info.AddCommonPositionACEs();
             this._info.AddCommonAngleACEs();
             this._info.AddCommonAppearanceACEs();
@@ -39,15 +39,19 @@
             SDK.Lang.PushContext(".properties");
 
             this._info.SetProperties([
-                new SDK.PluginProperty("text", "obj-path", "value",
+                new SDK.PluginProperty("text", "obj-path", "path",
             {
                 "interpolatable": false
             }),
-                new SDK.PluginProperty("text", "mtl-path", "value",
+                new SDK.PluginProperty("text", "mtl-path", "path",
             {
                 "interpolatable": false
             }),
-                new SDK.PluginProperty("text", "scale", "value",
+                new SDK.PluginProperty("text", "scale", "1",
+            {
+                "interpolatable": false
+            }),
+            new SDK.PluginProperty("float", "z-elevation", 0,
             {
                 "interpolatable": false
             }),

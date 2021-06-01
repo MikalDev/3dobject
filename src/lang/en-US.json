@@ -24,11 +24,68 @@
             "name": "Edit image",
             "desc": "Edit image",
             "link-text": "Edit image"
+          },
+          "z-elevation": {
+            "name": "Z elevation",
+            "desc": "Z elevation"
           }
         },
-        "aceCategories": {},
+        "aceCategories": {
+          "3dobject" : "3DObject"
+        },
         "conditions": {},
-        "actions": {},
+        "actions": {
+          "rotate": {
+            "list-name": "Rotate",
+            "display-text": "Rotate {0} degrees around {1} axis",
+            "description": "Rotate object around a specific axis",
+            "params": {
+              "angle": {
+                "name": "Angle",
+                "desc": "Rotate object by a number of degrees"
+              },
+              "axis": {
+                "name": "Axis",
+                "desc": "Axis to rotate object around.",
+                "items": {
+                  "X": "X",
+                  "Y": "Y",
+                  "Z": "Z"
+                }
+              }
+            }
+          },
+          "set-z-elevation": {
+            "list-name": "Set z elevation",
+            "display-text": "Set z elevation to {0}",
+            "description": "Set z elevation (world z axis, depth component).",
+            "params": {
+                  "z-elevation": {
+                      "name": "Zelevation",
+                      "desc": "Zelevation (z axis, depth)"
+                  }
+              }
+          },
+          "set-local-center": {
+            "list-name": "Set local center",
+            "display-text": "Set local center to {0}, {1}, {2}",
+            "description": "Set local center of object in original obj file coordinate system.",
+            "params": {
+              "x": {
+                "name": "X",
+                "desc": "X local coordinate of center"
+              },
+              "y": {
+                "name": "Y",
+                "desc": "Y local coordinate of center"
+              },
+              "z": {
+                "name": "Z",
+                "desc": "Z local coordinate of center"
+              }
+            }
+          }
+        },
         "expressions": {}
       }
     }
