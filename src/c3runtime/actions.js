@@ -16,6 +16,10 @@
             this.localCenter[0] = x;
             this.localCenter[1] = y;
             this.localCenter[2] = z;
+        },
+
+        SetScale(scale) {
+            this.scale = scale;
         }
     };
 }

@@ -57,7 +57,19 @@
                 "initialValue": "0"
               }
             ]
-        }               
+        },
+        {
+            "id": "set-scale",
+            "scriptName": "SetScale",
+            "highlight": false,
+            "params": [
+              {
+                "id": "scale",
+                "type": "number",
+                "initialValue": "1"
+              }
+            ]
+          }                       
       ],
       "expressions": []
     }

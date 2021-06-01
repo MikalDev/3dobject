@@ -84,6 +84,17 @@
                 "desc": "Z local coordinate of center"
               }
             }
+          },
+          "set-scale": {
+            "list-name": "Set scale",
+            "display-text": "Set scale to {0}",
+            "description": "Set scale from original object size.",
+            "params": {
+                  "scale": {
+                      "name": "Scale",
+                      "desc": "The size to scale from the original size."
+                  }
+              }
           }
         },
         "expressions": {}
