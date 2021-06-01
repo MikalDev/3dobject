@@ -24,11 +24,11 @@
             this._info.SetIsResizable(true); // allow to be resized
             this._info.SetIsRotatable(false); // allow to be rotated
             this._info.SetHasImage(true);
-            this._info.SetSupportsEffects(true); // allow effects
+            this._info.SetSupportsEffects(false); // allow effects
             this._info.SetMustPreDraw(false);
             this._info.SetCanBeBundled(false);
             this._info.AddCommonPositionACEs();
-            this._info.AddCommonAngleACEs();
+            // this._info.AddCommonAngleACEs();
             this._info.AddCommonAppearanceACEs();
             this._info.AddCommonZOrderACEs();
             this._info.AddCommonSizeACEs();
