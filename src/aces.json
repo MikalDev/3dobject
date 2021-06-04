@@ -1,6 +1,20 @@
 {
     "3dobject": {
-      "conditions": [],
+      "conditions": [
+        {
+            "id": "on-loaded",
+            "scriptName": "OnLoaded",
+            "highlight": false,
+            "isTrigger": true,
+            "isInvertible": false,
+            "isCompatibleWithTriggers": false
+        },
+        {
+            "id": "is-loaded",
+            "scriptName": "IsLoaded",
+            "highlight": false
+        }
+      ],
       "actions": [
         {
         "id": "rotate",

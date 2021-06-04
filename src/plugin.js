@@ -3,7 +3,7 @@
     const SDK = self.SDK;
 
     const PLUGIN_ID = "Mikal_3DObject";
-    const PLUGIN_VERSION = "1.2.0";
+    const PLUGIN_VERSION = "1.3.0";
     const PLUGIN_CATEGORY = "general";
 
     const PLUGIN_CLASS = SDK.Plugins.Mikal_3DObject = class Object3DPlugin extends SDK.IPluginBase
@@ -31,7 +31,7 @@
             // this._info.AddCommonAngleACEs();
             this._info.AddCommonAppearanceACEs();
             this._info.AddCommonZOrderACEs();
-            this._info.AddCommonSizeACEs();
+            // this._info.AddCommonSizeACEs();
             this._info.AddCommonSceneGraphACEs();
 
             this._info.SetSupportedRuntimes(["c3"]);

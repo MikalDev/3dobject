@@ -21,7 +21,7 @@ class ModelData
 		let resultObj = await this.loadObj(objURI);
 		if (resultMtl && resultObj)
 		{
-			console.info('[3DShape] modelData:', this.data);
+			console.info('[3DShape] modelData:', objPath, resultObj, this.data);
 			sdkType.loaded = true;
 		} else
 		{
@@ -49,6 +49,7 @@ class ModelData
 					
 		let i=0;
 		let materialCurrent = "";
+		let numFaces = 0;
 		
 		// Parse all lines
 		while(i < lines.length) {
@@ -69,6 +70,7 @@ class ModelData
 					data.uvs.push([parseFloat(words[1]), parseFloat(words[2])]);
 					break;
 				case "f":
+					numFaces++;
 					let face = {};
 					let elm = [];
 					for (let i=0;i<words.length-1;i++)
@@ -99,7 +101,7 @@ class ModelData
 			}
 			i++;
 		}
-		return true;
+		return numFaces;
 	}
 
 	async loadMtl(uri)

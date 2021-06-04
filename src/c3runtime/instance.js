@@ -46,9 +46,11 @@
                     // Create local version here
                     this.model3D = new globalThis.Model3D(this._runtime, this.sdkType, this);
                     this.loaded = true;
+                    this.Trigger(C3.Plugins.Mikal_3DObject.Cnds.OnLoaded);
                     console.log('[3dObject] instance loaded');
                 }
             }
+            this.runtime.UpdateRender();
         }
 
         Release()
@@ -61,7 +63,6 @@
             const imageInfo = this._objectClass.GetImageInfo();
             const texture = imageInfo.GetTexture();
 
-            debugger
             if (!texture) return; // dynamic texture load which hasn't completed yet; can't draw anything
             if (!this.loaded) return;
 

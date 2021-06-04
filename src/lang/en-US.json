@@ -4,8 +4,8 @@
   "text": {
     "plugins": {
       "mikal_3dobject": {
-        "name": "3DObject",
-        "description": "3D Object created using the obj/mtl 3D format.",
+        "name": "3DObject-Alpha",
+        "description": "3D Object created using the obj/mtl 3D format. Alpha",
         "help-url": "https://github.com/armandoalonso/c3IDE",
         "properties": {
           "obj-path": {
@@ -33,7 +33,18 @@
         "aceCategories": {
           "3dobject" : "3DObject"
         },
-        "conditions": {},
+        "conditions": {
+          "on-loaded": {
+            "list-name": "On loaded",
+            "display-text": "On loaded",
+            "description": "Triggers when 3DObject has completed loading the 3D model."
+          },
+          "is-loaded": {
+            "list-name": "Is Loaded",
+            "display-text": "Is loaded",
+            "description": "True if the 3DObject has loaded its 3D model."
+          }
+        },
         "actions": {
           "rotate": {
             "list-name": "Rotate",
