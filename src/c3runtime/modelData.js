@@ -58,7 +58,7 @@ class ModelData
 			switch (words[0])
 			{
 				case "usemtl":
-					materialCurrent = words[1];
+					materialCurrent = words[1].trim();
 					break;
 				case "v":
 					data.points.push([parseFloat(words[1]), parseFloat(words[2]), parseFloat(words[3])]);
@@ -131,9 +131,10 @@ class ModelData
 			switch (words[0])
 			{
 				case "newmtl":
-					data[words[1]] = {};
-					materialCurrent = words[1];
-					data[words[1]].textured = false;
+					let materialName = words[1].trim();
+					data[materialName] = {};
+					materialCurrent = materialName;
+					data[materialName].textured = false;
 					break;
 				case "Kd":
 					data[materialCurrent].r = parseFloat(words[1]);
@@ -142,7 +143,7 @@ class ModelData
 					break;
 				case "map_Kd":
 					let p = words[1].split("/");
-					let map = p[p.length-1]
+					let map = p[p.length-1].trim();
 					data[materialCurrent].map = map;
 					// load texture into current available frame
 					data[materialCurrent].textured = true;
