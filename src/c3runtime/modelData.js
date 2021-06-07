@@ -53,8 +53,10 @@ class ModelData
 		
 		// Parse all lines
 		while(i < lines.length) {
-			  // do stuff
-			const words = lines[i].split(" ");
+			// do stuff
+			let line = lines[i].trim();
+			line = line.replace(/\s{2,}/g,' ');
+			const words = line.split(" ");
 			switch (words[0])
 			{
 				case "usemtl":
