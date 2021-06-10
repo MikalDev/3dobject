@@ -17,7 +17,7 @@
         OnCreate()
         {
             this.GetImageInfo().LoadAsset(this._runtime);
-            this.modelData = new globalThis.ModelData3D(this._runtime, this);
+            this.modelData = new globalThis.ModelData3D(this._runtime, this, true);
             this.initOwner = -1;
             this.loaded = false;
         }

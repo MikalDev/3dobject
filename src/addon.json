@@ -11,7 +11,10 @@
   "editor-scripts": [
     "plugin.js",
     "type.js",
-    "instance.js"
+    "instance.js",
+    "gl-matrix.js",
+    "c3runtime/modelData.js",
+    "c3runtime/model.js"
   ],
   "file-list": [
     "c3runtime/plugin.js",

@@ -31,7 +31,7 @@
             if (sdkType.initOwner == -1)
             {
                 sdkType.initOwner = this.uid;
-                sdkType.modelData.load(this.objPath, this.mtlPath, this.scale);
+                sdkType.modelData.load(this.objPath, this.mtlPath, this.scale, true);
             }
             
             this._StartTicking();

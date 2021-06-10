@@ -2,7 +2,7 @@
 
 class ModelData
 {
-	constructor(runtime, sdkType)
+	constructor(runtime, sdkType, isRuntime)
 	{
 		this.data = {	obj: {points: [], faces: [], uvs: [], normals: [], scale:1, center: undefined},
 						mtls: {}
@@ -11,17 +11,26 @@ class ModelData
 		this._sdkType = sdkType;
 	}
 
-	async load(objPath, mtlPath, scale)
+	async load(objPath, mtlPath, scale, isRuntime)
 	{
 		let runtime = this._runtime;
 		let sdkType = this._sdkType;
-		let objURI = await runtime.GetAssetManager().GetProjectFileUrl(objPath);
-		let mtlURI = await runtime.GetAssetManager().GetProjectFileUrl(mtlPath);
-		let resultMtl = await this.loadMtl(mtlURI);
-		let resultObj = await this.loadObj(objURI);
+		let objURI, mtlURI;
+		if (isRuntime)
+		{
+			objURI = await runtime.GetAssetManager().GetProjectFileUrl(objPath);
+			mtlURI = await runtime.GetAssetManager().GetProjectFileUrl(mtlPath);
+		} else
+		{
+			// Get iProjectFiles
+			objURI = await runtime.GetProjectFileByName(objPath);
+			mtlURI = await runtime.GetProjectFileByName(mtlPath);
+		}
+		let resultMtl = await this.loadMtl(mtlURI, isRuntime);
+		let resultObj = await this.loadObj(objURI, isRuntime);
 		if (resultMtl && resultObj)
 		{
-			console.info('[3DShape] modelData:', objPath, resultObj, this.data);
+			console.info('[3DShape] modelData:', this.data);
 			sdkType.loaded = true;
 		} else
 		{
@@ -29,17 +38,28 @@ class ModelData
 		}
 	}
 
-	async loadObj(uri)
+	async loadObj(uri, isRuntime)
 	{
+		if (!uri) return false;
+
 		let fileData;
-		try
+		if (isRuntime)
 		{
-			let response = await fetch(uri);
-			fileData = await response.text();
-		} catch(err)
+			try
+			{
+				let response = await fetch(uri);
+				fileData = await response.text();
+			} catch(err)
+			{
+				console.error('[3DShape], cannot fetch obj', uri);
+				return false;
+			}
+		} else
 		{
-			console.error('[3DShape], cannot fetch obj', uri);
-			return false;
+			let projectFile = await uri.GetBlob();
+			if (!projectFile) return false;
+			fileData = await projectFile.text();
+			if (!fileData) return false;
 		}
 
 		// Parse obj file
@@ -106,17 +126,28 @@ class ModelData
 		return numFaces;
 	}
 
-	async loadMtl(uri)
+	async loadMtl(uri, isRuntime)
 	{
+		if (!uri) return false;
+
 		let fileData;
-		try
+		if (isRuntime)
 		{
-			let response = await fetch(uri);
-			fileData = await response.text();
-		} catch(err)
+			try
+			{
+				let response = await fetch(uri);
+				fileData = await response.text();
+			} catch(err)
+			{
+				console.error('[3DShape], cannot fetch obj', uri);
+				return false;
+			}
+		} else
 		{
-			console.error('[3DShape], cannot fetch mtl', uri);
-			return false;
+			let projectFile = await uri.GetBlob();
+			if (!projectFile) return false;
+			fileData = await projectFile.text();
+			if (!fileData) return false;
 		}
 
 		let data = this.data.mtls;
