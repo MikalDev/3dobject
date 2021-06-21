@@ -3,7 +3,7 @@
     self.C3.Plugins.Mikal_3DObject.Acts = {
         Rotate(angle, axis) {
             if (!this.loaded) return;
-            this.model3D.rotate(angle, axis);
+            this.model3D.rotate(angle, axis, false);
         },
 
         SetZElevation(z) {
@@ -20,6 +20,12 @@
 
         SetScale(scale) {
             this.scale = scale;
+        },
+        
+        SetRotationZXY(x,y,z) {
+            // Order of rotation based on Unity's procedure: Z,X,Y
+            if (!this.loaded) return;
+            this.model3D.rotateZXY(x,y,z);
         }
     };
 }

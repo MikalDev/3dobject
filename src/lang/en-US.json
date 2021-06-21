@@ -106,6 +106,25 @@
                       "desc": "The size to scale from the original size."
                   }
               }
+          },
+          "set-rotation": {
+            "list-name": "Set x,y,z rotation",
+            "display-text": "Set rotation to {0}, {1}, {2}",
+            "description": "Set rotation of object from original position, order of rotation: z,x,y",
+            "params": {
+              "x": {
+                "name": "X",
+                "desc": "X angle of rotation"
+              },
+              "y": {
+                "name": "Y",
+                "desc": "Y angle of rotation"
+              },
+              "z": {
+                "name": "Z",
+                "desc": "Z angle of rotation"
+              }
+            }
           }
         },
         "expressions": {}
