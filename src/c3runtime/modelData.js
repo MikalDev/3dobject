@@ -4,7 +4,7 @@ class ModelData
 {
 	constructor(runtime, sdkType, isRuntime)
 	{
-		this.data = {	obj: {points: [], faces: [], uvs: [], normals: [], scale:1, center: undefined},
+		this.data = {	obj: {points: [], faces: [], uvs: [], normals: [], scale:1, center: [0,0,0]},
 						mtls: {}
 					};
 		this._runtime = runtime;
@@ -41,6 +41,8 @@ class ModelData
 	async loadObj(uri, isRuntime)
 	{
 		if (!uri) return false;
+		let minPoints = {x:0, y:0, z:0};
+		let maxPoints = {x:0, y:0, z:0};
 
 		let fileData;
 		if (isRuntime)
@@ -83,7 +85,16 @@ class ModelData
 					materialCurrent = words[1].trim();
 					break;
 				case "v":
-					data.points.push([parseFloat(words[1]), parseFloat(words[2]), parseFloat(words[3])]);
+					let x = parseFloat(words[1]);
+					let y = parseFloat(words[2]);
+					let z = parseFloat(words[3]);
+					data.points.push([x, y, z]);
+					minPoints.x = x < minPoints.x ? x : minPoints.x;
+					minPoints.y = y < minPoints.y ? y : minPoints.y;
+					minPoints.z = z < minPoints.z ? z : minPoints.z;
+					maxPoints.x = x > maxPoints.x ? x : maxPoints.x;
+					maxPoints.y = y > maxPoints.y ? y : maxPoints.y;
+					maxPoints.z = z > maxPoints.z ? z : maxPoints.z;
 					break;
 				case "n":
 					data.normals.push([parseFloat(words[1]), parseFloat(words[2]), parseFloat(words[3])]);
@@ -123,6 +134,10 @@ class ModelData
 			}
 			i++;
 		}
+		// Create local center based on obj x,y,z ranges
+		this.data.obj.center[0] = (minPoints.x+maxPoints.x)/2;
+		this.data.obj.center[1] = (minPoints.y+maxPoints.y)/2;
+		this.data.obj.center[2] = (minPoints.z+maxPoints.z)/2;
 		return numFaces;
 	}
 

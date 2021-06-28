@@ -12,6 +12,60 @@ class Model
 		this.modelData = sdkType.modelData.data;
 	}
 
+	rotateOrdered(x,y,z,order)
+	{
+		let obj = this.data.obj;
+		let ps = obj.points;
+		let psOriginal = this.modelData.obj.points;
+		let center = this.inst.localCenter;
+		const g = globalThis.glMatrix3D;
+		let origin = g.vec3.fromValues(center[0],center[1],center[2]);
+		let i = 0;
+		let radianX = g.glMatrix.toRadian(x);
+		let radianY = g.glMatrix.toRadian(y);
+		let radianZ = g.glMatrix.toRadian(z);
+
+		while(i < ps.length)
+		{
+			switch(order)
+			{
+				case 'xyz':
+					g.vec3.rotateX(ps[i], psOriginal[i], origin, radianX);
+					g.vec3.rotateY(ps[i], ps[i], origin, radianY);
+					g.vec3.rotateZ(ps[i], ps[i], origin, radianZ);
+					break;
+				case 'xzy':
+					g.vec3.rotateX(ps[i], psOriginal[i], origin, radianX);
+					g.vec3.rotateZ(ps[i], ps[i], origin, radianZ);
+					g.vec3.rotateY(ps[i], ps[i], origin, radianY);
+					break;
+				case 'yxz':
+					g.vec3.rotateY(ps[i], psOriginal[i], origin, radianY);
+					g.vec3.rotateX(ps[i], ps[i], origin, radianX);
+					g.vec3.rotateZ(ps[i], ps[i], origin, radianZ);
+					break;
+				case 'yzx':
+					g.vec3.rotateY(ps[i], psOriginal[i], origin, radianY);
+					g.vec3.rotateZ(ps[i], ps[i], origin, radianZ);
+					g.vec3.rotateX(ps[i], ps[i], origin, radianX);
+					break;
+				case 'zxy':
+					g.vec3.rotateZ(ps[i], psOriginal[i], origin, radianZ);
+					g.vec3.rotateX(ps[i], ps[i], origin, radianX);
+					g.vec3.rotateY(ps[i], ps[i], origin, radianY);
+					break;
+				case 'zyx':
+					g.vec3.rotateZ(ps[i], psOriginal[i], origin, radianZ);
+					g.vec3.rotateY(ps[i], ps[i], origin, radianY);
+					g.vec3.rotateX(ps[i], ps[i], origin, radianX);
+					break;
+				default:
+					break;
+			}
+			i++;
+		}
+	}
+
 	rotateZXY(x,y,z)
 	{
 		// Rotate from original position Z,X,Y rotation order (Unity standard)

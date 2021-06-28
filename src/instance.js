@@ -9,22 +9,10 @@
         {
             super(sdkType, inst);
             this.sdkType = sdkType;
-            // this.runtime = inst.GetRuntime();
-            // this.renderer = this.runtime.GetCanvasManager().GetWebGLRenderer();
-            // this.uid = this.GetInstance().GetUID();
             this.loaded = false;
-                // wi.SetZElevation(properties[3]);
-                // wi._UpdateZElevation();
             this.localCenter = [0,0,0]
-            /*
-            // Initialization, once per group of instances
-            let sdkType = this.sdkType;
-            if (sdkType.initOwner == -1)
-            {
-                //sdkType.initOwner = this.uid;
-                // sdkType.modelData.load(this.objPath, this.mtlPath, this.scale, false);
-            }
-            */
+            this.uid = inst.GetUID();
+            this.layout = inst.GetLayout();
         }
 
         Release()
@@ -47,8 +35,6 @@
             {
                 this._inst.ApplyBlendMode(iRenderer);
                 iRenderer.SetTexture(texture);
-                // iRenderer.SetColor(this._inst.GetColor());
-                // iRenderer.Quad3(this._inst.GetQuad(), this.GetTexRect());
 
                 if (!this.scale) this.scale = this._inst.GetPropertyValue('scale');
 
@@ -68,10 +54,14 @@
                         // Create local version here
                         this.model3D = new globalThis.Model3D(this._runtime, this.sdkType, this);
                         this.loaded = true;
+                        this.localCenter = this.model3D.data.obj.center;
                         console.log('[3dObject] instance loaded');
-                        console.log(this._inst);
+                        this.layoutView.Refresh();
                     }
-                } else if (1)
+                    if (!this.layoutView) this.layoutView = iDrawParams.GetLayoutView();
+                    this.layoutView.Refresh();        
+                }
+                if (this.loaded)
                 {
                     // 3D Model 
                     const data = this.model3D.data;
@@ -175,7 +165,33 @@
         }
 
         OnPropertyChanged(id, value)
-        {}
+        {
+            switch(id)
+            {
+                case 'scale':
+                    this.scale = value;
+                    this.layoutView.Refresh();
+                    break;
+                case 'z-elevation':
+                    console.log('inst:', this._inst);
+                    // this._inst.SetZElevation(value);
+                    // this._inst._UpdateZElevation();
+                    break;   
+                case 'angle-x':
+                case 'angle-y':
+                case 'angle-z':
+                case 'rotation-order':
+                    let x = this._inst.GetPropertyValue('angle-x');
+                    let y = this._inst.GetPropertyValue('angle-y');
+                    let z = this._inst.GetPropertyValue('angle-z');
+                    let order = this._inst.GetPropertyValue('rotation-order');
+                    this.model3D.rotateOrdered(x,y,z,order);
+                    this.layoutView.Refresh();
+                    break;
+                default:
+                    break;
+            }
+        }
 
         LoadC2Property(name, valueString)
         {

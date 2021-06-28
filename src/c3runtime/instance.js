@@ -45,6 +45,8 @@
                 {
                     // Create local version here
                     this.model3D = new globalThis.Model3D(this._runtime, this.sdkType, this);
+                    this.localCenter = this.model3D.data.obj.center;
+                    console.log('[3DObject] localCenter', this.localCenter);
                     this.loaded = true;
                     this.Trigger(C3.Plugins.Mikal_3DObject.Cnds.OnLoaded);
                     console.log('[3dObject] instance loaded');

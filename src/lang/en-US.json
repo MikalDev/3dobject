@@ -28,6 +28,30 @@
           "z-elevation": {
             "name": "Z elevation",
             "desc": "Z elevation"
+          },
+          "angle-x": {
+            "name": "Angle x",
+            "desc": "Angle x"
+          },
+          "angle-y": {
+            "name": "Angle y",
+            "desc": "Angle y"
+          },
+          "angle-z": {
+            "name": "Angle z",
+            "desc": "Angle z"
+          },
+          "rotation-order": {
+            "name": "Rotation order",
+            "desc": "Axis euler angle rotation order",
+            "items": {
+              "xyz": "xyz",
+              "xzy": "xzy",
+              "yxz": "yxz",
+              "yzx": "yzx",
+              "zxy": "zxy",
+              "zyx": "zyx" 
+            }
           }
         },
         "aceCategories": {

@@ -55,6 +55,24 @@
             {
                 "interpolatable": false
             }),
+            new SDK.PluginProperty("float", "angle-x", 0,
+            {
+                "interpolatable": false
+            }),
+            new SDK.PluginProperty("float", "angle-y", 0,
+            {
+                "interpolatable": false
+            }),
+            new SDK.PluginProperty("float", "angle-z", 0,
+            {
+                "interpolatable": false
+            }),
+            new SDK.PluginProperty("combo", "rotation-order",
+            {
+                initialValue: "xyz",
+                items: ['xyz', 'xzy', 'yxz', 'yzx', 'zxy', 'zyx'],
+                interpolatable: false
+            }),
                 new SDK.PluginProperty("link", "edit-image",
             {
                 linkCallback: function(sdkType)
