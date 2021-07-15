@@ -30,31 +30,37 @@ class Model
 			switch(order)
 			{
 				case 'xyz':
+				case 0:
 					g.vec3.rotateX(ps[i], psOriginal[i], origin, radianX);
 					g.vec3.rotateY(ps[i], ps[i], origin, radianY);
 					g.vec3.rotateZ(ps[i], ps[i], origin, radianZ);
 					break;
 				case 'xzy':
+				case 1:
 					g.vec3.rotateX(ps[i], psOriginal[i], origin, radianX);
 					g.vec3.rotateZ(ps[i], ps[i], origin, radianZ);
 					g.vec3.rotateY(ps[i], ps[i], origin, radianY);
 					break;
 				case 'yxz':
+				case 2:
 					g.vec3.rotateY(ps[i], psOriginal[i], origin, radianY);
 					g.vec3.rotateX(ps[i], ps[i], origin, radianX);
 					g.vec3.rotateZ(ps[i], ps[i], origin, radianZ);
 					break;
 				case 'yzx':
+				case 3:
 					g.vec3.rotateY(ps[i], psOriginal[i], origin, radianY);
 					g.vec3.rotateZ(ps[i], ps[i], origin, radianZ);
 					g.vec3.rotateX(ps[i], ps[i], origin, radianX);
 					break;
 				case 'zxy':
+				case 4:
 					g.vec3.rotateZ(ps[i], psOriginal[i], origin, radianZ);
 					g.vec3.rotateX(ps[i], ps[i], origin, radianX);
 					g.vec3.rotateY(ps[i], ps[i], origin, radianY);
 					break;
 				case 'zyx':
+				case 5:
 					g.vec3.rotateZ(ps[i], psOriginal[i], origin, radianZ);
 					g.vec3.rotateY(ps[i], ps[i], origin, radianY);
 					g.vec3.rotateX(ps[i], ps[i], origin, radianX);

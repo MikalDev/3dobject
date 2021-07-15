@@ -19,7 +19,14 @@
         {}
 
         OnCreate()
-        {}
+        {
+            this.xAngle = this._inst.GetPropertyValue('angle-x');
+            this.yAngle = this._inst.GetPropertyValue('angle-y');
+            this.zAngle = this._inst.GetPropertyValue('angle-z');
+            this.rotationOrder = this._inst.GetPropertyValue('rotation-order');
+            this.scale = this._inst.GetPropertyValue('scale');
+            this.zElevation =  this._inst.GetPropertyValue('z-elevation');
+        }
 
         OnPlacedInLayout()
         {
@@ -55,6 +62,8 @@
                         this.model3D = new globalThis.Model3D(this._runtime, this.sdkType, this);
                         this.loaded = true;
                         this.localCenter = this.model3D.data.obj.center;
+                        console.log('[3DObject] localCenter', this.localCenter);
+                        this.model3D.rotateOrdered(this.xAngle,this.yAngle,this.zAngle,this.rotationOrder);
                         console.log('[3dObject] instance loaded');
                         if (!this.layoutView) this.layoutView = iDrawParams.GetLayoutView();
                         this.layoutView.Refresh();
@@ -75,8 +84,7 @@
                     // const wi = this._inst.GetWorldInfo();
                     const x = this._inst.GetX();
                     const y = this._inst.GetY();
-                    // z elevation handles offset on draw
-                    const z = 0;
+                    const z = this.zElevation;
 
                     iRenderer.SetTexture(texture);
 
@@ -174,7 +182,8 @@
                     this.layoutView.Refresh();
                     break;
                 case 'z-elevation':
-                    console.log('inst:', this._inst);
+                    this.zElevation = value;
+                    this.layoutView.Refresh();
                     // this._inst.SetZElevation(value);
                     // this._inst._UpdateZElevation();
                     break;   

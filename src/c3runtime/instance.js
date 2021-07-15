@@ -22,6 +22,10 @@
                 const wi = inst.GetWorldInfo();
                 wi.SetZElevation(properties[3]);
                 wi._UpdateZElevation();
+                this.xAngle = properties[4];
+                this.yAngle = properties[5];
+                this.zAngle = properties[6];
+                this.rotationOrder = properties[7];
             }
 
             this.localCenter = [0,0,0]
@@ -50,6 +54,8 @@
                     this.loaded = true;
                     this.Trigger(C3.Plugins.Mikal_3DObject.Cnds.OnLoaded);
                     console.log('[3dObject] instance loaded');
+                    debugger
+                    this.model3D.rotateOrdered(this.xAngle,this.yAngle,this.zAngle,this.rotationOrder);
                 }
             }
             this.runtime.UpdateRender();
