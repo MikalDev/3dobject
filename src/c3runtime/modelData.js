@@ -174,15 +174,20 @@ class ModelData
 		let i=0;
 		// Parse all lines
 		while(i < lines.length) {
-			// parse
-			const words = lines[i].split(" ");
+			// parse, remove whitespace
+			let line = lines[i].trim();
+			line = line.replace(/\s{2,}/g,' ');
+			const words = line.split(" ");
 			switch (words[0])
 			{
 				case "newmtl":
 					let materialName = words[1].trim();
 					data[materialName] = {};
 					materialCurrent = materialName;
-					data[materialName].textured = false;
+					// XXX Only textured files work currently
+					// Change to false if non-textured files accepted
+					// e.g. Kd color
+					data[materialName].textured = true;
 					break;
 				case "Kd":
 					data[materialCurrent].r = parseFloat(words[1]);

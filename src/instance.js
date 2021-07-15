@@ -56,6 +56,7 @@
                         this.loaded = true;
                         this.localCenter = this.model3D.data.obj.center;
                         console.log('[3dObject] instance loaded');
+                        if (!this.layoutView) this.layoutView = iDrawParams.GetLayoutView();
                         this.layoutView.Refresh();
                     }
                     if (!this.layoutView) this.layoutView = iDrawParams.GetLayoutView();
