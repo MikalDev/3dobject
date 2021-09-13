@@ -103,6 +103,12 @@
                 "id": "z",
                 "type": "number",
                 "initialValue": "0"
+              },
+              {
+                "id": "rotation-order",
+                "type": "combo",
+                "initialValue": "zxy",
+                "items": ["xyz", "xzy", "yxz", "yzx", "zxy", "zyx"]        
               }
             ]
           }                       

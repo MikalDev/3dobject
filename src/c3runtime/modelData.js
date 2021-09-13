@@ -34,7 +34,7 @@ class ModelData
 			sdkType.loaded = true;
 		} else
 		{
-			console.warn('[3DShape] Unable to obj/mtl files');
+			console.warn('[3DShape] Unable load to obj/mtl files');
 		}
 	}
 

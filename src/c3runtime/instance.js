@@ -66,6 +66,10 @@
             super.Release();
         }
 
+        RendersToOwnZPlane() {
+            return false;
+        }
+
         Draw(renderer)
         {
             const imageInfo = this._objectClass.GetImageInfo();
@@ -101,7 +105,9 @@
                 let f = fs[i].p;
                 let mtl = fs[i].mtl
 
-                if (mtls[mtl].textured)
+                // if (mtls[mtl].textured)
+                // Assume texture exists, only one texture currently
+                if (true)
                 {
                     tempQuad.set(
                     uv[f[0].uv][0], 1-uv[f[0].uv][1],

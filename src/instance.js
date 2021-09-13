@@ -34,8 +34,13 @@
             this.OnMakeOriginalSize();
         }
 
+        RendersToOwnZPlane() {
+            return false;
+        }
+
         Draw(iRenderer, iDrawParams)
         {
+            if (!this.layoutView) this.layoutView = iDrawParams.GetLayoutView();
             const texture = this.GetTexture();
 
             if (texture)
@@ -62,13 +67,9 @@
                         this.model3D = new globalThis.Model3D(this._runtime, this.sdkType, this);
                         this.loaded = true;
                         this.localCenter = this.model3D.data.obj.center;
-                        console.log('[3DObject] localCenter', this.localCenter);
                         this.model3D.rotateOrdered(this.xAngle,this.yAngle,this.zAngle,this.rotationOrder);
-                        console.log('[3dObject] instance loaded');
-                        if (!this.layoutView) this.layoutView = iDrawParams.GetLayoutView();
                         this.layoutView.Refresh();
                     }
-                    if (!this.layoutView) this.layoutView = iDrawParams.GetLayoutView();
                     this.layoutView.Refresh();        
                 }
                 if (this.loaded)
@@ -97,7 +98,9 @@
                         let f = fs[i].p;
                         let mtl = fs[i].mtl
 
-                        if (mtls[mtl].textured)
+                        // XXX if (mtls[mtl].textured)
+                        // XXX Only one texture (image) supported, so assume it exists (even if mtl file is not correct)
+                        if (true)
                         {
                             tempQuad.set(
                             uv[f[0].uv][0], 1-uv[f[0].uv][1],
@@ -179,13 +182,11 @@
             {
                 case 'scale':
                     this.scale = value;
-                    this.layoutView.Refresh();
+                    if (this.layoutView) this.layoutView.Refresh();
                     break;
                 case 'z-elevation':
                     this.zElevation = value;
-                    this.layoutView.Refresh();
-                    // this._inst.SetZElevation(value);
-                    // this._inst._UpdateZElevation();
+                    if (this.layoutView) this.layoutView.Refresh();
                     break;   
                 case 'angle-x':
                 case 'angle-y':
@@ -195,9 +196,17 @@
                     let y = this._inst.GetPropertyValue('angle-y');
                     let z = this._inst.GetPropertyValue('angle-z');
                     let order = this._inst.GetPropertyValue('rotation-order');
-                    this.model3D.rotateOrdered(x,y,z,order);
-                    this.layoutView.Refresh();
+                    if (this.model3D) this.model3D.rotateOrdered(x,y,z,order);
+                    if (this.layoutView) this.layoutView.Refresh();
                     break;
+                case 'obj-path':
+                    if (this.sdkType.initOwner = this.uid)
+                    {
+                        this.objPath = this._inst.GetPropertyValue('obj-path');
+                        this.mtlPath = this._inst.GetPropertyValue('mtl-path');
+                        this.sdkType.modelData.load(this.objPath, this.mtlPath, this.scale, false);
+                    }
+                    break
                 default:
                     break;
             }

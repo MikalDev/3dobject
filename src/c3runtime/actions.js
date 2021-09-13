@@ -26,6 +26,11 @@
             // Order of rotation based on Unity's procedure: Z,X,Y
             if (!this.loaded) return;
             this.model3D.rotateZXY(x,y,z);
+        },
+        
+        SetRotationOrdered(x,y,z,order) {
+            if (!this.loaded) return;
+            this.model3D.rotateOrdered(x,y,z,order);
         }
     };
 }

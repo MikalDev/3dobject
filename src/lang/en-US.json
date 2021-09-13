@@ -133,8 +133,8 @@
           },
           "set-rotation": {
             "list-name": "Set x,y,z rotation",
-            "display-text": "Set rotation to {0}, {1}, {2}",
-            "description": "Set rotation of object from original position, order of rotation: z,x,y",
+            "display-text": "Set rotation to {0}, {1}, {2}, {3} order",
+            "description": "Set rotation of object from original position, with rotation order",
             "params": {
               "x": {
                 "name": "X",
@@ -147,6 +147,18 @@
               "z": {
                 "name": "Z",
                 "desc": "Z angle of rotation"
+              },
+              "rotation-order": {
+                "name": "Rotation order",
+                "desc": "Order to rotate object around axes.",
+                "items": {
+                  "xyz": "XYZ",
+                  "xzy": "XZY",
+                  "yxz": "YXZ",
+                  "yzx": "YZX",
+                  "zxy": "ZXY",
+                  "zyx": "ZYX"
+                }
               }
             }
           }
