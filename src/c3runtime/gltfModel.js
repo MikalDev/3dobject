@@ -57,7 +57,7 @@ class GltfModel
                 let v = [0,0,0];			
                 for(let j=0; j<posData.length/3; j++)
                 {
-                    vec3.transformMat4(v, node.matrix, posData.subarray(j*3, j*3+3));
+                    vec3.transformMat4(v, posData.subarray(j*3, j*3+3), node.matrix);
                     // mat4.multiplyVec3(node.matrix, posData.subarray(j*3, j*3+3), v);
                     transformedVerts.push(v[0],v[1],v[2]);
                 }
@@ -73,9 +73,12 @@ class GltfModel
                         console.log('us texcoords', node.mesh.primitives[i].attributes.TEXCOORD_0.data);
 
                         // Push triangle data to draw
-                        this.inst.drawVerts = this.inst.drawVerts.concat(transformedVerts);
-                        this.inst.drawUVs = this.inst.drawUVs.concat(Array.from(node.mesh.primitives[i].attributes.TEXCOORD_0.data));
-                        this.inst.drawIndices = this.inst.drawIndices.concat(node.mesh.primitives[i].indices.data);
+                        // this.inst.drawVerts = this.inst.drawVerts.concat(transformedVerts);
+                        // this.inst.drawUVs = this.inst.drawUVs.concat(Array.from(node.mesh.primitives[i].attributes.TEXCOORD_0.data));
+                        // this.inst.drawIndices = this.inst.drawIndices.concat(node.mesh.primitives[i].indices.data);
+                        this.inst.drawVerts.push(transformedVerts);
+                        this.inst.drawUVs.push(Array.from(node.mesh.primitives[i].attributes.TEXCOORD_0.data));
+                        this.inst.drawIndices.push(Array.from(node.mesh.primitives[i].indices.data));
                     }
                 }
             }
