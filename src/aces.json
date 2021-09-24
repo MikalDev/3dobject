@@ -123,6 +123,18 @@
                 "initialValue": ""
               }
             ]
+          },
+          {
+            "id": "set-animation-rate",
+            "scriptName": "SetAnimationRate",
+            "highlight": false,
+            "params": [
+                {
+                "id": "rate",
+                "type": "number",
+                "initialValue": "60"
+                }
+            ]
           }                       
       ],
       "expressions": [

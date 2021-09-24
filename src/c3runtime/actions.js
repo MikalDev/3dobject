@@ -45,8 +45,12 @@
             if (newAnimationIndex >= 0)
             {
                 this.animationTime = 0;
+                this.animationLastTime = 0;
                 this.animationIndex = newAnimationIndex
             }
+        },
+        SetAnimationRate(rate) {
+            this.animationRate = rate;
         }
     };
 }

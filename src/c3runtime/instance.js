@@ -19,6 +19,8 @@
             this.drawIndices = [];
             this.animationIndex = 0;
             this.animationSpeed = 1;
+            this.animationLastTime = 0;
+            this.animationRate = 60;
 
             if (properties)
             {
@@ -75,13 +77,16 @@
             // Animate gltf model
             if (this.gtlfPath != 'path' && this.loaded && this.sdkType.gltfLoaded )
             {
-                this.drawVerts = [];
-                this.drawUVs = [];
-                this.drawIndices = [];
-
                 this.animationTime += this._runtime.GetDt();
-                this.gltf.updateAnimation(this.animationIndex, this.animationTime);
-                this.gltf.getPolygons();
+                if ((this.animationTime - this.animationLastTime) >= (1/this.animationRate))
+                {
+                    this.animationLastTime = this.animationTime;
+                    this.drawVerts = [];
+                    this.drawUVs = [];
+                    this.drawIndices = [];
+                    this.gltf.updateAnimation(this.animationIndex, this.animationTime);
+                    this.gltf.getPolygons();    
+                }
             }
             this.runtime.UpdateRender();
         }

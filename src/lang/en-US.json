@@ -176,6 +176,17 @@
                       "desc": "The animation name to play."
                   }
               }
+          },
+          "set-animation-rate": {
+            "list-name": "Set animation rate",
+            "display-text": "Set animation rate to {0}",
+            "description": "Set animation rate (FPS).",
+            "params": {
+                  "rate": {
+                      "name": "Rate",
+                      "desc": "Rate (FPS)"
+                  }
+              }
           }
         },
         "expressions": {
