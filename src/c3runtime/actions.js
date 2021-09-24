@@ -31,6 +31,22 @@
         SetRotationOrdered(x,y,z,order) {
             if (!this.loaded) return;
             this.model3D.rotateOrdered(x,y,z,order);
+        },
+
+        PlayAnimation(animation) {
+            if (!this.loaded) return;
+            let names = this.gltf.getAnimationNames();
+            let newAnimationIndex = -1;
+            names.forEach((name, index) => {
+                if (animation == name) {
+                    newAnimationIndex = index;
+                } 
+            });
+            if (newAnimationIndex >= 0)
+            {
+                this.animationTime = 0;
+                this.animationIndex = newAnimationIndex
+            }
         }
     };
 }

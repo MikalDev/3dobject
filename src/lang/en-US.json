@@ -165,9 +165,26 @@
                 }
               }
             }
+          },
+          "play-animation": {
+            "list-name": "Play animation",
+            "display-text": "Play animation {0}",
+            "description": "Play animation by name.",
+            "params": {
+                  "animation": {
+                      "name": "Animation",
+                      "desc": "The animation name to play."
+                  }
+              }
           }
         },
-        "expressions": {}
+        "expressions": {
+          "animation-names": {
+            "description": "Get animation names as JSON string.",
+            "translated-name": "AnimationNames",
+            "params": {}
+          }
+        }
       }
     }
   }

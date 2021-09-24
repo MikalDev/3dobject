@@ -21,8 +21,11 @@ class GltfModel
     */
     transformNode(node, parentMat)
     {
+        // @ts-ignore
         const mat4 = globalThis.glMatrix3D.mat4;       
+        // @ts-ignore
         const quat = globalThis.glMatrix3D.quat;
+        // @ts-ignore
         const vec3 = globalThis.glMatrix3D.vec3;
         const gltf = this.gltfData;
         let dummyMat4Out = mat4.create();
@@ -69,9 +72,6 @@ class GltfModel
                             gltf.pointBatch.push(transformedVerts[ii]);
                     else
                     {
-                        console.log('us points', transformedVerts);
-                        console.log('us texcoords', node.mesh.primitives[i].attributes.TEXCOORD_0.data);
-
                         // Push triangle data to draw
                         // this.inst.drawVerts = this.inst.drawVerts.concat(transformedVerts);
                         // this.inst.drawUVs = this.inst.drawUVs.concat(Array.from(node.mesh.primitives[i].attributes.TEXCOORD_0.data));
@@ -129,8 +129,6 @@ class GltfModel
                 let weights = node.mesh.primitives[i].attributes.WEIGHTS_0.data;
                 let joints = node.mesh.primitives[i].attributes.JOINTS_0.data;
                 
-                console.log('i:', i, posData);
-
                 for(let j=0; j<posData.length/3; j++)
                 {
                     let w = weights.subarray(j*4, j*4+4);
@@ -189,7 +187,9 @@ class GltfModel
     // Updates animation at index to be at time.  Is used to play animation.  
     updateAnimation(index, time)
     {
+        // @ts-ignore
         const vec3 = globalThis.glMatrix3D.vec3;
+        // @ts-ignore
         const quat = globalThis.glMatrix3D.quat;
         const gltf = this.gltfData;
         

@@ -17,6 +17,8 @@
             this.drawVerts = [];
             this.drawUVs = [];
             this.drawIndices = [];
+            this.animationIndex = 0;
+            this.animationSpeed = 1;
 
             if (properties)
             {
@@ -78,7 +80,7 @@
                 this.drawIndices = [];
 
                 this.animationTime += this._runtime.GetDt();
-                this.gltf.updateAnimation(1, this.animationTime);
+                this.gltf.updateAnimation(this.animationIndex, this.animationTime);
                 this.gltf.getPolygons();
             }
             this.runtime.UpdateRender();
@@ -130,7 +132,6 @@
                     let ind = this.drawIndices[ii];
 
                     let triangleCount = ind.length/3;
-                    console.log('ind:',ind)
                     let center = [0,0,0];
 
                     for(let i = 0; i<triangleCount; i++)
