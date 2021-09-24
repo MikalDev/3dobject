@@ -13,6 +13,10 @@
             this.renderer = this.runtime.GetCanvasManager().GetWebGLRenderer();
             this.uid = this.GetInstance().GetUID();
             this.loaded = false;
+            this.animationTime = 0;
+            this.drawVerts = [];
+            this.drawUVs = [];
+            this.drawIndices = [];
 
             if (properties)
             {
@@ -26,6 +30,7 @@
                 this.yAngle = properties[5];
                 this.zAngle = properties[6];
                 this.rotationOrder = properties[7];
+                this.gtlfPath = properties[8];
             }
 
             this.localCenter = [0,0,0]
@@ -36,6 +41,10 @@
             {
                 sdkType.initOwner = this.uid;
                 sdkType.modelData.load(this.objPath, this.mtlPath, this.scale, true);
+                if (this.gtlfPath != 'path')
+                {
+                    sdkType.gltfData.load(this.gtlfPath, true);
+                } 
             }
             
             this._StartTicking();
@@ -54,9 +63,23 @@
                     this.loaded = true;
                     this.Trigger(C3.Plugins.Mikal_3DObject.Cnds.OnLoaded);
                     console.log('[3dObject] instance loaded');
-                    debugger
                     this.model3D.rotateOrdered(this.xAngle,this.yAngle,this.zAngle,this.rotationOrder);
+
+                    // gtlf model
+                    if (this.gtlfPath != 'path') this.gltf = new globalThis.GltfModel(this._runtime, this.sdkType, this);
                 }
+            }
+
+            // Animate gltf model
+            if (this.gtlfPath != 'path' && this.loaded && this.sdkType.gltfLoaded )
+            {
+                this.drawVerts = [];
+                this.drawUVs = [];
+                this.drawIndices = [];
+
+                this.animationTime += this._runtime.GetDt();
+                this.gltf.updateAnimation(1, this.animationTime);
+                this.gltf.getPolygons();
             }
             this.runtime.UpdateRender();
         }
@@ -98,38 +121,90 @@
 
             const tempQuad = C3.New(C3.Quad);
 
-            // Create function, to share with editor
-            let i=0;
-            while(i < fs.length)
+            if (this.gtlfPath != 'path')
             {
-                let f = fs[i].p;
-                let mtl = fs[i].mtl
+                for (let ii=0;ii<this.drawVerts.length;ii++)
+                {
+                    let v = this.drawVerts[ii];
+                    let uv = this.drawUVs[ii];
+                    let ind = this.drawIndices[ii];
 
-                // if (mtls[mtl].textured)
-                // Assume texture exists, only one texture currently
-                if (true)
-                {
-                    tempQuad.set(
-                    uv[f[0].uv][0], 1-uv[f[0].uv][1],
-                    uv[f[1].uv][0], 1-uv[f[1].uv][1],
-                    uv[f[2].uv][0], 1-uv[f[2].uv][1],
-                    uv[f[3].uv][0], 1-uv[f[3].uv][1]
-                    );
-                } else
-                {
-                    // Set face to color if possible
-                    tempQuad.set(0,0,1,0,0,1,1,1);
+                    let triangleCount = ind.length/3;
+                    console.log('ind:',ind)
+                    let center = [0,0,0];
+
+                    for(let i = 0; i<triangleCount; i++)
+                    {
+                        if (true)
+                        {
+                            tempQuad.set(
+                            uv[ind[i*3+0]*2+0], uv[ind[i*3+0]*2+1],
+                            uv[ind[i*3+1]*2+0], uv[ind[i*3+1]*2+1],
+                            uv[ind[i*3+2]*2+0], uv[ind[i*3+2]*2+1],
+                            uv[ind[i*3+2]*2+0], uv[ind[i*3+2]*2+1]
+                            );
+                        } else
+                        {
+                            // Set face to color if possible
+                            tempQuad.set(0,0,1,0,0,1,0,1);
+                        }
+                        
+                        let x0 = x+(v[ind[i*3+0]*3+0]-center[0])*this.scale;
+                        let y0 = y-(v[ind[i*3+0]*3+1]-center[1])*this.scale;
+                        let z0 = z+(v[ind[i*3+0]*3+2]-center[2])*this.scale/10;
+                        let x1 = x+(v[ind[i*3+1]*3+0]-center[0])*this.scale;
+                        let y1 = y-(v[ind[i*3+1]*3+1]-center[1])*this.scale;
+                        let z1 = z+(v[ind[i*3+1]*3+2]-center[2])*this.scale/10;
+                        let x2 = x+(v[ind[i*3+2]*3+0]-center[0])*this.scale;
+                        let y2 = y-(v[ind[i*3+2]*3+1]-center[1])*this.scale;
+                        let z2 = z+(v[ind[i*3+2]*3+2]-center[2])*this.scale/10;
+
+                        renderer.Quad3D2(
+                            x0, y0, z0,
+                            x1, y1, z1,
+                            x2, y2, z2,
+                            x2, y2, z2,
+                            tempQuad
+                            ); 
+                    }
                 }
-                let center = this.localCenter;
-                // Could precalculate based on actions (e.g. scale, change localCenter)
-                renderer.Quad3D2(
-                    x+(p[f[0].v][0]-center[0])*this.scale, y-(p[f[0].v][1]-center[1])*this.scale, z+(p[f[0].v][2]-center[2])*this.scale/10,
-                    x+(p[f[1].v][0]-center[0])*this.scale, y-(p[f[1].v][1]-center[1])*this.scale, z+(p[f[1].v][2]-center[2])*this.scale/10,
-                    x+(p[f[2].v][0]-center[0])*this.scale, y-(p[f[2].v][1]-center[1])*this.scale, z+(p[f[2].v][2]-center[2])*this.scale/10,
-                    x+(p[f[3].v][0]-center[0])*this.scale, y-(p[f[3].v][1]-center[1])*this.scale, z+(p[f[3].v][2]-center[2])*this.scale/10,
-                    tempQuad
-                    );                
-                i++;
+            } else
+
+            // obj/mtl
+            {
+                // Create function, to share with editor
+                let i=0;
+                while(i < fs.length)
+                {
+                    let f = fs[i].p;
+                    let mtl = fs[i].mtl
+
+                    // if (mtls[mtl].textured)
+                    // Assume texture exists, only one texture currently
+                    if (true)
+                    {
+                        tempQuad.set(
+                        uv[f[0].uv][0], 1-uv[f[0].uv][1],
+                        uv[f[1].uv][0], 1-uv[f[1].uv][1],
+                        uv[f[2].uv][0], 1-uv[f[2].uv][1],
+                        uv[f[3].uv][0], 1-uv[f[3].uv][1]
+                        );
+                    } else
+                    {
+                        // Set face to color if possible
+                        tempQuad.set(0,0,1,0,0,1,1,1);
+                    }
+                    let center = this.localCenter;
+                    // Could precalculate based on actions (e.g. scale, change localCenter)
+                    renderer.Quad3D2(
+                        x+(p[f[0].v][0]-center[0])*this.scale, y-(p[f[0].v][1]-center[1])*this.scale, z+(p[f[0].v][2]-center[2])*this.scale/10,
+                        x+(p[f[1].v][0]-center[0])*this.scale, y-(p[f[1].v][1]-center[1])*this.scale, z+(p[f[1].v][2]-center[2])*this.scale/10,
+                        x+(p[f[2].v][0]-center[0])*this.scale, y-(p[f[2].v][1]-center[1])*this.scale, z+(p[f[2].v][2]-center[2])*this.scale/10,
+                        x+(p[f[3].v][0]-center[0])*this.scale, y-(p[f[3].v][1]-center[1])*this.scale, z+(p[f[3].v][2]-center[2])*this.scale/10,
+                        tempQuad
+                        );                
+                    i++;
+                }
             }
         }
 

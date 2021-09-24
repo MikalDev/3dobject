@@ -16,6 +16,10 @@
             "name": "mtl path",
             "desc": "mtl file path"
           },
+          "gtlf-path": {
+            "name": "gtlf path",
+            "desc": "gtlf file path"
+          },
           "scale": {
             "name": "Scale",
             "desc": "Scale object"
