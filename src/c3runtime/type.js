@@ -17,11 +17,9 @@
         OnCreate()
         {
             this.GetImageInfo().LoadAsset(this._runtime);
-            this.modelData = new globalThis.ModelData3D(this._runtime, this, true);
             this.initOwner = -1;
             this.loaded = false;
-            this.gltfLoaded = false;
-            this.gltfData = new globalThis.GltfData(this._runtime, this, true);
+            this.gltfData = new globalThis.GltfData(this._runtime, this);
         }
 
         LoadTextures(renderer)

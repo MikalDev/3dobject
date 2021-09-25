@@ -30,7 +30,10 @@
         
         SetRotationOrdered(x,y,z,order) {
             if (!this.loaded) return;
-            this.model3D.rotateOrdered(x,y,z,order);
+            this.xAngle = x;
+            this.yAngle = y;
+            this.zAngle = z;
+            // this.model3D.rotateOrdered(x,y,z,order);
         },
 
         PlayAnimation(animation) {

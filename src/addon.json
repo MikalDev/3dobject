@@ -14,7 +14,9 @@
     "instance.js",
     "gl-matrix.js",
     "c3runtime/modelData.js",
-    "c3runtime/model.js"
+    "c3runtime/model.js",
+    "c3runtime/gltfData.js",
+    "c3runtime/gltfModel.js"
   ],
   "file-list": [
     "c3runtime/plugin.js",

@@ -86,7 +86,7 @@
           },
           {
             "id": "set-rotation",
-            "scriptName": "SetRotationZXY",
+            "scriptName": "SetRotationOrdered",
             "highlight": false,
             "params": [
               {

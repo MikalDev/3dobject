@@ -15,6 +15,55 @@ class GltfModel
         this.gltfData = sdkType.gltfData.gltf;
 	}
 
+    render(renderer, x, y, z, tempQuad)
+    {
+        for (let ii=0; ii<this.inst.drawVerts.length; ii++)
+        {
+            let v = this.inst.drawVerts[ii];
+            let uv = this.inst.drawUVs[ii];
+            let ind = this.inst.drawIndices[ii];
+
+            let triangleCount = ind.length/3;
+            let center = [0,0,0];
+
+            for(let i = 0; i<triangleCount; i++)
+            {
+                if (true)
+                {
+                    tempQuad.set(
+                    uv[ind[i*3+0]*2+0], uv[ind[i*3+0]*2+1],
+                    uv[ind[i*3+1]*2+0], uv[ind[i*3+1]*2+1],
+                    uv[ind[i*3+2]*2+0], uv[ind[i*3+2]*2+1],
+                    uv[ind[i*3+2]*2+0], uv[ind[i*3+2]*2+1]
+                    );
+                } else
+                {
+                    // Set face to color if possible
+                    tempQuad.set(0,0,1,0,0,1,0,1);
+                }
+                
+                let scale = this.inst.scale;
+                let x0 = x+(v[ind[i*3+0]*3+0]-center[0])*scale;
+                let y0 = y-(v[ind[i*3+0]*3+1]-center[1])*scale;
+                let z0 = z+(v[ind[i*3+0]*3+2]-center[2])*scale/10;
+                let x1 = x+(v[ind[i*3+1]*3+0]-center[0])*scale;
+                let y1 = y-(v[ind[i*3+1]*3+1]-center[1])*scale;
+                let z1 = z+(v[ind[i*3+1]*3+2]-center[2])*scale/10;
+                let x2 = x+(v[ind[i*3+2]*3+0]-center[0])*scale;
+                let y2 = y-(v[ind[i*3+2]*3+1]-center[1])*scale;
+                let z2 = z+(v[ind[i*3+2]*3+2]-center[2])*scale/10;
+
+                renderer.Quad3D2(
+                    x0, y0, z0,
+                    x1, y1, z1,
+                    x2, y2, z2,
+                    x2, y2, z2,
+                    tempQuad
+                    ); 
+            }
+        }        
+    }
+
     /*
         Updates a node's matrix and all it's children nodes.
         After that it transforms unskinned mesh points and sends them to c2.
@@ -52,7 +101,7 @@ class GltfModel
         {
             let transformedVerts = [];
             
-            for(let i in node.mesh.primitives)
+            for(let i = 0; i < node.mesh.primitives.length; i++)
             {
                 transformedVerts.length = 0;
                 let posData = node.mesh.primitives[i].attributes.POSITION.data;
@@ -68,7 +117,7 @@ class GltfModel
                 if(transformedVerts.length > 0)
                 {
                     if(gltf.pointBatch != undefined)
-                        for(let ii in transformedVerts)
+                        for(let ii = 0; ii < transformedVerts.length; ii++)
                             gltf.pointBatch.push(transformedVerts[ii]);
                     else
                     {
@@ -85,7 +134,7 @@ class GltfModel
         }
         
         if(node.children != undefined)
-            for(let i in node.children)
+            for(let i = 0; i < node.children.length; i++)
                 this.transformNode(node.children[i], node.matrix);
     }
 
@@ -94,22 +143,29 @@ class GltfModel
     {
         const vec3 = globalThis.glMatrix3D.vec3;
         const mat4 = globalThis.glMatrix3D.mat4;
+        const quat = globalThis.glMatrix3D.quat;
         const gltf = this.gltfData;
+        
+        let rotationQuat = quat.create();
+        quat.fromEuler(rotationQuat, this.inst.xAngle, this.inst.yAngle, this.inst.zAngle);
+        
 
         // update all scene matrixes.
-        for(let i in gltf.scene.nodes)
+        for(let i = 0; i < gltf.scene.nodes.length; i++)
         {
+            // gltf.scene.nodes[i].rotation = rotationQuat;
             this.transformNode(gltf.scene.nodes[i]);
         }
         
         //todo loop over skinned nodes.
         //todo: limit to ones in scene?
-        for(let ii in gltf.skinnedNodes)
+        for(let ii = 0; ii < gltf.skinnedNodes.length; ii++)
         {
             let node = gltf.skinnedNodes[ii];
+            node.rotation = rotationQuat;
             
             //update bone matrixes
-            for(let jj in node.skin.joints)
+            for(let jj = 0; jj < node.skin.joints.length; jj++)
             {
                 let joint = node.skin.joints[jj];
                 
@@ -121,7 +177,7 @@ class GltfModel
             
             let transformedVerts = [];
             
-            for(let i in node.mesh.primitives)
+            for(let i = 0; i < node.mesh.primitives.length; i++)
             {
                 transformedVerts.length=0;
                 
@@ -152,7 +208,7 @@ class GltfModel
                 if(transformedVerts.length > 0)
                 {
                     if(gltf.pointBatch != undefined)
-                        for(let ii in transformedVerts)
+                        for(let ii = 0; ii < transformedVerts.length; ii++)
                             gltf.pointBatch.push(transformedVerts[ii]);
                     else
                     {
@@ -178,7 +234,7 @@ class GltfModel
         const gltf = this.gltfData;
         let names = [];
         
-        for(let i in gltf.animations)
+        for(let i = 0; i <gltf.animations.length; i++)
             names.push(gltf.animations[i].name);
 
         return names;
@@ -195,7 +251,7 @@ class GltfModel
         
         let anim = gltf.animations[index];
         
-        for(let i in anim.channels)
+        for(let i = 0; i < anim.channels.length; i++)
         {
             let c = anim.channels[i];
             let timeValues = c.sampler.input;

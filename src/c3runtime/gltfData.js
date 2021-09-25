@@ -42,7 +42,7 @@ class GltfData
 		}
 
         this.gltf = resultgltf;
-        sdkType.gltfLoaded = true;
+        sdkType.loaded = true;
     }
 
 /*
@@ -75,10 +75,14 @@ class GltfData
             {
                 let projectFile = await uri.GetBlob();
                 if (!projectFile) return false;
-                gltf = JSON.parse(await projectFile.text());
+                let text = await projectFile.text();
+                if (!text) return false;
+                gltf = JSON.parse(text);
+                console.log('gltf buffers:', gltf.buffers);
             } catch(err)
             {
-                console.error('[3DShape], cannot fetch/parse gltf', uri);
+                console.error('[3DShape], cannot fetch/parse gltf blob', uri);
+				return false;
             }
 		}
         if (!gltf) return false;
@@ -89,14 +93,15 @@ class GltfData
         gltf.skinnedNodes = [];
         
         // buffers
-        for(let i in gltf.buffers)  // convert to typed arrays.
+        for(let i = 0; i < gltf.buffers.length; i++)  // convert to typed arrays.
         {
+            console.log('i:',i);
             let base64 = gltf.buffers[i].uri.slice(37)
             gltf.buffers[i] = Uint8Array.from(atob(base64), c=>c.charCodeAt(0)).buffer;
         }
         
         // accessors
-        for(let i in gltf.accessors)
+        for(let i =0; i < gltf.accessors.length;i++)
         {
             let a = gltf.accessors[i];
             let buftype = null;
@@ -119,15 +124,15 @@ class GltfData
         gltf.scene = gltf.scenes[gltf.scene];
         
         // scenes
-        for(let i in gltf.scenes)
+        for(let i =0; i<gltf.scenes.length; i++)
         {
             let s = gltf.scenes[i];
-            for(let j in s.nodes)
+            for(let j = 0; j < s.nodes.length; j++)
                 s.nodes[j] = gltf.nodes[s.nodes[j]];
         }
         
         // nodes
-        for(let i in gltf.nodes)
+        for(let i = 0; i < gltf.nodes.length; i++)
         {
             let n = gltf.nodes[i];
             
@@ -149,23 +154,23 @@ class GltfData
                 gltf.skinnedNodes.push(n);
             }
             if(n.children != undefined)
-                for(let j in n.children)
+                for(let j = 0; j < n.children.length; j++)
                     n.children[j] = gltf.nodes[n.children[j]];
         }
 	
         // animations
-        for(let i in gltf.animations)
+        for(let i = 0; i < gltf.animations.length; i++)
         {
             let a = gltf.animations[i];
             
-            for(let j in a.channels)
+            for(let j = 0; j < a.channels.length; j++)
             {
                 let c = a.channels[j];
                 c.sampler = a.samplers[c.sampler];
                 c.target.node = gltf.nodes[c.target.node];
             }
             
-            for(let j in a.samplers)
+            for(let j = 0; j < a.samplers.length; j++)
             {
                 let s = a.samplers[j];
                 s.input = gltf.accessors[s.input];
@@ -174,10 +179,10 @@ class GltfData
         }
         
         //meshes
-        for(let i in gltf.meshes)
+        for(let i = 0; i < gltf.meshes.length; i++)
         {
             let m = gltf.meshes[i];
-            for(let j in m.primitives)
+            for(let j = 0; j < m.primitives.length; j++)
             {
                 let p = m.primitives[j];
                 
@@ -191,7 +196,7 @@ class GltfData
         }
         
         //skins
-        for(let i in gltf.skins)
+        for(let i = 0; i < gltf.skins.length; i++)
         {
             let s = gltf.skins[i];
             s.inverseBindMatrices = gltf.accessors[s.inverseBindMatrices];

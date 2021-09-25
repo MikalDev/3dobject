@@ -39,14 +39,6 @@
             SDK.Lang.PushContext(".properties");
 
             this._info.SetProperties([
-                new SDK.PluginProperty("text", "obj-path", "path",
-            {
-                "interpolatable": false
-            }),
-                new SDK.PluginProperty("text", "mtl-path", "path",
-            {
-                "interpolatable": false
-            }),
                 new SDK.PluginProperty("text", "scale", "1",
             {
                 "interpolatable": false
