@@ -180,7 +180,7 @@ class GltfData
                 }
             }
         }
-                
+
         //meshes
         for(let i = 0; i < gltf.meshes.length; i++)
         {
@@ -199,16 +199,19 @@ class GltfData
         }
         
         //skins
-        for(let i = 0; i < gltf.skins.length; i++)
+        if (gltf.skins)
         {
-            let s = gltf.skins[i];
-            s.inverseBindMatrices = gltf.accessors[s.inverseBindMatrices];
-            // for(let j in s.joints)
-            for(let j=0;j<s.joints.length;j++)
+            for(let i = 0; i < gltf.skins.length; i++)
             {
-                s.joints[j] = gltf.nodes[s.joints[j]];
-                s.joints[j].invBindMatrix = s.inverseBindMatrices.data.subarray(j*16, j*16+16);
-                s.joints[j].boneMatrix = [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0];
+                let s = gltf.skins[i];
+                s.inverseBindMatrices = gltf.accessors[s.inverseBindMatrices];
+                // for(let j in s.joints)
+                for(let j=0;j<s.joints.length;j++)
+                {
+                    s.joints[j] = gltf.nodes[s.joints[j]];
+                    s.joints[j].invBindMatrix = s.inverseBindMatrices.data.subarray(j*16, j*16+16);
+                    s.joints[j].boneMatrix = [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0];
+                }
             }
         }
 

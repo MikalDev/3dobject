@@ -233,6 +233,7 @@ class GltfModel
     {
         const gltf = this.gltfData;
         let names = [];
+        if (!gltf.animations) return;
         
         for(let i = 0; i <gltf.animations.length; i++)
             names.push(gltf.animations[i].name);
@@ -263,7 +264,7 @@ class GltfModel
                 time = (time-timeValues.min[0])%(timeValues.max[0]-timeValues.min[0]) + timeValues.min[0]; // loop
             } else
             {
-                if (time > timeValues.max[0]) time = timeValues.max[0]-0.017; // Stop on max time
+                if (time > timeValues.max[0]) time = timeValues.max[0]-0.01; // Stop on max time
             }
             //time = Math.min(Math.max(time, timeValues.min[0]), timeValues.max[0]);  //clamp
             timeValues = timeValues.data;

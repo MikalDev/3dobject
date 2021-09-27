@@ -72,7 +72,8 @@
             }
 
             // Animate gltf model
-            if (this.gtlfPath != 'path' && this.loaded && this.sdkType.loaded && this.animationPlay)
+            if (this.gtlfPath != 'path' && this.loaded && this.sdkType.loaded && this.animationPlay && this.gltf.animations)
+            // if (this.gtlfPath != 'path' && this.loaded && this.sdkType.loaded && this.animationPlay && this.gltf.animations)
             {
                 this.animationTime += this._runtime.GetDt()*this.animationSpeed;
                 if ((this.animationTime - this.animationLastTime) >= (1/this.animationRate))

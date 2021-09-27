@@ -39,6 +39,7 @@
         PlayAnimation(animation, loop) {
             if (!this.loaded) return;
             let names = this.gltf.getAnimationNames();
+            if (!names) return;
             let newAnimationIndex = -1;
             names.forEach((name, index) => {
                 if (animation == name) {
