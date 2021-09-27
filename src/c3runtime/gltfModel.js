@@ -258,7 +258,13 @@ class GltfModel
             let otherValues = c.sampler.output.data;
             let target = c.target;
             
-            time = (time-timeValues.min[0])%(timeValues.max[0]-timeValues.min[0]) + timeValues.min[0]; // loop
+            if (this.inst.animationLoop)
+            {
+                time = (time-timeValues.min[0])%(timeValues.max[0]-timeValues.min[0]) + timeValues.min[0]; // loop
+            } else
+            {
+                if (time > timeValues.max[0]) time = timeValues.max[0]-0.017; // Stop on max time
+            }
             //time = Math.min(Math.max(time, timeValues.min[0]), timeValues.max[0]);  //clamp
             timeValues = timeValues.data;
             

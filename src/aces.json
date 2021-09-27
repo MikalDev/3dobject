@@ -121,6 +121,11 @@
                 "id": "animation",
                 "type": "string",
                 "initialValue": ""
+              },
+              {
+                "id": "loop",
+                "type": "boolean",
+                "initialValue": "true"
               }
             ]
           },
@@ -135,7 +140,33 @@
                 "initialValue": "60"
                 }
             ]
-          }                       
+          },
+          {
+            "id": "stop-animation",
+            "scriptName": "StopAnimation",
+            "highlight": false,
+            "params": [
+            ]
+          },
+          {
+            "id": "unpause-animation",
+            "scriptName": "UnpauseAnimation",
+            "highlight": false,
+            "params": [
+            ]
+          },
+          {
+            "id": "set-animation-speed",
+            "scriptName": "SetAnimationSpeed",
+            "highlight": false,
+            "params": [
+                {
+                "id": "speed",
+                "type": "number",
+                "initialValue": "1"
+                }
+            ]
+          }                            
       ],
       "expressions": [
         {

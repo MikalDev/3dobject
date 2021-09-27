@@ -21,6 +21,8 @@
             this.animationSpeed = 1;
             this.animationLastTime = 0;
             this.animationRate = 60;
+            this.animationLoop = true;
+            this.animationPlay = true;
 
             if (properties)
             {
@@ -60,13 +62,19 @@
                     this.gltf = new globalThis.GltfModel(this._runtime, this.sdkType, this);
                     this.loaded = true;
                     this.Trigger(C3.Plugins.Mikal_3DObject.Cnds.OnLoaded);
+                    console.log('angles:',this.xAngle, this.yAngle, this.zAngle);
+                    this.drawVerts = [];
+                    this.drawUVs = [];
+                    this.drawIndices = [];
+                    this.gltf.getPolygons();
+                    this.runtime.UpdateRender();
                 }
             }
 
             // Animate gltf model
-            if (this.gtlfPath != 'path' && this.loaded && this.sdkType.loaded )
+            if (this.gtlfPath != 'path' && this.loaded && this.sdkType.loaded && this.animationPlay)
             {
-                this.animationTime += this._runtime.GetDt();
+                this.animationTime += this._runtime.GetDt()*this.animationSpeed;
                 if ((this.animationTime - this.animationLastTime) >= (1/this.animationRate))
                 {
                     this.animationLastTime = this.animationTime;

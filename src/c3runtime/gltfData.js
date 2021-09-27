@@ -159,25 +159,28 @@ class GltfData
         }
 	
         // animations
-        for(let i = 0; i < gltf.animations.length; i++)
+        if (gltf.animations)
         {
-            let a = gltf.animations[i];
-            
-            for(let j = 0; j < a.channels.length; j++)
+            for(let i = 0; i < gltf.animations.length; i++)
             {
-                let c = a.channels[j];
-                c.sampler = a.samplers[c.sampler];
-                c.target.node = gltf.nodes[c.target.node];
-            }
-            
-            for(let j = 0; j < a.samplers.length; j++)
-            {
-                let s = a.samplers[j];
-                s.input = gltf.accessors[s.input];
-                s.output = gltf.accessors[s.output];
+                let a = gltf.animations[i];
+                
+                for(let j = 0; j < a.channels.length; j++)
+                {
+                    let c = a.channels[j];
+                    c.sampler = a.samplers[c.sampler];
+                    c.target.node = gltf.nodes[c.target.node];
+                }
+                
+                for(let j = 0; j < a.samplers.length; j++)
+                {
+                    let s = a.samplers[j];
+                    s.input = gltf.accessors[s.input];
+                    s.output = gltf.accessors[s.output];
+                }
             }
         }
-        
+                
         //meshes
         for(let i = 0; i < gltf.meshes.length; i++)
         {
