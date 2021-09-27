@@ -30,7 +30,41 @@
         
         SetRotationOrdered(x,y,z,order) {
             if (!this.loaded) return;
-            this.model3D.rotateOrdered(x,y,z,order);
+            this.xAngle = x;
+            this.yAngle = y;
+            this.zAngle = z;
+            // this.model3D.rotateOrdered(x,y,z,order);
+        },
+
+        PlayAnimation(animation, loop) {
+            if (!this.loaded) return;
+            let names = this.gltf.getAnimationNames();
+            let newAnimationIndex = -1;
+            names.forEach((name, index) => {
+                if (animation == name) {
+                    newAnimationIndex = index;
+                } 
+            });
+            if (newAnimationIndex >= 0)
+            {
+                this.animationTime = 0;
+                this.animationLastTime = 0;
+                this.animationIndex = newAnimationIndex;
+                this.animationLoop = loop;
+                this.animationPlay = true;
+            }
+        },
+        SetAnimationRate(rate) {
+            this.animationRate = rate;
+        },
+        SetAnimationSpeed(speed) {
+            this.animationSpeed = speed;
+        },
+        StopAnimation() {
+            this.animationPlay = false;
+        },
+        UnpauseAnimation() {
+            this.animationPlay = true;
         }
     };
 }

@@ -13,19 +13,28 @@
             this.renderer = this.runtime.GetCanvasManager().GetWebGLRenderer();
             this.uid = this.GetInstance().GetUID();
             this.loaded = false;
+            this.animationTime = 0;
+            this.drawVerts = [];
+            this.drawUVs = [];
+            this.drawIndices = [];
+            this.animationIndex = 0;
+            this.animationSpeed = 1;
+            this.animationLastTime = 0;
+            this.animationRate = 60;
+            this.animationLoop = true;
+            this.animationPlay = true;
 
             if (properties)
             {
-                this.objPath = properties[0];
-                this.mtlPath = properties[1];
-                this.scale = properties[2];
+                this.scale = properties[0];
                 const wi = inst.GetWorldInfo();
-                wi.SetZElevation(properties[3]);
+                wi.SetZElevation(properties[1]);
                 wi._UpdateZElevation();
-                this.xAngle = properties[4];
-                this.yAngle = properties[5];
-                this.zAngle = properties[6];
-                this.rotationOrder = properties[7];
+                this.xAngle = properties[2];
+                this.yAngle = properties[3];
+                this.zAngle = properties[4];
+                this.rotationOrder = properties[5];
+                this.gtlfPath = properties[6];
             }
 
             this.localCenter = [0,0,0]
@@ -35,7 +44,10 @@
             if (sdkType.initOwner == -1)
             {
                 sdkType.initOwner = this.uid;
-                sdkType.modelData.load(this.objPath, this.mtlPath, this.scale, true);
+                if (this.gtlfPath != 'path')
+                {
+                    sdkType.gltfData.load(this.gtlfPath, true);
+                } 
             }
             
             this._StartTicking();
@@ -47,18 +59,33 @@
             {
                 if (this.sdkType.loaded)
                 {
-                    // Create local version here
-                    this.model3D = new globalThis.Model3D(this._runtime, this.sdkType, this);
-                    this.localCenter = this.model3D.data.obj.center;
-                    console.log('[3DObject] localCenter', this.localCenter);
+                    this.gltf = new globalThis.GltfModel(this._runtime, this.sdkType, this);
                     this.loaded = true;
                     this.Trigger(C3.Plugins.Mikal_3DObject.Cnds.OnLoaded);
-                    console.log('[3dObject] instance loaded');
-                    debugger
-                    this.model3D.rotateOrdered(this.xAngle,this.yAngle,this.zAngle,this.rotationOrder);
+                    console.log('angles:',this.xAngle, this.yAngle, this.zAngle);
+                    this.drawVerts = [];
+                    this.drawUVs = [];
+                    this.drawIndices = [];
+                    this.gltf.getPolygons();
+                    this.runtime.UpdateRender();
                 }
             }
-            this.runtime.UpdateRender();
+
+            // Animate gltf model
+            if (this.gtlfPath != 'path' && this.loaded && this.sdkType.loaded && this.animationPlay)
+            {
+                this.animationTime += this._runtime.GetDt()*this.animationSpeed;
+                if ((this.animationTime - this.animationLastTime) >= (1/this.animationRate))
+                {
+                    this.animationLastTime = this.animationTime;
+                    this.drawVerts = [];
+                    this.drawUVs = [];
+                    this.drawIndices = [];
+                    this.gltf.updateAnimation(this.animationIndex, this.animationTime);
+                    this.gltf.getPolygons();    
+                    this.runtime.UpdateRender();
+                }
+            }
         }
 
         Release()
@@ -78,17 +105,7 @@
             if (!texture) return; // dynamic texture load which hasn't completed yet; can't draw anything
             if (!this.loaded) return;
 
-            // 3D Model 
-            const data = this.model3D.data;
-            const p = data.obj.points;
-            const uv = data.obj.uvs;
-            const fs = data.obj.faces;
-            const n = data.obj.normals;
-            const mtls = data.mtls;
-
             const wi = this.GetWorldInfo();
-            const quad = wi.GetBoundingQuad();
-            const rcTex = imageInfo.GetTexRect();
             const x = wi.GetX();
             const y = wi.GetY();
             // z elevation handles offset on draw
@@ -98,38 +115,13 @@
 
             const tempQuad = C3.New(C3.Quad);
 
-            // Create function, to share with editor
-            let i=0;
-            while(i < fs.length)
+            if (this.loaded && this.gtlfPath != 'path')
             {
-                let f = fs[i].p;
-                let mtl = fs[i].mtl
-
-                // if (mtls[mtl].textured)
-                // Assume texture exists, only one texture currently
-                if (true)
-                {
-                    tempQuad.set(
-                    uv[f[0].uv][0], 1-uv[f[0].uv][1],
-                    uv[f[1].uv][0], 1-uv[f[1].uv][1],
-                    uv[f[2].uv][0], 1-uv[f[2].uv][1],
-                    uv[f[3].uv][0], 1-uv[f[3].uv][1]
-                    );
-                } else
-                {
-                    // Set face to color if possible
-                    tempQuad.set(0,0,1,0,0,1,1,1);
-                }
-                let center = this.localCenter;
-                // Could precalculate based on actions (e.g. scale, change localCenter)
-                renderer.Quad3D2(
-                    x+(p[f[0].v][0]-center[0])*this.scale, y-(p[f[0].v][1]-center[1])*this.scale, z+(p[f[0].v][2]-center[2])*this.scale/10,
-                    x+(p[f[1].v][0]-center[0])*this.scale, y-(p[f[1].v][1]-center[1])*this.scale, z+(p[f[1].v][2]-center[2])*this.scale/10,
-                    x+(p[f[2].v][0]-center[0])*this.scale, y-(p[f[2].v][1]-center[1])*this.scale, z+(p[f[2].v][2]-center[2])*this.scale/10,
-                    x+(p[f[3].v][0]-center[0])*this.scale, y-(p[f[3].v][1]-center[1])*this.scale, z+(p[f[3].v][2]-center[2])*this.scale/10,
-                    tempQuad
-                    );                
-                i++;
+                this.gltf.render(renderer, x, y, z, tempQuad);
+                
+            } else
+            {
+                return
             }
         }
 

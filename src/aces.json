@@ -86,7 +86,7 @@
           },
           {
             "id": "set-rotation",
-            "scriptName": "SetRotationZXY",
+            "scriptName": "SetRotationOrdered",
             "highlight": false,
             "params": [
               {
@@ -111,8 +111,73 @@
                 "items": ["xyz", "xzy", "yxz", "yzx", "zxy", "zyx"]        
               }
             ]
-          }                       
+          },
+          {
+            "id": "play-animation",
+            "scriptName": "PlayAnimation",
+            "highlight": false,
+            "params": [
+              {
+                "id": "animation",
+                "type": "string",
+                "initialValue": ""
+              },
+              {
+                "id": "loop",
+                "type": "boolean",
+                "initialValue": "true"
+              }
+            ]
+          },
+          {
+            "id": "set-animation-rate",
+            "scriptName": "SetAnimationRate",
+            "highlight": false,
+            "params": [
+                {
+                "id": "rate",
+                "type": "number",
+                "initialValue": "60"
+                }
+            ]
+          },
+          {
+            "id": "stop-animation",
+            "scriptName": "StopAnimation",
+            "highlight": false,
+            "params": [
+            ]
+          },
+          {
+            "id": "unpause-animation",
+            "scriptName": "UnpauseAnimation",
+            "highlight": false,
+            "params": [
+            ]
+          },
+          {
+            "id": "set-animation-speed",
+            "scriptName": "SetAnimationSpeed",
+            "highlight": false,
+            "params": [
+                {
+                "id": "speed",
+                "type": "number",
+                "initialValue": "1"
+                }
+            ]
+          }                            
       ],
-      "expressions": []
+      "expressions": [
+        {
+          "id": "animation-names",
+          "scriptName": "AnimationNames",
+          "expressionName": "AnimationNames",
+          "returnType": "string",
+          "highlight": false,
+          "params": [
+          ]  
+        }
+      ]
     }
   }

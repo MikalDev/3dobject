@@ -2,7 +2,7 @@
 
 class ModelData
 {
-	constructor(runtime, sdkType, isRuntime)
+	constructor(runtime, sdkType)
 	{
 		this.data = {	obj: {points: [], faces: [], uvs: [], normals: [], scale:1, center: [0,0,0]},
 						mtls: {}

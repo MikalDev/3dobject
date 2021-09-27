@@ -43,7 +43,7 @@
             if (!this.layoutView) this.layoutView = iDrawParams.GetLayoutView();
             const texture = this.GetTexture();
 
-            if (texture)
+            if (false)
             {
                 this._inst.ApplyBlendMode(iRenderer);
                 iRenderer.SetTexture(texture);
@@ -54,20 +54,23 @@
                 if (sdkType.initOwner == -1)
                 {
                     sdkType.initOwner = this.uid;
-                    this.objPath = this._inst.GetPropertyValue('obj-path');
-                    this.mtlPath = this._inst.GetPropertyValue('mtl-path');
-                    sdkType.modelData.load(this.objPath, this.mtlPath, this.scale, false);
+ 
+                    this.gltfPath = this._inst.GetPropertyValue('gtlf-path');
+                    sdkType.gltfData.load(this.gltfPath, false)
                 }
 
                 if (!this.loaded)
                 {
                     if (this.sdkType.loaded)
                     {
-                        // Create local version here
-                        this.model3D = new globalThis.Model3D(this._runtime, this.sdkType, this);
+                        this.gltf = new globalThis.GltfModel(this._runtime, this.sdkType, this);
+                        this.drawVerts = [];
+                        this.drawUVs = [];
+                        this.drawIndices = [];
+                        this.gltf.updateAnimation(0, 0);
+    
+                        this.gltf.getPolygons();
                         this.loaded = true;
-                        this.localCenter = this.model3D.data.obj.center;
-                        this.model3D.rotateOrdered(this.xAngle,this.yAngle,this.zAngle,this.rotationOrder);
                         this.layoutView.Refresh();
                     }
                     this.layoutView.Refresh();        
@@ -75,14 +78,6 @@
                 if (this.loaded)
                 {
                     // 3D Model 
-                    const data = this.model3D.data;
-                    const p = data.obj.points;
-                    const uv = data.obj.uvs;
-                    const fs = data.obj.faces;
-                    const n = data.obj.normals;
-                    const mtls = data.mtls;
-
-                    // const wi = this._inst.GetWorldInfo();
                     const x = this._inst.GetX();
                     const y = this._inst.GetY();
                     const z = this.zElevation;
@@ -91,39 +86,19 @@
 
                     const tempQuad = new SDK.Quad();
 
-                    // Create function, to share with editor
-                    let i=0;
-                    while(i < fs.length)
+                    if (this.loaded && this.gtlfPath != 'path')
                     {
-                        let f = fs[i].p;
-                        let mtl = fs[i].mtl
-
-                        // XXX if (mtls[mtl].textured)
-                        // XXX Only one texture (image) supported, so assume it exists (even if mtl file is not correct)
-                        if (true)
-                        {
-                            tempQuad.set(
-                            uv[f[0].uv][0], 1-uv[f[0].uv][1],
-                            uv[f[1].uv][0], 1-uv[f[1].uv][1],
-                            uv[f[2].uv][0], 1-uv[f[2].uv][1],
-                            uv[f[3].uv][0], 1-uv[f[3].uv][1]
-                            );
-                        } else
-                        {
-                            // Set face to color if possible
-                            tempQuad.set(0,0,1,0,0,1,1,1);
-                        }
-                        let center = this.localCenter;
-                        // Could precalculate based on actions (e.g. scale, change localCenter)
-                        iRenderer.Quad3D2(
-                            x+(p[f[0].v][0]-center[0])*this.scale, y-(p[f[0].v][1]-center[1])*this.scale, z+(p[f[0].v][2]-center[2])*this.scale/10,
-                            x+(p[f[1].v][0]-center[0])*this.scale, y-(p[f[1].v][1]-center[1])*this.scale, z+(p[f[1].v][2]-center[2])*this.scale/10,
-                            x+(p[f[2].v][0]-center[0])*this.scale, y-(p[f[2].v][1]-center[1])*this.scale, z+(p[f[2].v][2]-center[2])*this.scale/10,
-                            x+(p[f[3].v][0]-center[0])*this.scale, y-(p[f[3].v][1]-center[1])*this.scale, z+(p[f[3].v][2]-center[2])*this.scale/10,
-                            tempQuad
-                            );                
-                        i++;
+                        this.drawVerts = [];
+                        this.drawUVs = [];
+                        this.drawIndices = [];
+                        this.gltf.getPolygons();
+                        this.gltf.render(iRenderer, x, y, z, tempQuad);
+                        
+                    } else
+                    {
+                        return
                     }
+
                 }
             }
             else

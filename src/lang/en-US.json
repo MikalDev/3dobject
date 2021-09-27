@@ -16,6 +16,10 @@
             "name": "mtl path",
             "desc": "mtl file path"
           },
+          "gtlf-path": {
+            "name": "gtlf path",
+            "desc": "gtlf file path"
+          },
           "scale": {
             "name": "Scale",
             "desc": "Scale object"
@@ -161,9 +165,68 @@
                 }
               }
             }
+          },
+          "play-animation": {
+            "list-name": "Play animation",
+            "display-text": "Play animation {0}, loop {1}",
+            "description": "Play animation by name.",
+            "params": {
+                  "animation": {
+                      "name": "Animation",
+                      "desc": "The animation name to play."
+                  },
+                  "loop": {
+                    "name": "Loop",
+                    "desc": "Loop animation."
+                }
+              }
+          },
+          "stop-animation": {
+            "list-name": "Pause animation",
+            "display-text": "Pause animation.",
+            "description": "Pause playing animation.",
+            "params": {
+            }
+
+          },
+          "unpause-animation": {
+            "list-name": "Unpause animation",
+            "display-text": "Unpause animation.",
+            "description": "Unpause playing animation.",
+            "params": {
+            }
+
+          },
+          "set-animation-rate": {
+            "list-name": "Set animation rate",
+            "display-text": "Set animation rate to {0}",
+            "description": "Set animation rate (FPS), .",
+            "params": {
+                  "rate": {
+                      "name": "Rate",
+                      "desc": "Rate (FPS)"
+                  }
+              }
+          },
+          "set-animation-speed": {
+            "list-name": "Set animation speed",
+            "display-text": "Set animation speed to {0}x",
+            "description": "Set animation speed.",
+            "params": {
+                  "speed": {
+                      "name": "Speed",
+                      "desc": "Speed (multiplier)."
+                  }
+              }
           }
         },
-        "expressions": {}
+        "expressions": {
+          "animation-names": {
+            "description": "Get animation names as JSON string.",
+            "translated-name": "AnimationNames",
+            "params": {}
+          }
+        }
       }
     }
   }

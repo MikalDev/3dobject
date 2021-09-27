@@ -3,7 +3,7 @@
     const SDK = self.SDK;
 
     const PLUGIN_ID = "Mikal_3DObject";
-    const PLUGIN_VERSION = "1.6.1";
+    const PLUGIN_VERSION = "2.1.0";
     const PLUGIN_CATEGORY = "general";
 
     const PLUGIN_CLASS = SDK.Plugins.Mikal_3DObject = class Object3DPlugin extends SDK.IPluginBase
@@ -24,7 +24,7 @@
             this._info.SetIsResizable(true); // allow to be resized
             this._info.SetIsRotatable(false); // allow to be rotated
             this._info.SetHasImage(true);
-            this._info.SetSupportsEffects(false); // allow effects
+            this._info.SetSupportsEffects(true); // allow effects
             this._info.SetMustPreDraw(false);
             this._info.SetCanBeBundled(false);
             this._info.AddCommonPositionACEs();
@@ -39,14 +39,6 @@
             SDK.Lang.PushContext(".properties");
 
             this._info.SetProperties([
-                new SDK.PluginProperty("text", "obj-path", "path",
-            {
-                "interpolatable": false
-            }),
-                new SDK.PluginProperty("text", "mtl-path", "path",
-            {
-                "interpolatable": false
-            }),
                 new SDK.PluginProperty("text", "scale", "1",
             {
                 "interpolatable": false
@@ -80,7 +72,11 @@
                     sdkType.GetObjectType().EditImage();
                 },
                 callbackType: "once-for-type"
-            })
+            }),
+            new SDK.PluginProperty("text", "gtlf-path", "path",
+            {
+                "interpolatable": false
+            }),
             ]);
 
             this._info.AddFileDependency(
@@ -98,6 +94,16 @@
                 filename: "c3runtime/modelData.js",
                 type: "external-runtime-script"
             });
+            this._info.AddFileDependency(
+                {
+                    filename: "c3runtime/gltfData.js",
+                    type: "external-runtime-script"
+                });
+            this._info.AddFileDependency(
+                {
+                    filename: "c3runtime/gltfModel.js",
+                    type: "external-runtime-script"
+                });
 
             SDK.Lang.PopContext(); //.properties
             SDK.Lang.PopContext();
