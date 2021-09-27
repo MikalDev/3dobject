@@ -72,9 +72,11 @@
             }
 
             // Animate gltf model
-            if (this.gtlfPath != 'path' && this.loaded && this.sdkType.loaded && this.animationPlay && this.gltf.animations)
-            // if (this.gtlfPath != 'path' && this.loaded && this.sdkType.loaded && this.animationPlay && this.gltf.animations)
+            if (this.gtlfPath !== 'path' && this.sdkType.loaded && this.loaded && this.animationPlay)
             {
+                debugger
+                if (!this.gltf.gltfData.hasOwnProperty('animations')) return
+
                 this.animationTime += this._runtime.GetDt()*this.animationSpeed;
                 if ((this.animationTime - this.animationLastTime) >= (1/this.animationRate))
                 {
