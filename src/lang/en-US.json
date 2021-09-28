@@ -4,7 +4,7 @@
   "text": {
     "plugins": {
       "mikal_3dobject": {
-        "name": "3DObject-Alpha",
+        "name": "3D object",
         "description": "3D Object created using the obj/mtl 3D format. Alpha",
         "help-url": "https://github.com/armandoalonso/c3IDE",
         "properties": {
@@ -218,12 +218,28 @@
                       "desc": "Speed (multiplier)."
                   }
               }
+          },
+          "set-z-scale": {
+            "list-name": "Set z scale",
+            "display-text": "Set z scale to {0}",
+            "description": "Set z scale.",
+            "params": {
+                  "z-scale": {
+                      "name": "Z scale",
+                      "desc": "Z scale."
+                  }
+              }
           }
         },
         "expressions": {
           "animation-names": {
             "description": "Get animation names as JSON string.",
             "translated-name": "AnimationNames",
+            "params": {}
+          },
+          "z-elevation": {
+            "description": "Get z elevation.",
+            "translated-name": "ZElevation",
             "params": {}
           }
         }

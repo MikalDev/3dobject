@@ -166,7 +166,19 @@
                 "initialValue": "1"
                 }
             ]
-          }                            
+          },
+          {
+            "id": "set-z-scale",
+            "scriptName": "SetZScale",
+            "highlight": false,
+            "params": [
+                {
+                "id": "z-scale",
+                "type": "number",
+                "initialValue": "10"
+                }
+            ]
+          }                                  
       ],
       "expressions": [
         {
@@ -174,6 +186,15 @@
           "scriptName": "AnimationNames",
           "expressionName": "AnimationNames",
           "returnType": "string",
+          "highlight": false,
+          "params": [
+          ]  
+        },
+        {
+          "id": "z-elevation",
+          "scriptName": "ZElevation",
+          "expressionName": "ZElevation",
+          "returnType": "number",
           "highlight": false,
           "params": [
           ]  

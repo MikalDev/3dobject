@@ -43,15 +43,16 @@ class GltfModel
                 }
                 
                 let scale = this.inst.scale;
+                let zScale = this.inst.zScale
                 let x0 = x+(v[ind[i*3+0]*3+0]-center[0])*scale;
                 let y0 = y-(v[ind[i*3+0]*3+1]-center[1])*scale;
-                let z0 = z+(v[ind[i*3+0]*3+2]-center[2])*scale/10;
+                let z0 = z+(v[ind[i*3+0]*3+2]-center[2])*scale/zScale;
                 let x1 = x+(v[ind[i*3+1]*3+0]-center[0])*scale;
                 let y1 = y-(v[ind[i*3+1]*3+1]-center[1])*scale;
-                let z1 = z+(v[ind[i*3+1]*3+2]-center[2])*scale/10;
+                let z1 = z+(v[ind[i*3+1]*3+2]-center[2])*scale/zScale;
                 let x2 = x+(v[ind[i*3+2]*3+0]-center[0])*scale;
                 let y2 = y-(v[ind[i*3+2]*3+1]-center[1])*scale;
-                let z2 = z+(v[ind[i*3+2]*3+2]-center[2])*scale/10;
+                let z2 = z+(v[ind[i*3+2]*3+2]-center[2])*scale/zScale;
 
                 renderer.Quad3D2(
                     x0, y0, z0,

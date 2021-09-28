@@ -1,9 +1,9 @@
 {
   "is-c3-addon": true,
   "type": "plugin",
-  "name": "3DObject-Alpha",
+  "name": "3D object",
   "id": "Mikal_3DObject",
-  "version": "2.1.2",
+  "version": "2.2.0",
   "author": "Mikal",
   "website": "https://www.construct.net",
   "documentation": "https://www.construct.net",

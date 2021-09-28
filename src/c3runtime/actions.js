@@ -66,6 +66,9 @@
         },
         UnpauseAnimation() {
             this.animationPlay = true;
-        }
+        },
+        SetZScale(zScale) {
+            this.zScale = zScale;
+        },
     };
 }

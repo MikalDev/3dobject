@@ -23,6 +23,7 @@
             this.animationRate = 60;
             this.animationLoop = true;
             this.animationPlay = true;
+            this.zScale = 6;
 
             if (properties)
             {
