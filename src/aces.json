@@ -20,6 +20,7 @@
         "id": "rotate",
         "scriptName": "Rotate",
         "highlight": false,
+        "isDeprecated": true,
         "params": [
         {
             "id": "angle",
