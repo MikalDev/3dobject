@@ -75,6 +75,16 @@
             "list-name": "Is Loaded",
             "display-text": "Is loaded",
             "description": "True if the 3DObject has loaded its 3D model."
+          },
+          "is-animation-finished": {
+            "list-name": "Is animation finished",
+            "display-text": "Is animation finished",
+            "description": "True if the animation has finished (only true if not looping)."
+          },
+          "on-animation-finished": {
+            "list-name": "On animation finished",
+            "display-text": "On animation finished ",
+            "description": "Triggers when the animation has finished (only triggered if not looping)."
           }
         },
         "actions": {
@@ -244,6 +254,11 @@
           "z-elevation": {
             "description": "Get z elevation.",
             "translated-name": "ZElevation",
+            "params": {}
+          },
+          "current-animation": {
+            "description": "Get current animation name.",
+            "translated-name": "CurrentAnimation",
             "params": {}
           }
         }

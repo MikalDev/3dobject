@@ -23,6 +23,8 @@
             this.animationRate = 60;
             this.animationLoop = true;
             this.animationPlay = true;
+            this.animationFinished = false;
+            this.animationName = '';
             this.zScale = 6;
             this.debug = false;
 
@@ -64,12 +66,16 @@
                 {
                     this.gltf = new globalThis.GltfModel(this._runtime, this.sdkType, this);
                     this.loaded = true;
-                    this.Trigger(C3.Plugins.Mikal_3DObject.Cnds.OnLoaded);
                     this.drawVerts = [];
                     this.drawUVs = [];
                     this.drawIndices = [];
                     this.gltf.getPolygons();
                     this.runtime.UpdateRender();
+                    if (this.gltf.getAnimationNames().length > 0)
+                    {
+                        this.animationName = this.gltf.getAnimationNames()[0]
+                    }
+                    this.Trigger(C3.Plugins.Mikal_3DObject.Cnds.OnLoaded);
                 }
             }
 

@@ -6,6 +6,9 @@
             },
             ZElevation() {
                 return this.GetWorldInfo().GetZElevation();
+            },
+            CurrentAnimation() {
+                return this.animationName;
             }
         };
 }

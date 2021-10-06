@@ -34,7 +34,7 @@ class GltfData
 		
         if (resultgltf)
 		{
-			console.info('[3DShape] modelData:', resultgltf);
+			if (debug) console.info('[3DShape] modelData:', resultgltf);
 			sdkType.loaded = true;
 		} else
 		{

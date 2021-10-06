@@ -13,7 +13,20 @@
             "id": "is-loaded",
             "scriptName": "IsLoaded",
             "highlight": false
-        }
+        },
+        {
+          "id": "is-animation-finished",
+          "scriptName": "IsAnimationFinished",
+          "highlight": false
+        },
+        {
+          "id": "on-animation-finished",
+          "scriptName": "OnAnimationFinished",
+          "highlight": false,
+          "isTrigger": true,
+          "isInvertible": false,
+          "isCompatibleWithTriggers": false
+        }    
       ],
       "actions": [
         {
@@ -196,6 +209,15 @@
           "scriptName": "ZElevation",
           "expressionName": "ZElevation",
           "returnType": "number",
+          "highlight": false,
+          "params": [
+          ]  
+        },
+        {
+          "id": "current-animation",
+          "scriptName": "CurrentAnimation",
+          "expressionName": "CurrentAnimation",
+          "returnType": "string",
           "highlight": false,
           "params": [
           ]  

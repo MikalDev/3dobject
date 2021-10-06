@@ -6,6 +6,12 @@
         },
         IsLoaded() {
             return this.loaded;
+        },
+        OnAnimationFinished() {
+            return true;
+        },
+        IsAnimationFinished() {
+            return this.IsAnimationFinished;
         }
     };
 }

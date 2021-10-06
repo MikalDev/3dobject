@@ -95,7 +95,7 @@
                         this.drawIndices = [];
                         this.gltf.getPolygons();
                         this.gltf.render(iRenderer, x, y, z, tempQuad);
-                        
+                        this.layoutView.Refresh();
                     } else
                     {
                         return
@@ -177,8 +177,9 @@
                 case 'gltf-path':
                     if (this.sdkType.initOwner = this.uid)
                     {
-                        this.gltfPath = this._inst.GetPropertyValue('obj-path');
-                        // sdkType.gltfData.load(this.gltfPath, false)
+                        this.gltfPath = this._inst.GetPropertyValue('gltf-path');
+                        sdkType.gltfData.load(this.gltfPath, false)
+                        if (this.layoutView) this.layoutView.Refresh();
                     }
                     break
                 case 'debug':

@@ -48,11 +48,13 @@
             });
             if (newAnimationIndex >= 0)
             {
+                this.animationName = animation;
                 this.animationTime = 0;
                 this.animationLastTime = 0;
                 this.animationIndex = newAnimationIndex;
                 this.animationLoop = loop;
                 this.animationPlay = true;
+                this.animationFinished = false;
             }
         },
         SetAnimationRate(rate) {

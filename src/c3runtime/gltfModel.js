@@ -1,6 +1,5 @@
 // @ts-check
 'use strict';
-
 class GltfModel
 {
     constructor(runtime, sdkType, inst)
@@ -269,7 +268,16 @@ class GltfModel
                 time = (time-timeValues.min[0])%(timeValues.max[0]-timeValues.min[0]) + timeValues.min[0]; // loop
             } else
             {
-                if (time > timeValues.max[0]) time = timeValues.max[0]-0.01; // Stop on max time
+                if (time > timeValues.max[0])
+                {
+                    time = timeValues.max[0]-0.01; // Stop on max time
+                    if (!this.inst.animationFinished)
+                    {
+                        this.inst.animationFinished = true;
+                        // @ts-ignore
+                        this.inst.Trigger(self.C3.Plugins.Mikal_3DObject.Cnds.OnAnimationFinished);
+                    }
+                }
             }
             //time = Math.min(Math.max(time, timeValues.min[0]), timeValues.max[0]);  //clamp
             timeValues = timeValues.data;
