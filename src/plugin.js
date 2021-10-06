@@ -3,7 +3,7 @@
     const SDK = self.SDK;
 
     const PLUGIN_ID = "Mikal_3DObject";
-    const PLUGIN_VERSION = "2.2.1";
+    const PLUGIN_VERSION = "2.3.0";
     const PLUGIN_CATEGORY = "3d";
 
     const PLUGIN_CLASS = SDK.Plugins.Mikal_3DObject = class Object3DPlugin extends SDK.IPluginBase
@@ -77,21 +77,15 @@
             {
                 "interpolatable": false
             }),
+            new SDK.PluginProperty("check", "debug", false,
+            {
+                "interpolatable": false
+            }),
             ]);
 
             this._info.AddFileDependency(
             {
                 filename: "gl-matrix.js",
-                type: "external-runtime-script"
-            });
-            this._info.AddFileDependency(
-            {
-                filename: "c3runtime/model.js",
-                type: "external-runtime-script"
-            });
-            this._info.AddFileDependency(
-            {
-                filename: "c3runtime/modelData.js",
                 type: "external-runtime-script"
             });
             this._info.AddFileDependency(

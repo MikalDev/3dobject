@@ -3,17 +3,25 @@
 
 class GltfModel
 {
-
     constructor(runtime, sdkType, inst)
 	{
 		this._runtime = runtime;
         this._sdkType = sdkType;
 		// Deep copy
 		// For instance version, may only need points, others remain stable, full copy for now
-		this.gltf = JSON.parse(JSON.stringify(sdkType.gltfData.gltf));
+        // this.gltf = this.structuralClone(sdkType.gltfData.gltf);
+        this.gltf = {};
 		this.inst = inst;
         this.gltfData = sdkType.gltfData.gltf;
-	}
+    }
+    
+    structuralClone(obj) {
+        return new Promise(resolve => {
+          const {port1, port2} = new MessageChannel();
+          port2.onmessage = ev => resolve(ev.data);
+          port1.postMessage(obj);
+        });
+    }
 
     render(renderer, x, y, z, tempQuad)
     {
@@ -142,8 +150,11 @@ class GltfModel
     //	Updates scene graph, and as a second step sends transformed skinned mesh points to c2.
     getPolygons()
     {
+        // @ts-ignore
         const vec3 = globalThis.glMatrix3D.vec3;
+        // @ts-ignore
         const mat4 = globalThis.glMatrix3D.mat4;
+        // @ts-ignore
         const quat = globalThis.glMatrix3D.quat;
         const gltf = this.gltfData;
         
@@ -213,13 +224,6 @@ class GltfModel
                             gltf.pointBatch.push(transformedVerts[ii]);
                     else
                     {
-                        // console.log('points', transformedVerts);
-                        // console.log('texcoords', node.mesh.primitives[i].attributes.TEXCOORD_0.data);
-
-                        // Push triangle data to draw
-                        // this.inst.drawVerts = this.inst.drawVerts.concat(transformedVerts);
-                        // this.inst.drawUVs = this.inst.drawUVs.concat(Array.from(node.mesh.primitives[i].attributes.TEXCOORD_0.data));
-                        // this.inst.drawIndices = this.inst.drawIndices.concat(Array.from(node.mesh.primitives[i].indices.data));
                         this.inst.drawVerts.push(transformedVerts);
                         this.inst.drawUVs.push(Array.from(node.mesh.primitives[i].attributes.TEXCOORD_0.data));
                         this.inst.drawIndices.push(Array.from(node.mesh.primitives[i].indices.data));

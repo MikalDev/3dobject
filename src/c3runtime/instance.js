@@ -24,6 +24,7 @@
             this.animationLoop = true;
             this.animationPlay = true;
             this.zScale = 6;
+            this.debug = false;
 
             if (properties)
             {
@@ -36,6 +37,7 @@
                 this.zAngle = properties[4];
                 this.rotationOrder = properties[5];
                 this.gtlfPath = properties[6];
+                this.debug = properties[7]
             }
 
             this.localCenter = [0,0,0]
@@ -47,7 +49,7 @@
                 sdkType.initOwner = this.uid;
                 if (this.gtlfPath != 'path')
                 {
-                    sdkType.gltfData.load(this.gtlfPath, true);
+                    sdkType.gltfData.load(this.gtlfPath, true, this.debug);
                 } 
             }
             
@@ -63,7 +65,6 @@
                     this.gltf = new globalThis.GltfModel(this._runtime, this.sdkType, this);
                     this.loaded = true;
                     this.Trigger(C3.Plugins.Mikal_3DObject.Cnds.OnLoaded);
-                    console.log('angles:',this.xAngle, this.yAngle, this.zAngle);
                     this.drawVerts = [];
                     this.drawUVs = [];
                     this.drawIndices = [];
@@ -75,7 +76,6 @@
             // Animate gltf model
             if (this.gtlfPath !== 'path' && this.sdkType.loaded && this.loaded && this.animationPlay)
             {
-                debugger
                 if (!this.gltf.gltfData.hasOwnProperty('animations')) return
 
                 this.animationTime += this._runtime.GetDt()*this.animationSpeed;

@@ -15,7 +15,7 @@ class GltfData
 	Requests an url as a json file, then does some processing on that, and finally calls a js or c2 function.
 	Expects an "embeded" gltf file.
     */
-    async load(gltfPath, isRuntime)
+    async load(gltfPath, isRuntime, debug)
     {
         let runtime = this._runtime;
 		let sdkType = this._sdkType;
@@ -30,7 +30,7 @@ class GltfData
 			gltfURI = await runtime.GetProjectFileByName(gltfPath);
 		}
 
-		let resultgltf = await this.loadGLTF(gltfURI, isRuntime);
+		let resultgltf = await this.loadGLTF(gltfURI, isRuntime, debug);
 		
         if (resultgltf)
 		{
@@ -53,7 +53,7 @@ class GltfData
 	4. Adds some properties that are optionally in the gltf file.
 	5. Adds a few properties that are utilized when getting data from skinning.
 */
-    async loadGLTF(uri, isRuntime)
+    async loadGLTF(uri, isRuntime, debug)
     {
         let gltf;
 
@@ -78,7 +78,7 @@ class GltfData
                 let text = await projectFile.text();
                 if (!text) return false;
                 gltf = JSON.parse(text);
-                console.log('gltf buffers:', gltf.buffers);
+                if (debug) console.log('gltf buffers:', gltf.buffers);
             } catch(err)
             {
                 console.error('[3DShape], cannot fetch/parse gltf blob', uri);
@@ -87,7 +87,7 @@ class GltfData
 		}
         if (!gltf) return false;
 
-        console.log('gltf:', gltf)
+        if (debug) console.log('gltf:', gltf)
 
         //extra variable for a list of skinned meshes.  They need to be transformed after the rest.
         gltf.skinnedNodes = [];
@@ -95,8 +95,8 @@ class GltfData
         // buffers
         for(let i = 0; i < gltf.buffers.length; i++)  // convert to typed arrays.
         {
-            console.log('i:',i);
             let base64 = gltf.buffers[i].uri.slice(37)
+            // @ts-ignore
             gltf.buffers[i] = Uint8Array.from(atob(base64), c=>c.charCodeAt(0)).buffer;
         }
         

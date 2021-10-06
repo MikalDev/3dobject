@@ -13,6 +13,8 @@
             this.localCenter = [0,0,0]
             this.uid = inst.GetUID();
             this.layout = inst.GetLayout();
+            this.zScale = 6;
+            this.debug = false;
         }
 
         Release()
@@ -26,6 +28,7 @@
             this.rotationOrder = this._inst.GetPropertyValue('rotation-order');
             this.scale = this._inst.GetPropertyValue('scale');
             this.zElevation =  this._inst.GetPropertyValue('z-elevation');
+            this.debug = this._inst.GetPropertyValue('debug')
         }
 
         OnPlacedInLayout()
@@ -43,19 +46,20 @@
             if (!this.layoutView) this.layoutView = iDrawParams.GetLayoutView();
             const texture = this.GetTexture();
 
-            if (false)
+            if (texture)
             {
                 this._inst.ApplyBlendMode(iRenderer);
                 iRenderer.SetTexture(texture);
 
                 if (!this.scale) this.scale = this._inst.GetPropertyValue('scale');
 
+                this.gltfPath = this._inst.GetPropertyValue('gtlf-path');
+
                 let sdkType = this.sdkType;
-                if (sdkType.initOwner == -1)
+
+                if (this.gltfPath != 'path' && sdkType.initOwner == -1)
                 {
-                    sdkType.initOwner = this.uid;
- 
-                    this.gltfPath = this._inst.GetPropertyValue('gtlf-path');
+                    sdkType.initOwner = this.uid; 
                     sdkType.gltfData.load(this.gltfPath, false)
                 }
 
@@ -67,7 +71,7 @@
                         this.drawVerts = [];
                         this.drawUVs = [];
                         this.drawIndices = [];
-                        this.gltf.updateAnimation(0, 0);
+                        // this.gltf.updateAnimation(0, 0);
     
                         this.gltf.getPolygons();
                         this.loaded = true;
@@ -81,8 +85,6 @@
                     const x = this._inst.GetX();
                     const y = this._inst.GetY();
                     const z = this.zElevation;
-
-                    iRenderer.SetTexture(texture);
 
                     const tempQuad = new SDK.Quad();
 
@@ -98,7 +100,6 @@
                     {
                         return
                     }
-
                 }
             }
             else
@@ -108,7 +109,7 @@
                 iRenderer.SetColorFillMode();
 
                 if (this.HadTextureError()) iRenderer.SetColorRgba(0.25, 0, 0, 0.25);
-                else iRenderer.SetColorRgba(0, 0, 0.1, 0.1);
+                else iRenderer.SetColorRgba(0, 0, 0.5, 0.5);
 
                 iRenderer.Quad(this._inst.GetQuad());
             }
@@ -167,21 +168,22 @@
                 case 'angle-y':
                 case 'angle-z':
                 case 'rotation-order':
-                    let x = this._inst.GetPropertyValue('angle-x');
-                    let y = this._inst.GetPropertyValue('angle-y');
-                    let z = this._inst.GetPropertyValue('angle-z');
+                    this.xAngle = this._inst.GetPropertyValue('angle-x');
+                    this.yAngle = this._inst.GetPropertyValue('angle-y');
+                    this.zAngle = this._inst.GetPropertyValue('angle-z');
                     let order = this._inst.GetPropertyValue('rotation-order');
-                    if (this.model3D) this.model3D.rotateOrdered(x,y,z,order);
                     if (this.layoutView) this.layoutView.Refresh();
                     break;
-                case 'obj-path':
+                case 'gltf-path':
                     if (this.sdkType.initOwner = this.uid)
                     {
-                        this.objPath = this._inst.GetPropertyValue('obj-path');
-                        this.mtlPath = this._inst.GetPropertyValue('mtl-path');
-                        this.sdkType.modelData.load(this.objPath, this.mtlPath, this.scale, false);
+                        this.gltfPath = this._inst.GetPropertyValue('obj-path');
+                        // sdkType.gltfData.load(this.gltfPath, false)
                     }
                     break
+                case 'debug':
+                    this.debug = this._inst.GetPropertyValue('debug');
+                    break;
                 default:
                     break;
             }
