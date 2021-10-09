@@ -241,7 +241,7 @@ class GltfModel
     {
         const gltf = this.gltfData;
         let names = [];
-        if (!gltf.animations) return;
+        if (!gltf.animations) return names;
         
         for(let i = 0; i <gltf.animations.length; i++)
             names.push(gltf.animations[i].name);
