@@ -41,6 +41,17 @@
             return false;
         }
 
+        async doInit() {
+            this.gltf = new globalThis.GltfModel(this._runtime, this.sdkType, this);
+            await this.gltf.init();
+            this.loaded = true;
+            this.drawVerts = [];
+            this.drawUVs = [];
+            this.drawIndices = [];
+            this.gltf.getPolygons();
+            this.layoutView.Refresh();
+        }
+
         Draw(iRenderer, iDrawParams)
         {
             if (!this.layoutView) this.layoutView = iDrawParams.GetLayoutView();
@@ -67,15 +78,10 @@
                 {
                     if (this.sdkType.loaded)
                     {
-                        this.gltf = new globalThis.GltfModel(this._runtime, this.sdkType, this);
-                        this.drawVerts = [];
-                        this.drawUVs = [];
-                        this.drawIndices = [];
-                        // this.gltf.updateAnimation(0, 0);
-    
-                        this.gltf.getPolygons();
-                        this.loaded = true;
-                        this.layoutView.Refresh();
+                        if (!this.doingInit) {
+                            this.doingInit = true;
+                            this.doInit()
+                        }
                     }
                     this.layoutView.Refresh();        
                 }

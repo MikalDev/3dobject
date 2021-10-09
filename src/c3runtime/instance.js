@@ -58,24 +58,32 @@
             this._StartTicking();
         }
 
+        async doInit() {
+            this.gltf = new globalThis.GltfModel(this._runtime, this.sdkType, this);
+            await this.gltf.init();
+            this.loaded = true;
+            this.drawVerts = [];
+            this.drawUVs = [];
+            this.drawIndices = [];
+            this.gltf.getPolygons();
+            this.runtime.UpdateRender();
+            if (this.gltf.getAnimationNames().length > 0)
+            {
+                this.animationName = this.gltf.getAnimationNames()[0]
+            }
+            this.Trigger(C3.Plugins.Mikal_3DObject.Cnds.OnLoaded);
+        }
+
         Tick()
         {
             if (!this.loaded)
             {
                 if (this.sdkType.loaded)
                 {
-                    this.gltf = new globalThis.GltfModel(this._runtime, this.sdkType, this);
-                    this.loaded = true;
-                    this.drawVerts = [];
-                    this.drawUVs = [];
-                    this.drawIndices = [];
-                    this.gltf.getPolygons();
-                    this.runtime.UpdateRender();
-                    if (this.gltf.getAnimationNames().length > 0)
-                    {
-                        this.animationName = this.gltf.getAnimationNames()[0]
+                    if (!this.doingInit) {
+                        this.doingInit = true;
+                        this.doInit()
                     }
-                    this.Trigger(C3.Plugins.Mikal_3DObject.Cnds.OnLoaded);
                 }
             }
 

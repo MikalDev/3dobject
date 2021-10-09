@@ -9,9 +9,13 @@ class GltfModel
 		// Deep copy
 		// For instance version, may only need points, others remain stable, full copy for now
         // this.gltf = this.structuralClone(sdkType.gltfData.gltf);
-        this.gltf = {};
 		this.inst = inst;
-        this.gltfData = sdkType.gltfData.gltf;
+        // this.gltfData = sdkType.gltfData.gltf;
+        this.gltfData = {};
+    }
+
+    async init() {
+        this.gltfData = await this.structuralClone(this._sdkType.gltfData.gltf)
     }
     
     structuralClone(obj) {
