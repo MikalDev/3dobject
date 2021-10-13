@@ -162,18 +162,20 @@ class GltfModel
         const gltf = this.gltfData;
         
         let rotationQuat = quat.create();
-        quat.fromEuler(rotationQuat, this.inst.xAngle, this.inst.yAngle, this.inst.zAngle);
-        
+        let parentMatrix = mat4.create();        
+
+        quat.fromEuler(rotationQuat, 360-this.inst.xAngle, 360-this.inst.yAngle, 360-this.inst.zAngle);
+        mat4.fromRotationTranslation(parentMatrix, rotationQuat, [0,0,0])
 
         // update all scene matrixes.
         for(let i = 0; i < gltf.scene.nodes.length; i++)
         {
-            // gltf.scene.nodes[i].rotation = rotationQuat;
-            this.transformNode(gltf.scene.nodes[i]);
+            this.transformNode(gltf.scene.nodes[i], parentMatrix);
         }
         
         //todo loop over skinned nodes.
         //todo: limit to ones in scene?
+        quat.fromEuler(rotationQuat, this.inst.xAngle, this.inst.yAngle, this.inst.zAngle);
         for(let ii = 0; ii < gltf.skinnedNodes.length; ii++)
         {
             let node = gltf.skinnedNodes[ii];

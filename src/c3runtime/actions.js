@@ -33,7 +33,7 @@
             this.xAngle = x;
             this.yAngle = y;
             this.zAngle = z;
-            // this.model3D.rotateOrdered(x,y,z,order);
+            this.renderOnce = true;
         },
 
         PlayAnimation(animation, loop) {

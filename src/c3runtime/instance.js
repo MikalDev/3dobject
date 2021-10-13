@@ -27,6 +27,7 @@
             this.animationName = '';
             this.zScale = 6;
             this.debug = false;
+            this.renderOnce = false;
 
             if (properties)
             {
@@ -90,11 +91,10 @@
             // Animate gltf model
             if (this.gtlfPath !== 'path' && this.sdkType.loaded && this.loaded && this.animationPlay)
             {
-                if (!this.gltf.gltfData.hasOwnProperty('animations')) return
-
-                this.animationTime += this._runtime.GetDt()*this.animationSpeed;
-                if ((this.animationTime - this.animationLastTime) >= (1/this.animationRate))
+                if (this.gltf.gltfData.hasOwnProperty('animations'))
                 {
+                    this.animationTime += this._runtime.GetDt()*this.animationSpeed;
+                    if ((this.animationTime - this.animationLastTime) >= (1/this.animationRate))
                     this.animationLastTime = this.animationTime;
                     this.drawVerts = [];
                     this.drawUVs = [];
@@ -102,7 +102,15 @@
                     this.gltf.updateAnimation(this.animationIndex, this.animationTime);
                     this.gltf.getPolygons();    
                     this.runtime.UpdateRender();
-                }
+                } else if (this.renderOnce)
+                {
+                    this.renderOnce = false;
+                    this.drawVerts = [];
+                    this.drawUVs = [];
+                    this.drawIndices = [];
+                    this.gltf.getPolygons();    
+                    this.runtime.UpdateRender();
+                }    
             }
         }
 

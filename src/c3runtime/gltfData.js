@@ -30,19 +30,24 @@ class GltfData
 			gltfURI = await runtime.GetProjectFileByName(gltfPath);
 		}
 
-		let resultgltf = await this.loadGLTF(gltfURI, isRuntime, debug);
-		
+        let resultgltf
+       
+        try {
+		    resultgltf = await this.loadGLTF(gltfURI, isRuntime, debug);
+        } catch( err ) {
+            alert('Error loading GLTF:'+err)
+        }
+
         if (resultgltf)
 		{
 			if (debug) console.info('[3DShape] modelData:', resultgltf);
 			sdkType.loaded = true;
 		} else
 		{
-			console.warn('[3DShape] Unable load to gltf files');
+			console.warn('[3DShape] Unable to load gltf files');
 		}
 
         this.gltf = resultgltf;
-        sdkType.loaded = true;
     }
 
 /*
@@ -190,7 +195,7 @@ class GltfData
                 let p = m.primitives[j];
                 
                 p.indices = gltf.accessors[p.indices];
-                p.material = gltf.materials[p.material];
+                if (p.material) p.material = gltf.materials[p.material];
                 
                 Object.keys(p.attributes).forEach(function(key){
                     p.attributes[key] = gltf.accessors[p.attributes[key]];

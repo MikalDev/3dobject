@@ -180,13 +180,16 @@
                     let order = this._inst.GetPropertyValue('rotation-order');
                     if (this.layoutView) this.layoutView.Refresh();
                     break;
-                case 'gltf-path':
+                case 'gtlf-path':
+                    /*
                     if (this.sdkType.initOwner = this.uid)
                     {
-                        this.gltfPath = this._inst.GetPropertyValue('gltf-path');
-                        sdkType.gltfData.load(this.gltfPath, false)
+                        this.gltfPath = this._inst.GetPropertyValue('gtlf-path');
+                        console.log('gltf-path changed', this.gltfPath)
+                        this.sdkType.gltfData.load(this.gltfPath, false)
                         if (this.layoutView) this.layoutView.Refresh();
                     }
+                    */
                     break
                 case 'debug':
                     this.debug = this._inst.GetPropertyValue('debug');
