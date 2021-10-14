@@ -95,13 +95,15 @@
                 {
                     this.animationTime += this._runtime.GetDt()*this.animationSpeed;
                     if ((this.animationTime - this.animationLastTime) >= (1/this.animationRate))
-                    this.animationLastTime = this.animationTime;
-                    this.drawVerts = [];
-                    this.drawUVs = [];
-                    this.drawIndices = [];
-                    this.gltf.updateAnimation(this.animationIndex, this.animationTime);
-                    this.gltf.getPolygons();    
-                    this.runtime.UpdateRender();
+                    {
+                        this.animationLastTime = this.animationTime;
+                        this.drawVerts = [];
+                        this.drawUVs = [];
+                        this.drawIndices = [];
+                        this.gltf.updateAnimation(this.animationIndex, this.animationTime);
+                        this.gltf.getPolygons();    
+                        this.runtime.UpdateRender();
+                    }
                 } else if (this.renderOnce)
                 {
                     this.renderOnce = false;
