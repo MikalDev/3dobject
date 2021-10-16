@@ -149,6 +149,17 @@
                   }
               }
           },
+          "set-z-height": {
+            "list-name": "Set z height",
+            "display-text": "Set z height to {0}",
+            "description": "Set z height, used for viewport clipping",
+            "params": {
+                  "z-height": {
+                      "name": "Z height",
+                      "desc": "The z height of the object, used for viewport clipping."
+                  }
+              }
+          },
           "set-rotation": {
             "list-name": "Set x,y,z rotation",
             "display-text": "Set rotation to {0}, {1}, {2}, {3} order",

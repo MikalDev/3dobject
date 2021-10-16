@@ -87,6 +87,18 @@
             ]
         },
         {
+          "id": "set-z-height",
+          "scriptName": "SetZHeight",
+          "highlight": false,
+          "params": [
+            {
+              "id": "z-height",
+              "type": "number",
+              "initialValue": "0"
+            }
+          ]
+        },
+        {
             "id": "set-scale",
             "scriptName": "SetScale",
             "highlight": false,

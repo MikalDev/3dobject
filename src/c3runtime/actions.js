@@ -60,6 +60,9 @@
         SetAnimationRate(rate) {
             this.animationRate = rate;
         },
+        SetZHeight(h) {
+            this._setZHeight(h);
+        },
         SetAnimationSpeed(speed) {
             this.animationSpeed = speed;
         },

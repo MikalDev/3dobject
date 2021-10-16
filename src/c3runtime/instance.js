@@ -125,6 +125,15 @@
             return false;
         }
 
+        _setZHeight(h) {
+            h = Math.max(h, 0);
+            if (this._zHeight === h)
+                return;
+            this._zHeight = h;
+            this.GetWorldInfo().SetDepth(h);
+            this._runtime.UpdateRender()
+        }
+
         Draw(renderer)
         {
             const imageInfo = this._objectClass.GetImageInfo();

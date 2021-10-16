@@ -28,6 +28,7 @@ class GltfModel
 
     render(renderer, x, y, z, tempQuad)
     {
+        let totalTriangles = 0;
         for (let ii=0; ii<this.inst.drawVerts.length; ii++)
         {
             let v = this.inst.drawVerts[ii];
@@ -36,7 +37,7 @@ class GltfModel
 
             let triangleCount = ind.length/3;
             let center = [0,0,0];
-
+            totalTriangles += triangleCount;
             for(let i = 0; i<triangleCount; i++)
             {
                 if (true)
@@ -73,7 +74,8 @@ class GltfModel
                     tempQuad
                     ); 
             }
-        }        
+        }
+        if (this.inst.debug) console.log('Tri:',totalTriangles)
     }
 
     /*
