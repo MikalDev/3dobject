@@ -89,7 +89,7 @@
             }
 
             // Animate gltf model
-            if (this.gtlfPath !== 'path' && this.sdkType.loaded && this.loaded && this.animationPlay)
+            if (this.gtlfPath !== 'path' && this.sdkType.loaded && this.loaded && this.animationPlay && !this.animationFinished)
             {
                 if (this.gltf.gltfData.hasOwnProperty('animations'))
                 {
