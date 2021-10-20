@@ -75,8 +75,19 @@
             this.Trigger(C3.Plugins.Mikal_3DObject.Cnds.OnLoaded);
         }
 
+        IsOnScreen() {
+            const wi = this.GetWorldInfo();
+            const layer = wi.GetLayer();
+            if (layer.Has3DCamera())
+                return wi.IsInViewport3D(layer._GetViewFrustum());
+            else
+                return wi.IsInViewport(layer.GetViewport(), wi.GetLayout().HasVanishingPointOutsideViewport(), wi.GetLayout().IsOrthographicProjection())
+        }
+
         Tick()
         {
+            const onScreen = this.IsOnScreen();
+
             if (!this.loaded)
             {
                 if (this.sdkType.loaded)
@@ -100,9 +111,12 @@
                         this.drawVerts = [];
                         this.drawUVs = [];
                         this.drawIndices = [];
-                        this.gltf.updateAnimation(this.animationIndex, this.animationTime);
-                        this.gltf.getPolygons();    
-                        this.runtime.UpdateRender();
+                        this.gltf.updateAnimation(this.animationIndex, this.animationTime, onScreen);
+                        if (onScreen)
+                        {
+                            this.gltf.getPolygons();    
+                            this.runtime.UpdateRender();    
+                        }
                     }
                 } else if (this.renderOnce)
                 {

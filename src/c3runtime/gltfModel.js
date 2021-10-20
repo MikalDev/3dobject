@@ -72,7 +72,7 @@ class GltfModel
                     x2, y2, z2,
                     x2, y2, z2,
                     tempQuad
-                    ); 
+                    );
             }
         }
         if (this.inst.debug) console.log('Tri:',totalTriangles)
@@ -254,7 +254,7 @@ class GltfModel
     }
 
     // Updates animation at index to be at time.  Is used to play animation.  
-    updateAnimation(index, time)
+    updateAnimation(index, time, onScreen)
     {
         // @ts-ignore
         const vec3 = globalThis.glMatrix3D.vec3;
@@ -287,6 +287,10 @@ class GltfModel
                     }
                 }
             }
+
+            // If not on screen no more animation required.
+            if (!onScreen) continue
+
             //time = Math.min(Math.max(time, timeValues.min[0]), timeValues.max[0]);  //clamp
             timeValues = timeValues.data;
             
