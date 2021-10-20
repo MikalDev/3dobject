@@ -295,7 +295,12 @@ class GltfModel
             for(t0=0, t1=1; t0<timeValues.length-1; t0++, t1++)  
                 if(time >= timeValues[t0] && time <= timeValues[t1])
                     break;
+
             let t = (time - timeValues[t0])/(timeValues[t1] - timeValues[t0]);
+            
+            // Check if invalid state, if so, skip animation
+            // TODO: Change how change animation vs tick is handled to make sure this case does not happen
+            if (timeValues[t1] == null) break
             
             if(target.path == "translation")
                 vec3.lerp(target.node.translation, otherValues.subarray(t0*3,t0*3+3), otherValues.subarray(t1*3,t1*3+3), t);
