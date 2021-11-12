@@ -28,6 +28,8 @@
             this.zScale = 6;
             this.debug = false;
             this.renderOnce = false;
+            this.currentAnimationTime = 0;
+            this.currentAnimationFrame = 0;
 
             if (properties)
             {

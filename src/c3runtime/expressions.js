@@ -9,6 +9,12 @@
             },
             CurrentAnimation() {
                 return this.animationName;
+            },
+            CurrentAnimationTime() {
+                return this.currentAnimationTime;
+            },
+            CurrentAnimationFrame() {
+                return this.currentAnimationFrame;
             }
         };
 }

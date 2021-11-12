@@ -287,6 +287,8 @@ class GltfModel
                     }
                 }
             }
+            
+            this.inst.currentAnimationTime = time;
 
             // If not on screen no more animation required.
             if (!onScreen) continue
@@ -300,8 +302,12 @@ class GltfModel
                 if(time >= timeValues[t0] && time <= timeValues[t1])
                     break;
 
+            this.inst.currentAnimationFrame = t0;
+
             let t = (time - timeValues[t0])/(timeValues[t1] - timeValues[t0]);
-            
+
+            this.inst.currentAnimationFrame = Math.round(t0+t);
+
             // Check if invalid state, if so, skip animation
             // TODO: Change how change animation vs tick is handled to make sure this case does not happen
             if (timeValues[t1] == null) break

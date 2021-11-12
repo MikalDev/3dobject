@@ -233,6 +233,24 @@
           "highlight": false,
           "params": [
           ]  
+        },
+        {
+          "id": "current-animation-time",
+          "scriptName": "CurrentAnimationTime",
+          "expressionName": "CurrentAnimationTime",
+          "returnType": "number",
+          "highlight": false,
+          "params": [
+          ]  
+        },
+        {
+          "id": "current-animation-frame",
+          "scriptName": "CurrentAnimationFrame",
+          "expressionName": "CurrentAnimationFrame",
+          "returnType": "number",
+          "highlight": false,
+          "params": [
+          ]  
         }
       ]
     }

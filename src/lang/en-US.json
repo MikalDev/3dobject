@@ -271,6 +271,16 @@
             "description": "Get current animation name.",
             "translated-name": "CurrentAnimation",
             "params": {}
+          },
+          "current-animation-time": {
+            "description": "Get current animation time.",
+            "translated-name": "CurrentAnimationTime",
+            "params": {}
+          },
+          "current-animation-frame": {
+            "description": "Get current animation frame.",
+            "translated-name": "CurrentAnimationFrame",
+            "params": {}
           }
         }
       }
