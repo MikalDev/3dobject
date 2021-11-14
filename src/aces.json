@@ -201,7 +201,6 @@
                 {
                 "id": "z-scale",
                 "type": "number",
-                "initialValue": "10"
                 }
             ]
           }                                  
@@ -247,6 +246,24 @@
           "id": "current-animation-frame",
           "scriptName": "CurrentAnimationFrame",
           "expressionName": "CurrentAnimationFrame",
+          "returnType": "number",
+          "highlight": false,
+          "params": [
+          ]  
+        },
+        {
+          "id": "scale",
+          "scriptName": "Scale",
+          "expressionName": "Scale",
+          "returnType": "number",
+          "highlight": false,
+          "params": [
+          ]  
+        },
+        {
+          "id": "z-scale",
+          "scriptName": "ZScale",
+          "expressionName": "ZScale",
           "returnType": "number",
           "highlight": false,
           "params": [

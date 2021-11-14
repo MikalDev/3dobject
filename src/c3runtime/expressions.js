@@ -15,6 +15,12 @@
             },
             CurrentAnimationFrame() {
                 return this.currentAnimationFrame;
+            },
+            Scale() {
+                return this.scale;
+            },
+            ZScale() {
+                return this.zScale;
             }
         };
 }

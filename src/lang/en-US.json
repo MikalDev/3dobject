@@ -281,6 +281,16 @@
             "description": "Get current animation frame.",
             "translated-name": "CurrentAnimationFrame",
             "params": {}
+          },
+          "scale": {
+            "description": "Get scale.",
+            "translated-name": "Scale",
+            "params": {}
+          },
+          "z-scale": {
+            "description": "Get z scale.",
+            "translated-name": "ZScale",
+            "params": {}
           }
         }
       }
