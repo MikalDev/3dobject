@@ -201,6 +201,7 @@
                 {
                 "id": "z-scale",
                 "type": "number",
+                "initialValue": "6"
                 }
             ]
           }                                  
