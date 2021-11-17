@@ -42,7 +42,8 @@
                 this.zAngle = properties[4];
                 this.rotationOrder = properties[5];
                 this.gtlfPath = properties[6];
-                this.debug = properties[7]
+                this.debug = properties[7];
+                this.animationBlend = properties[8];
             }
 
             this.localCenter = [0,0,0]
@@ -107,13 +108,14 @@
                 if (this.gltf.gltfData.hasOwnProperty('animations'))
                 {
                     this.animationTime += this._runtime.GetDt()*this.animationSpeed;
-                    if ((this.animationTime - this.animationLastTime) >= (1/this.animationRate))
+                    const deltaTime = this.animationTime - this.animationLastTime;
+                    if ((deltaTime) >= (1/this.animationRate))
                     {
                         this.animationLastTime = this.animationTime;
                         this.drawVerts = [];
                         this.drawUVs = [];
                         this.drawIndices = [];
-                        this.gltf.updateAnimation(this.animationIndex, this.animationTime, onScreen);
+                        this.gltf.updateAnimation(this.animationIndex, this.animationTime, onScreen, deltaTime);
                         if (onScreen)
                         {
                             this.gltf.getPolygons();    

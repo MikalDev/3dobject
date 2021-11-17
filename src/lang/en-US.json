@@ -60,6 +60,10 @@
           "debug": {
             "name": "Debug",
             "desc": "Debug logging."
+          },
+          "animation-blend": {
+            "name": "Animation blend",
+            "desc": "Animation blend time in seconds"
           }
         },
         "aceCategories": {

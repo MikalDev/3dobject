@@ -12,6 +12,11 @@ class GltfModel
 		this.inst = inst;
         // this.gltfData = sdkType.gltfData.gltf;
         this.gltfData = {};
+        this._blendState = 'init';
+        this._lastTarget = [];
+        this._blendTarget = [];
+        this._blendTime = 0;
+        this._lastIndex = 0;
     }
 
     async init() {
@@ -75,7 +80,6 @@ class GltfModel
                     );
             }
         }
-        if (this.inst.debug) console.log('Tri:',totalTriangles)
     }
 
     /*
@@ -254,15 +258,57 @@ class GltfModel
     }
 
     // Updates animation at index to be at time.  Is used to play animation.  
-    updateAnimation(index, time, onScreen)
+    updateAnimation(index, time, onScreen, deltaTime)
     {
         // @ts-ignore
         const vec3 = globalThis.glMatrix3D.vec3;
         // @ts-ignore
         const quat = globalThis.glMatrix3D.quat;
         const gltf = this.gltfData;
+        const animationBlend = this.inst.animationBlend;
         
         let anim = gltf.animations[index];
+
+        // Blend state machine
+        switch(this._blendState) {
+            case 'init':
+                if (animationBlend != 0 && this._lastIndex != index) {
+                    this._blendState = 'blend'
+                    this._blendTime = 0;
+                    this._blendTarget = JSON.parse(JSON.stringify(this._lastTarget));
+                    this._lastIndex = index;
+//                    console.log('[3DObject] blendTarget capture')
+                    }
+                break;
+            case 'blend':
+                if (this._lastIndex != index) {
+                    this._blendState = 'blend'
+                    this._blendTime = 0;
+                    this._blendTarget = JSON.parse(JSON.stringify(this._lastTarget));
+                    this._lastIndex = index;
+//                    console.log('[3DObject] blendTarget capture')
+                    break;
+                }            
+                if (this._blendTime > animationBlend) {
+                    this._blendState = 'idle'
+                    break
+                }
+                this._blendTime += deltaTime
+                break;
+            case 'idle':
+                if (this._lastIndex != index) {
+                    this._blendState = 'blend'
+                    this._blendTime = 0;
+                    this._blendTarget = JSON.parse(JSON.stringify(this._lastTarget));
+                    this._lastIndex = index;
+//                    console.log('[3DObject] blendTarget capture')
+                }
+                break;
+            default:
+                console.warn('[3DObject] bad blend state:', this._blendState)       
+        }
+
+        this._lastTarget = [];
         
         for(let i = 0; i < anim.channels.length; i++)
         {
@@ -321,6 +367,24 @@ class GltfModel
             else if(target.path == "scale")
                 vec3.lerp(target.node.scale, otherValues.subarray(t0*3,t0*3+3), otherValues.subarray(t1*3,t1*3+3), t);
                 // vec3.lerp(otherValues.subarray(t0*3,t0*3+3), otherValues.subarray(t1*3,t1*3+3), t, target.node.scale);
+
+            // Blend to last animation if during blend
+            if (this._blendState == 'blend') {
+                const blend = this._blendTime == 0 ? 0 : this._blendTime/animationBlend;
+                // console.log('bt:', blend);
+                const blendTarget = this._blendTarget[i];
+                if (blendTarget != null) {
+                    if(target.path == "translation" && blendTarget.path == "translation")
+                        vec3.lerp(target.node.translation, blendTarget.node.translation, target.node.translation, blend);
+                    else if(target.path == "rotation" && blendTarget.path == "rotation")
+                        quat.slerp(target.node.rotation, blendTarget.node.rotation, target.node.rotation, blend);
+                    else if(target.path == "scale" && blendTarget.path == "scale")
+                        vec3.lerp(target.node.scale, blendTarget.node.scale, target.node.scale, blend);
+                }
+            }
+
+            // this._lastTarget.push(JSON.parse(JSON.stringify(target)));
+            if (animationBlend != 0) this._lastTarget.push(target);
         }
     }
 }
