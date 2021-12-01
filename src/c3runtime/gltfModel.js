@@ -33,6 +33,8 @@ class GltfModel
 
     render(renderer, x, y, z, tempQuad)
     {
+        let scale = this.inst.scale;
+        let zScale = this.inst.scale/this.inst.zScale
         let totalTriangles = 0;
         for (let ii=0; ii<this.inst.drawVerts.length; ii++)
         {
@@ -59,17 +61,16 @@ class GltfModel
                     tempQuad.set(0,0,1,0,0,1,0,1);
                 }
                 
-                let scale = this.inst.scale;
-                let zScale = this.inst.zScale
-                let x0 = x+(v[ind[i*3+0]*3+0]-center[0])*scale;
-                let y0 = y-(v[ind[i*3+0]*3+1]-center[1])*scale;
-                let z0 = z+(v[ind[i*3+0]*3+2]-center[2])*scale/zScale;
-                let x1 = x+(v[ind[i*3+1]*3+0]-center[0])*scale;
-                let y1 = y-(v[ind[i*3+1]*3+1]-center[1])*scale;
-                let z1 = z+(v[ind[i*3+1]*3+2]-center[2])*scale/zScale;
-                let x2 = x+(v[ind[i*3+2]*3+0]-center[0])*scale;
-                let y2 = y-(v[ind[i*3+2]*3+1]-center[1])*scale;
-                let z2 = z+(v[ind[i*3+2]*3+2]-center[2])*scale/zScale;
+                let i3 = i*3;
+                let x0 = x+(v[ind[i3+0]*3+0]);
+                let y0 = y-(v[ind[i3+0]*3+1]);
+                let z0 = z+(v[ind[i3+0]*3+2]);
+                let x1 = x+(v[ind[i3+1]*3+0]);
+                let y1 = y-(v[ind[i3+1]*3+1]);
+                let z1 = z+(v[ind[i3+1]*3+2]);
+                let x2 = x+(v[ind[i3+2]*3+0]);
+                let y2 = y-(v[ind[i3+2]*3+1]);
+                let z2 = z+(v[ind[i3+2]*3+2]);
 
                 renderer.Quad3D2(
                     x0, y0, z0,
@@ -97,6 +98,8 @@ class GltfModel
         const gltf = this.gltfData;
         let dummyMat4Out = mat4.create();
 
+        const scale = this.inst.scale;
+        const zScale = this.inst.scale/this.inst.zScale;
 
         if(parentMat != undefined)
             mat4.copy(node.matrix, parentMat);
@@ -129,7 +132,7 @@ class GltfModel
                 {
                     vec3.transformMat4(v, posData.subarray(j*3, j*3+3), node.matrix);
                     // mat4.multiplyVec3(node.matrix, posData.subarray(j*3, j*3+3), v);
-                    transformedVerts.push(v[0],v[1],v[2]);
+                    transformedVerts.push(v[0]*scale,v[1]*scale,v[2]*zScale);
                 }
                 
                 if(transformedVerts.length > 0)
@@ -166,6 +169,8 @@ class GltfModel
         // @ts-ignore
         const quat = globalThis.glMatrix3D.quat;
         const gltf = this.gltfData;
+        const scale = this.inst.scale;
+        const zScale = this.inst.scale/this.inst.zScale;
         
         let rotationQuat = quat.create();
         let parentMatrix = mat4.create();        
@@ -225,7 +230,7 @@ class GltfModel
                         // vec3.add(vsum, v);
                     }
                     
-                    transformedVerts.push(vsum[0],vsum[1],vsum[2]);
+                    transformedVerts.push(vsum[0]*scale,vsum[1]*scale,vsum[2]*zScale);
                 }
                 
                 if(transformedVerts.length > 0)
