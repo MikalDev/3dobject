@@ -30,6 +30,8 @@
             this.renderOnce = false;
             this.currentAnimationTime = 0;
             this.currentAnimationFrame = 0;
+            this.drawVertsCache = [];
+            this.drawUVsCache = [];
 
             if (properties)
             {

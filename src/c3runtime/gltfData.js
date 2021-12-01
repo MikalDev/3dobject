@@ -126,6 +126,7 @@ class GltfData
         }
         
         // scene
+        if (typeof gltf.scene === 'undefined') gltf.scene = 0;
         gltf.scene = gltf.scenes[gltf.scene];
         
         // scenes
