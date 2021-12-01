@@ -101,7 +101,7 @@
                         this.drawIndices = [];
                         this.gltf.getPolygons();
                         this.gltf.render(iRenderer, x, y, z, tempQuad);
-                        this.layoutView.Refresh();
+                        // this.layoutView.Refresh();
                     } else
                     {
                         return
