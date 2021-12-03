@@ -61,6 +61,7 @@
             {
                 this._inst.ApplyBlendMode(iRenderer);
                 iRenderer.SetTexture(texture);
+                iRenderer.SetColor(this._inst.GetColor());
 
                 if (!this.scale) this.scale = this._inst.GetPropertyValue('scale');
 
