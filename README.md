@@ -1,4 +1,4 @@
 # 3dobject
  3dObject plugin for Construct 3
 
-Copyright KindEyeGames LLC 2021
+Copyright Kind Eye Games LLC 2021
