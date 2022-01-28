@@ -201,10 +201,17 @@
                 {
                 "id": "z-scale",
                 "type": "number",
-                "initialValue": "6"
+                "initialValue": "1"
                 }
             ]
-          }                                  
+          },
+          {
+            "id": "update-bbox",
+            "scriptName": "UpdateBbox",
+            "highlight": false,
+            "params": [
+            ]
+          }                                         
       ],
       "expressions": [
         {

@@ -13,6 +13,9 @@
         },
 
         SetLocalCenter(x,y,z) {
+            const wi = this.GetWorldInfo();
+            wi.SetOriginX(x);
+            wi.SetOriginY(y);
             this.localCenter[0] = x;
             this.localCenter[1] = y;
             this.localCenter[2] = z;
@@ -75,5 +78,8 @@
         SetZScale(zScale) {
             this.zScale = zScale;
         },
+        UpdateBbox() {
+            this.UpdateBbox = true
+        }
     };
 }

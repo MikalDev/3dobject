@@ -13,8 +13,10 @@
             this.localCenter = [0,0,0]
             this.uid = inst.GetUID();
             this.layout = inst.GetLayout();
-            this.zScale = 6;
+            this.zScale = 1;
             this.debug = false;
+            this.minBB = [0,0,0]
+            this.maxBB = [0,0,0]
         }
 
         Release()
@@ -29,6 +31,8 @@
             this.scale = this._inst.GetPropertyValue('scale');
             this.zElevation =  this._inst.GetPropertyValue('z-elevation');
             this.debug = this._inst.GetPropertyValue('debug')
+            const wi = this._inst;
+            wi.SetOriginY(1);
         }
 
         OnPlacedInLayout()
@@ -103,6 +107,8 @@
                         this.gltf.getPolygons();
                         this.gltf.render(iRenderer, x, y, z, tempQuad);
                         // this.layoutView.Refresh();
+                        const wi = this._inst;
+                        wi.SetSize(this.maxBB[0]-this.minBB[0], this.maxBB[1]-this.minBB[1]);
                     } else
                     {
                         return

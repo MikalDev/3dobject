@@ -258,6 +258,13 @@
                       "desc": "Z scale."
                   }
               }
+          },
+          "update-bbox": {
+            "list-name": "Update bounding box",
+            "display-text": "Update bounding box",
+            "description": "Update bounding box based on current 3D animation.",
+            "params": {
+            }
           }
         },
         "expressions": {

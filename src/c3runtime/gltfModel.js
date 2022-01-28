@@ -121,6 +121,9 @@ class GltfModel
         if(node.mesh != undefined && node.skin == undefined)  
         {
             let transformedVerts = [];
+            this.inst.minBB = [Number.POSITIVE_INFINITY,Number.POSITIVE_INFINITY,Number.POSITIVE_INFINITY];
+            this.inst.maxBB = [Number.NEGATIVE_INFINITY,Number.NEGATIVE_INFINITY,Number.NEGATIVE_INFINITY];
+
             
             for(let i = 0; i < node.mesh.primitives.length; i++)
             {
@@ -132,9 +135,21 @@ class GltfModel
                 {
                     vec3.transformMat4(v, posData.subarray(j*3, j*3+3), node.matrix);
                     // mat4.multiplyVec3(node.matrix, posData.subarray(j*3, j*3+3), v);
-                    transformedVerts.push(v[0]*scale,v[1]*scale,v[2]*zScale);
+
+                    const x = v[0]*scale
+                    const y = v[1]*scale
+                    const z = v[2]*zScale
+
+                    if (this.inst.minBB[0] > x) this.inst.minBB[0] = x
+                    if (this.inst.minBB[1] > y) this.inst.minBB[1] = y
+                    if (this.inst.minBB[2] > z) this.inst.minBB[2] = z
+                    if (this.inst.maxBB[0] < x) this.inst.maxBB[0] = x
+                    if (this.inst.maxBB[1] < y) this.inst.maxBB[1] = y
+                    if (this.inst.maxBB[2] < z) this.inst.maxBB[2] = z
+
+                    transformedVerts.push(x,y,z);
                 }
-                
+
                 if(transformedVerts.length > 0)
                 {
                     if(gltf.pointBatch != undefined)
@@ -204,6 +219,8 @@ class GltfModel
             }
             
             let transformedVerts = [];
+            this.inst.minBB = [Number.POSITIVE_INFINITY,Number.POSITIVE_INFINITY,Number.POSITIVE_INFINITY];
+            this.inst.maxBB = [Number.NEGATIVE_INFINITY,Number.NEGATIVE_INFINITY,Number.NEGATIVE_INFINITY];
             
             for(let i = 0; i < node.mesh.primitives.length; i++)
             {
@@ -229,8 +246,19 @@ class GltfModel
                         vec3.add(vsum, vsum, v);
                         // vec3.add(vsum, v);
                     }
-                    
-                    transformedVerts.push(vsum[0]*scale,vsum[1]*scale,vsum[2]*zScale);
+
+                    const x = vsum[0]*scale
+                    const y = vsum[1]*scale
+                    const z = vsum[2]*zScale
+
+                    if (this.inst.minBB[0] > x) this.inst.minBB[0] = x
+                    if (this.inst.minBB[1] > y) this.inst.minBB[1] = y
+                    if (this.inst.minBB[2] > z) this.inst.minBB[2] = z
+                    if (this.inst.maxBB[0] < x) this.inst.maxBB[0] = x
+                    if (this.inst.maxBB[1] < y) this.inst.maxBB[1] = y
+                    if (this.inst.maxBB[2] < z) this.inst.maxBB[2] = z
+
+                    transformedVerts.push(x,y,z);
                 }
                 
                 if(transformedVerts.length > 0)

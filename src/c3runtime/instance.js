@@ -32,6 +32,9 @@
             this.currentAnimationFrame = 0;
             this.drawVertsCache = [];
             this.drawUVsCache = [];
+            this.minBB = [0,0,0]
+            this.maxBB = [0,0,0]
+            this.updateBbox = true
 
             if (properties)
             {
@@ -62,6 +65,8 @@
             }
             
             this._StartTicking();
+            const wi = this.GetWorldInfo();
+            wi.SetOriginY(1);
         }
 
         async doInit() {
@@ -175,7 +180,12 @@
             if (this.loaded && this.gtlfPath != 'path')
             {
                 this.gltf.render(renderer, x, y, z, tempQuad);
-                
+                wi.SetSize(this.maxBB[0]-this.minBB[0], this.maxBB[1]-this.minBB[1]);
+                if (this.updateBbox)
+                {
+                    wi.SetBboxChanged()
+                    this.updateBbox = false
+                }
             } else
             {
                 return
