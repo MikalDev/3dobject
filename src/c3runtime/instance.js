@@ -173,7 +173,12 @@
             // z elevation handles offset on draw
             const z = 0;
 
-            renderer.SetTexture(texture);
+            this.sdkType.LoadDynamicTextures(renderer, 0);
+            if (this.sdkType.texture) {
+                renderer.SetTexture(this.sdkType.texture);
+            } else {
+                renderer.SetTexture(texture);
+            }
 
             const tempQuad = C3.New(C3.Quad);
 

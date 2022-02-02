@@ -20,6 +20,24 @@
             this.initOwner = -1;
             this.loaded = false;
             this.gltfData = new globalThis.GltfData(this._runtime, this);
+            this.dynamicTexturesLoaded = false;
+        }
+
+        async LoadDynamicTextures(renderer, imageNumber)
+        {
+            if (this.dynamicTexturesLoaded === true || this.dynamicTexturesLoaded === null) return;
+
+            const gltf = this.gltfData.gltf;
+            if (!gltf.imageBitmap) {
+                this.dynamicTexturesLoaded = true;
+                return;
+            }
+            this.dynamicTexturesLoaded = null;
+            const width = gltf.imageBitmap[imageNumber].width;
+            const height = gltf.imageBitmap[imageNumber].height;
+            this.texture = renderer.CreateDynamicTexture(width, height);
+            await renderer.UpdateTexture(gltf.imageBitmap[imageNumber], this.texture)
+            this.dynamicTexturesLoaded = true;
         }
 
         LoadTextures(renderer)

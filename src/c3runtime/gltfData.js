@@ -30,10 +30,13 @@ class GltfData
 			gltfURI = await runtime.GetProjectFileByName(gltfPath);
 		}
 
+        const isBinary = gltfPath.includes("glb");
+
         let resultgltf
-       
+
+        debug = true
         try {
-		    resultgltf = await this.loadGLTF(gltfURI, isRuntime, debug);
+		    resultgltf = await this.loadGLTF(gltfURI, isRuntime, debug, isBinary);
         } catch( err ) {
             alert('Error loading GLTF:'+err)
         }
@@ -58,38 +61,88 @@ class GltfData
 	4. Adds some properties that are optionally in the gltf file.
 	5. Adds a few properties that are utilized when getting data from skinning.
 */
-    async loadGLTF(uri, isRuntime, debug)
+    async loadGLTF(uri, isRuntime, debug, isBinary)
     {
         let gltf;
+        let binBuffer;
 
 		if (isRuntime)
 		{
-			try
-			{
-				let response = await fetch(uri);
-                let text = await response.text();
-				gltf = JSON.parse(text);
-			} catch(err)
-			{
-				console.error('[3DShape], cannot fetch/parse gltf', uri);
-				return false;
-			}
+            if (isBinary) {
+                let response = await fetch(uri);
+                let buffer = await response.arrayBuffer()
+                console.log('[3DShape] loading gltf from blob, buffer', buffer);
+                // if (!buffer) return false;
+                const magic = new DataView(buffer.slice(0, 4)).getUint32(0, true);
+                const version = new DataView(buffer.slice(4, 8)).getUint32(0, true);
+                const jsonBufSize = new DataView(buffer.slice(12, 16)).getUint32(0, true);
+                console.log('magic, version, jsonBufSize', magic.toString(16), version, jsonBufSize);
+
+                let utf8decoder = new TextDecoder()
+                let jsonString = utf8decoder.decode(buffer.slice(20, 20 + jsonBufSize));
+            
+                gltf = JSON.parse(jsonString);
+                console.log('[3DShape] gltf', gltf);
+                binBuffer = buffer.slice(jsonBufSize + 28);
+            } else {
+                try
+                {
+                    let response = await fetch(uri);
+                    let text = await response.text();
+                    gltf = JSON.parse(text);
+                } catch(err)
+                {
+                    console.error('[3DShape], cannot fetch/parse gltf', uri);
+                    return false;
+                }
+            }
 		} else
 		{
-            try
-            {
-                let projectFile = await uri.GetBlob();
-                if (!projectFile) return false;
-                let text = await projectFile.text();
-                if (!text) return false;
-                gltf = JSON.parse(text);
-                if (debug) console.log('gltf buffers:', gltf.buffers);
-            } catch(err)
-            {
-                console.error('[3DShape], cannot fetch/parse gltf blob', uri);
-				return false;
+            if (isBinary) {
+                try
+                {
+                    let projectFile = await uri.GetBlob();
+                    if (!projectFile) return false;
+                    console.log('[3DShape] loading gltf from blob, projectFile', projectFile);
+                    let buffer = await projectFile.arrayBuffer();
+                    console.log('[3DShape] loading gltf from blob, buffer', buffer);
+                    // if (!buffer) return false;
+                    const magic = new DataView(buffer.slice(0, 4)).getUint32(0, true);
+                    const version = new DataView(buffer.slice(4, 8)).getUint32(0, true);
+                    const jsonBufSize = new DataView(buffer.slice(12, 16)).getUint32(0, true);
+                    console.log('magic, version, jsonBufSize', magic.toString(16), version, jsonBufSize);
+
+                    let utf8decoder = new TextDecoder()
+                    let jsonString = utf8decoder.decode(buffer.slice(20, 20 + jsonBufSize));
+                
+                    gltf = JSON.parse(jsonString);
+                    console.log('[3DShape] gltf', gltf);
+                    binBuffer = buffer.slice(jsonBufSize + 28);
+                } catch(err)
+                {
+                    console.error('[3DShape], cannot fetch/parse gltf blob', err);
+                    return false;
+                }
+
+            } else {
+                try
+                {
+                    let projectFile = await uri.GetBlob();
+                    if (!projectFile) return false;
+                    let text = await projectFile.text();
+                    if (!text) return false;
+                    gltf = JSON.parse(text);
+                    if (debug) console.log('gltf buffers:', gltf.buffers);
+                } catch(err)
+                {
+                    console.error('[3DShape], cannot fetch/parse gltf blob', uri);
+                    return false;
+                }
             }
 		}
+
+        if (debug) console.log('gltf:', gltf)
+
         if (!gltf) return false;
 
         if (debug) console.log('gltf:', gltf)
@@ -100,9 +153,13 @@ class GltfData
         // buffers
         for(let i = 0; i < gltf.buffers.length; i++)  // convert to typed arrays.
         {
-            let base64 = gltf.buffers[i].uri.slice(37)
-            // @ts-ignore
-            gltf.buffers[i] = Uint8Array.from(atob(base64), c=>c.charCodeAt(0)).buffer;
+            if (isBinary) {
+                gltf.buffers[i] = new Uint8Array(binBuffer).buffer;
+            } else {
+                let base64 = gltf.buffers[i].uri.slice(37)
+                // @ts-ignore
+                gltf.buffers[i] = Uint8Array.from(atob(base64), c=>c.charCodeAt(0)).buffer;
+            }
         }
         
         // accessors
@@ -122,6 +179,7 @@ class GltfData
             }
             let compcount = {"SCALAR":1, "VEC2":2, "VEC3":3, "VEC4":4, "MAT2":4, "MAT3":9, "MAT4":16}[a.type];
             let bufview = gltf.bufferViews[a.bufferView];
+            console.log('bufView:',i,bufview.byteOffset, compcount*a.count)
             a.data = new buftype(gltf.buffers[bufview.buffer], bufview.byteOffset, compcount*a.count);
         }
         
@@ -219,6 +277,25 @@ class GltfData
                     s.joints[j].boneMatrix = [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0];
                 }
             }
+        }
+
+        // images
+        for(let i = 0; i < gltf?.images?.length; i++) {
+            const image = gltf.images[i]
+            const bufview = gltf.bufferViews[image.bufferView]
+            let imageBuffer;
+            if (binBuffer) {
+                imageBuffer = binBuffer.slice(bufview.byteOffset, bufview.byteOffset + bufview.byteLength)
+            } else {
+                imageBuffer = gltf.buffers[0].slice(bufview.byteOffset, bufview.byteOffset + bufview.byteLength)
+            }
+            const blob = await new Blob( [ imageBuffer ] );
+            const url = await URL.createObjectURL( blob );
+            // console.log(blob, url, imageBuffer)
+            const imageBitmap = await createImageBitmap(blob);
+            // console.log('imageBitmap', imageBitmap);
+            if (!gltf.imageBitmap) gltf.imageBitmap = []
+            gltf.imageBitmap[i] = imageBitmap
         }
 
         return gltf
