@@ -56,7 +56,7 @@
             this.layoutView.Refresh();
         }
 
-        Draw(iRenderer, iDrawParams)
+        async Draw(iRenderer, iDrawParams)
         {
             if (!this.layoutView) this.layoutView = iDrawParams.GetLayoutView();
             const texture = this.GetTexture();
@@ -64,19 +64,25 @@
             if (texture)
             {
                 this._inst.ApplyBlendMode(iRenderer);
-                iRenderer.SetTexture(texture);
+                if (this.sdkType.texture) {
+                    iRenderer.SetTexture(this.sdkType.texture);
+                } else {                    
+                    iRenderer.SetTexture(texture);
+                }
                 iRenderer.SetColor(this._inst.GetColor());
 
                 if (!this.scale) this.scale = this._inst.GetPropertyValue('scale');
 
                 this.gltfPath = this._inst.GetPropertyValue('gtlf-path');
 
-                let sdkType = this.sdkType;
+                const sdkType = this.sdkType;
 
                 if (this.gltfPath != 'path' && sdkType.initOwner == -1)
                 {
                     sdkType.initOwner = this.uid; 
-                    sdkType.gltfData.load(this.gltfPath, false)
+                    await sdkType.gltfData.load(this.gltfPath, false)
+                    console.log('gtlfData', sdkType.gltfData)
+                    await sdkType.LoadDynamicTextures(iRenderer, 0);
                 }
 
                 if (!this.loaded)
