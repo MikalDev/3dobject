@@ -64,6 +64,10 @@
           "animation-blend": {
             "name": "Animation blend",
             "desc": "Animation blend time in seconds"
+          },
+          "instance-model": {
+            "name": "Instance model data",
+            "desc": "Model data per instance"
           }
         },
         "aceCategories": {
@@ -265,6 +269,17 @@
             "description": "Update bounding box based on current 3D animation.",
             "params": {
             }
+          },
+          "load-model": {
+            "list-name": "Load model",
+            "display-text": "Load model {0}",
+            "description": "Load model from path.",
+            "params": {
+                  "gltf-path": {
+                      "name": "Gltf path",
+                      "desc": "Gltf/glb projet file name or URL to Gltf/glb file (with URL, it will not show in editor.)"
+                  }
+              }
           }
         },
         "expressions": {

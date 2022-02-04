@@ -87,6 +87,10 @@
             {
                 "interpolatable": false
             }),
+            new SDK.PluginProperty("check", "instance-model", false,
+            {
+                "interpolatable": false
+            }),
             ]);
 
             this._info.AddFileDependency(

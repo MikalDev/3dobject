@@ -80,6 +80,12 @@
         },
         UpdateBbox() {
             this.UpdateBbox = true
+        },
+        LoadModel(gltfPath) {
+            this.sdkType.dynamicTexturesLoaded = false;
+            this.doingInit = false;
+            this.loaded = false;
+            this.sdkType.gltfData.load(gltfPath, true, this.debug);
         }
     };
 }

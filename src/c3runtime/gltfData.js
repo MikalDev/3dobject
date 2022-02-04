@@ -9,6 +9,7 @@ class GltfData
 		this._runtime = runtime;
         this._sdkType = sdkType;
         this.gltf = {};
+        this.dynamicTexturesLoaded = false;
 	}
 
     /*
@@ -26,11 +27,16 @@ class GltfData
 			gltfURI = await runtime.GetAssetManager().GetProjectFileUrl(gltfPath);
 		} else
 		{
+            if (gltfPath.includes('http')) {
+                // Can't load from URL in editor
+                return
+            } else {
 			// Get iProjectFiles
-			gltfURI = await runtime.GetProjectFileByName(gltfPath);
+            gltfURI = await runtime.GetProjectFileByName(gltfPath);
+            }
 		}
 
-        const isBinary = gltfPath.includes("glb");
+        const isBinary = gltfPath.includes(".glb") || gltfPath.includes("ext=glb");
 
         let resultgltf
 
@@ -44,7 +50,7 @@ class GltfData
         if (resultgltf)
 		{
 			if (debug) console.info('[3DShape] modelData:', resultgltf);
-			sdkType.loaded = true;
+			sdkType.dataLoaded = true;
 		} else
 		{
 			console.warn('[3DShape] Unable to load gltf files');
@@ -69,7 +75,7 @@ class GltfData
 		if (isRuntime)
 		{
             if (isBinary) {
-                let response = await fetch(uri);
+                let response = await fetch(uri, {mode:'cors'});
                 let buffer = await response.arrayBuffer()
                 console.log('[3DShape] loading gltf from blob, buffer', buffer);
                 // if (!buffer) return false;
@@ -175,12 +181,27 @@ class GltfData
                 case 5123: buftype=Uint16Array; break;
                 case 5125: buftype=Uint32Array; break;
                 case 5126: buftype=Float32Array; break;
-                default: console.log("error: gltf, unhandled componentType");
+                default: console.error("error: gltf, unhandled componentType");
             }
             let compcount = {"SCALAR":1, "VEC2":2, "VEC3":3, "VEC4":4, "MAT2":4, "MAT3":9, "MAT4":16}[a.type];
             let bufview = gltf.bufferViews[a.bufferView];
-            console.log('bufView:',i,bufview.byteOffset, compcount*a.count)
-            a.data = new buftype(gltf.buffers[bufview.buffer], bufview.byteOffset, compcount*a.count);
+            console.log('bufView:',i,bufview.byteOffset, compcount*a.count, a.byteOffset, compcount);
+            if ('byteStride' in bufview) {
+                console.info('[3DObject] gltf, bytestride', bufview.byteStride);
+                const stride = bufview.byteStride;
+                const offset = a.byteOffset;
+                const view = new DataView(gltf.buffers[bufview.buffer]);
+                console.info('view:', view);
+                a.data = new buftype(compcount*a.count);                
+                for(let j = 0; j < a.count; j++) {
+                    for(let k = 0; k < compcount; k++) {
+                        a.data[j*compcount+k] = view.getFloat32(bufview.byteOffset + stride*j + offset + k*4, true);
+                    }
+                }
+                console.info('data:',a.data);
+            } else {
+                a.data = new buftype(gltf.buffers[bufview.buffer], bufview.byteOffset, compcount*a.count);                    
+            }
         }
         
         // scene

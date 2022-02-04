@@ -211,6 +211,18 @@
             "highlight": false,
             "params": [
             ]
+          },
+          {
+            "id": "load-model",
+            "scriptName": "LoadModel",
+            "highlight": false,
+            "params": [
+              {
+                "id": "gltf-path",
+                "type": "string",
+                "initialValue": ""
+              }
+            ]
           }                                         
       ],
       "expressions": [

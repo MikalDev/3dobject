@@ -35,6 +35,9 @@
             this.minBB = [0,0,0]
             this.maxBB = [0,0,0]
             this.updateBbox = true
+            this.gltfData = null;
+            this.instanceModel = false
+            this.texture = [];
 
             if (properties)
             {
@@ -49,19 +52,28 @@
                 this.gtlfPath = properties[6];
                 this.debug = properties[7];
                 this.animationBlend = properties[8];
+                this.instanceModel = properties[9];
             }
 
             this.localCenter = [0,0,0]
 
-            // Initialization, once per group of instances
-            let sdkType = this.sdkType;
-            if (sdkType.initOwner == -1)
-            {
-                sdkType.initOwner = this.uid;
-                if (this.gtlfPath != 'path')
+            // Initialization, once per group of instances unless model data specified per instance
+            if (this.instanceModel) {
+                this.gltfData = new globalThis.GltfData(this.runtime, this);
+                if (this.gtlfPath != 'path' && this.gtlfPath != '')
                 {
-                    sdkType.gltfData.load(this.gtlfPath, true, this.debug);
+                    this.gltfData.load(this.gtlfPath, true, this.debug);
                 } 
+            } else {
+                let sdkType = this.sdkType;
+                if (sdkType.initOwner == -1)
+                {
+                    sdkType.initOwner = this.uid;
+                    if (this.gtlfPath != 'path' && this.gtlfPath != '')
+                    {
+                        sdkType.gltfData.load(this.gtlfPath, true, this.debug);
+                    } 
+                }
             }
             
             this._StartTicking();
@@ -70,7 +82,11 @@
         }
 
         async doInit() {
-            this.gltf = new globalThis.GltfModel(this._runtime, this.sdkType, this);
+            if (this.instanceModel) {
+                this.gltf = new globalThis.GltfModel(this._runtime, this, this);
+            } else {
+                this.gltf = new globalThis.GltfModel(this._runtime, this.sdkType, this);
+            }
             await this.gltf.init();
             this.loaded = true;
             this.drawVerts = [];
@@ -100,7 +116,7 @@
 
             if (!this.loaded)
             {
-                if (this.sdkType.loaded)
+                if (this.sdkType.dataLoaded || this.dataLoaded)
                 {
                     if (!this.doingInit) {
                         this.doingInit = true;
@@ -110,7 +126,7 @@
             }
 
             // Animate gltf model
-            if (this.gtlfPath !== 'path' && this.sdkType.loaded && this.loaded && this.animationPlay)
+            if (this.loaded && this.animationPlay)
             {
                 if (this.gltf.gltfData.hasOwnProperty('animations'))
                 {
@@ -173,9 +189,12 @@
             // z elevation handles offset on draw
             const z = 0;
 
-            this.sdkType.LoadDynamicTextures(renderer, 0);
-            if (this.sdkType.texture) {
-                renderer.SetTexture(this.sdkType.texture);
+            let textures = this.instanceModel ? this.texture : this.sdkType.texture
+            let gltfData = this.instanceModel ? this.gltfData : this.sdkType.gltfData
+            this.sdkType.LoadDynamicTextures(renderer, gltfData, textures);
+
+            if (textures) {
+                renderer.SetTexture(textures[0]);
             } else {
                 renderer.SetTexture(texture);
             }
