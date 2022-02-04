@@ -24,7 +24,7 @@
             this.texture = [];
         }
 
-        async LoadDynamicTextures(renderer, gltfData, textures)
+        async LoadDynamicTextures(renderer, gltfData, textures, instanceModel)
         {
             const gltf = gltfData.gltf;
 
@@ -42,7 +42,10 @@
                 textures.push(renderer.CreateDynamicTexture(width, height));
                 await renderer.UpdateTexture(gltf.imageBitmap[i], textures[i])
             }
-            this.dynamicTexturesLoaded = true;
+            gltfData.dynamicTexturesLoaded = true;
+            if (instanceModel) {
+                // gltfData = null
+            }
         }
 
         LoadTextures(renderer)

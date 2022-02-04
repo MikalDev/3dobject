@@ -6,11 +6,7 @@ class GltfModel
 	{
 		this._runtime = runtime;
         this._sdkType = sdkType;
-		// Deep copy
-		// For instance version, may only need points, others remain stable, full copy for now
-        // this.gltf = this.structuralClone(sdkType.gltfData.gltf);
 		this.inst = inst;
-        // this.gltfData = sdkType.gltfData.gltf;
         this.gltfData = {};
         this._blendState = 'init';
         this._lastTarget = [];
@@ -20,7 +16,15 @@ class GltfModel
     }
 
     async init() {
+		// Deep copy
+		// For instance version, may only need points, others remain stable, full copy for now
         this.gltfData = await this.structuralClone(this._sdkType.gltfData.gltf)
+        if ('buffers' in this.gltfData) {
+            this.gltfData.buffers = null
+        }
+        if ('imageBitmap' in this.gltfData) {
+            this.gltfData.imageBitmap = null
+        }
     }
     
     structuralClone(obj) {

@@ -17,6 +17,9 @@
             this.debug = false;
             this.minBB = [0,0,0]
             this.maxBB = [0,0,0]
+            this._runtime = sdkType._project;
+            this.dataLoaded = false;
+            this.texture = [];
         }
 
         Release()
@@ -30,7 +33,10 @@
             this.rotationOrder = this._inst.GetPropertyValue('rotation-order');
             this.scale = this._inst.GetPropertyValue('scale');
             this.zElevation =  this._inst.GetPropertyValue('z-elevation');
-            this.debug = this._inst.GetPropertyValue('debug')
+            this.debug = this._inst.GetPropertyValue('debug');
+            this.instanceModel = this._inst.GetPropertyValue('instance-model');
+            this.gltfData = null;
+
             const wi = this._inst;
             wi.SetOriginY(1);
         }
@@ -46,7 +52,11 @@
         }
 
         async doInit() {
-            this.gltf = new globalThis.GltfModel(this._runtime, this.sdkType, this);
+            if (this.instanceModel) {
+                this.gltf = new globalThis.GltfModel(this._runtime, this, this);
+            } else {
+                this.gltf = new globalThis.GltfModel(this._runtime, this.sdkType, this);
+            }
             await this.gltf.init();
             this.loaded = true;
             this.drawVerts = [];
@@ -65,7 +75,7 @@
             {
                 this._inst.ApplyBlendMode(iRenderer);
                 if (this.sdkType.texture) {
-                    iRenderer.SetTexture(this.sdkType.texture);
+                    // iRenderer.SetTexture(this.sdkType.texture);
                 } else {                    
                     iRenderer.SetTexture(texture);
                 }
@@ -77,17 +87,32 @@
 
                 const sdkType = this.sdkType;
 
-                if (this.gltfPath != 'path' && sdkType.initOwner == -1)
+                // Initialization, once per group of instances unless model data specified per instance
+                if (this.instanceModel && this.gltfData == null) {
+                    this.gltfData = new globalThis.GltfData(this._runtime, this);
+                }
+
+                let textures = this.instanceModel ? this.texture : this.sdkType.texture
+                let gltfData = this.instanceModel ? this.gltfData : this.sdkType.gltfData
+
+                if (this.instanceModel && this.gltfPath != 'path' && this.gltfPath != '' && !this.gltfDataLoad)
+                {
+                    this.gltfDataLoad = true;
+                    await this.gltfData.load(this.gltfPath, false, this.debug);
+                    await this.sdkType.LoadDynamicTextures(iRenderer, gltfData, textures, this.instanceModel)
+                    } 
+
+
+                if (!this.instanceModel && this.gltfPath != 'path' && sdkType.initOwner == -1)
                 {
                     sdkType.initOwner = this.uid; 
-                    await sdkType.gltfData.load(this.gltfPath, false)
-                    console.log('gtlfData', sdkType.gltfData)
-                    await sdkType.LoadDynamicTextures(iRenderer, 0);
-                }
+                    await sdkType.gltfData.load(this.gltfPath, false, this.debug);
+                    await this.sdkType.LoadDynamicTextures(iRenderer, gltfData, textures, this.instanceModel)
+                    }
 
                 if (!this.loaded)
                 {
-                    if (this.sdkType.loaded)
+                    if ((!this.instanceModel && this.sdkType.dataLoaded) || (this.instanceModel && this.dataLoaded))
                     {
                         if (!this.doingInit) {
                             this.doingInit = true;
@@ -96,8 +121,15 @@
                     }
                     this.layoutView.Refresh();        
                 }
+                
                 if (this.loaded)
                 {
+                    if (textures) {
+                        iRenderer.SetTexture(textures[0]);
+                    } else {
+                        iRenderer.SetTexture(texture);
+                    }
+                    
                     // 3D Model 
                     const x = this._inst.GetX();
                     const y = this._inst.GetY();
