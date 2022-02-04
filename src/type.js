@@ -13,17 +13,31 @@
             this.initOwner = -1;
             this.loaded = false;
             this.gltfData = new globalThis.GltfData(this._project, this);
-            this.texture = null;
+            this.texture = [];
+            this.dataLoaded = false;
         }
 
-        async LoadDynamicTextures(renderer, imageNumber)
+        async LoadDynamicTextures(renderer, gltfData, textures, instanceModel)
         {
-            const gltf = this.gltfData.gltf;
-            if (!gltf.imageBitmap) return
-            const width = gltf.imageBitmap[imageNumber].width;
-            const height = gltf.imageBitmap[imageNumber].height;
-            this.texture = renderer.CreateDynamicTexture(width, height);
-            await renderer.UpdateTexture(gltf.imageBitmap[imageNumber], this.texture)
+            const gltf = gltfData.gltf;
+
+            if (gltfData.dynamicTexturesLoaded === true || gltfData.dynamicTexturesLoaded === null) return;
+
+            if (!gltf.imageBitmap) {
+                gltfData.dynamicTexturesLoaded = true;
+                return;
+            }
+            gltfData.dynamicTexturesLoaded = null;
+            for (let i=0;i<gltf.imageBitmap.length;i++) {
+                const width = gltf.imageBitmap[i].width;
+                const height = gltf.imageBitmap[i].height;
+                textures.push(renderer.CreateDynamicTexture(width, height));
+                await renderer.UpdateTexture(gltf.imageBitmap[i], textures[i])
+            }
+            gltfData.dynamicTexturesLoaded = true;
+            if (instanceModel) {
+                // gltfData = null
+            }
         }
     };
 }

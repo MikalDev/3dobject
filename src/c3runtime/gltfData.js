@@ -49,11 +49,11 @@ class GltfData
 
         if (resultgltf)
 		{
-			if (debug) console.info('[3DShape] modelData:', resultgltf);
+			if (debug) console.info('[3DObject] modelData:', resultgltf);
 			sdkType.dataLoaded = true;
 		} else
 		{
-			console.warn('[3DShape] Unable to load gltf files');
+			console.warn('[3DObject] Unable to load gltf files');
 		}
 
         this.gltf = resultgltf;
@@ -77,18 +77,14 @@ class GltfData
             if (isBinary) {
                 let response = await fetch(uri, {mode:'cors'});
                 let buffer = await response.arrayBuffer()
-                console.log('[3DShape] loading gltf from blob, buffer', buffer);
-                // if (!buffer) return false;
                 const magic = new DataView(buffer.slice(0, 4)).getUint32(0, true);
                 const version = new DataView(buffer.slice(4, 8)).getUint32(0, true);
                 const jsonBufSize = new DataView(buffer.slice(12, 16)).getUint32(0, true);
-                console.log('magic, version, jsonBufSize', magic.toString(16), version, jsonBufSize);
 
                 let utf8decoder = new TextDecoder()
                 let jsonString = utf8decoder.decode(buffer.slice(20, 20 + jsonBufSize));
             
                 gltf = JSON.parse(jsonString);
-                console.log('[3DShape] gltf', gltf);
                 binBuffer = buffer.slice(jsonBufSize + 28);
             } else {
                 try
@@ -109,20 +105,16 @@ class GltfData
                 {
                     let projectFile = await uri.GetBlob();
                     if (!projectFile) return false;
-                    console.log('[3DShape] loading gltf from blob, projectFile', projectFile);
                     let buffer = await projectFile.arrayBuffer();
-                    console.log('[3DShape] loading gltf from blob, buffer', buffer);
                     // if (!buffer) return false;
                     const magic = new DataView(buffer.slice(0, 4)).getUint32(0, true);
                     const version = new DataView(buffer.slice(4, 8)).getUint32(0, true);
                     const jsonBufSize = new DataView(buffer.slice(12, 16)).getUint32(0, true);
-                    console.log('magic, version, jsonBufSize', magic.toString(16), version, jsonBufSize);
 
                     let utf8decoder = new TextDecoder()
                     let jsonString = utf8decoder.decode(buffer.slice(20, 20 + jsonBufSize));
                 
                     gltf = JSON.parse(jsonString);
-                    console.log('[3DShape] gltf', gltf);
                     binBuffer = buffer.slice(jsonBufSize + 28);
                 } catch(err)
                 {
@@ -138,7 +130,6 @@ class GltfData
                     let text = await projectFile.text();
                     if (!text) return false;
                     gltf = JSON.parse(text);
-                    if (debug) console.log('gltf buffers:', gltf.buffers);
                 } catch(err)
                 {
                     console.error('[3DShape], cannot fetch/parse gltf blob', uri);
@@ -147,11 +138,7 @@ class GltfData
             }
 		}
 
-        if (debug) console.log('gltf:', gltf)
-
         if (!gltf) return false;
-
-        if (debug) console.log('gltf:', gltf)
 
         //extra variable for a list of skinned meshes.  They need to be transformed after the rest.
         gltf.skinnedNodes = [];
@@ -185,20 +172,16 @@ class GltfData
             }
             let compcount = {"SCALAR":1, "VEC2":2, "VEC3":3, "VEC4":4, "MAT2":4, "MAT3":9, "MAT4":16}[a.type];
             let bufview = gltf.bufferViews[a.bufferView];
-            console.log('bufView:',i,bufview.byteOffset, compcount*a.count, a.byteOffset, compcount);
             if ('byteStride' in bufview) {
-                console.info('[3DObject] gltf, bytestride', bufview.byteStride);
                 const stride = bufview.byteStride;
                 const offset = a.byteOffset;
                 const view = new DataView(gltf.buffers[bufview.buffer]);
-                console.info('view:', view);
                 a.data = new buftype(compcount*a.count);                
                 for(let j = 0; j < a.count; j++) {
                     for(let k = 0; k < compcount; k++) {
                         a.data[j*compcount+k] = view.getFloat32(bufview.byteOffset + stride*j + offset + k*4, true);
                     }
                 }
-                console.info('data:',a.data);
             } else {
                 a.data = new buftype(gltf.buffers[bufview.buffer], bufview.byteOffset, compcount*a.count);                    
             }
@@ -312,9 +295,7 @@ class GltfData
             }
             const blob = await new Blob( [ imageBuffer ] );
             const url = await URL.createObjectURL( blob );
-            // console.log(blob, url, imageBuffer)
             const imageBitmap = await createImageBitmap(blob);
-            // console.log('imageBitmap', imageBitmap);
             if (!gltf.imageBitmap) gltf.imageBitmap = []
             gltf.imageBitmap[i] = imageBitmap
         }

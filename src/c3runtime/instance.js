@@ -38,6 +38,7 @@
             this.gltfData = null;
             this.instanceModel = false
             this.texture = [];
+            this.dataLoaded = false;
 
             if (properties)
             {
@@ -49,7 +50,7 @@
                 this.yAngle = properties[3];
                 this.zAngle = properties[4];
                 this.rotationOrder = properties[5];
-                this.gtlfPath = properties[6];
+                this.gltfPath = properties[6];
                 this.debug = properties[7];
                 this.animationBlend = properties[8];
                 this.instanceModel = properties[9];
@@ -60,18 +61,18 @@
             // Initialization, once per group of instances unless model data specified per instance
             if (this.instanceModel) {
                 this.gltfData = new globalThis.GltfData(this.runtime, this);
-                if (this.gtlfPath != 'path' && this.gtlfPath != '')
+                if (this.gltfPath != 'path' && this.gltfPath != '')
                 {
-                    this.gltfData.load(this.gtlfPath, true, this.debug);
+                    this.gltfData.load(this.gltfPath, true, this.debug);
                 } 
             } else {
                 let sdkType = this.sdkType;
                 if (sdkType.initOwner == -1)
                 {
                     sdkType.initOwner = this.uid;
-                    if (this.gtlfPath != 'path' && this.gtlfPath != '')
+                    if (this.gltfPath != 'path' && this.gltfPath != '')
                     {
-                        sdkType.gltfData.load(this.gtlfPath, true, this.debug);
+                        sdkType.gltfData.load(this.gltfPath, true, this.debug);
                     } 
                 }
             }
@@ -88,6 +89,7 @@
                 this.gltf = new globalThis.GltfModel(this._runtime, this.sdkType, this);
             }
             await this.gltf.init();
+            console.log('doInit', this.gltf);
             this.loaded = true;
             this.drawVerts = [];
             this.drawUVs = [];
@@ -116,7 +118,7 @@
 
             if (!this.loaded)
             {
-                if (this.sdkType.dataLoaded || this.dataLoaded)
+                if ((!this.instanceModel && this.sdkType.dataLoaded) || (this.instanceModel && this.dataLoaded))
                 {
                     if (!this.doingInit) {
                         this.doingInit = true;
@@ -191,7 +193,7 @@
 
             let textures = this.instanceModel ? this.texture : this.sdkType.texture
             let gltfData = this.instanceModel ? this.gltfData : this.sdkType.gltfData
-            this.sdkType.LoadDynamicTextures(renderer, gltfData, textures);
+            this.sdkType.LoadDynamicTextures(renderer, gltfData, textures, this.instanceModel);
 
             if (textures) {
                 renderer.SetTexture(textures[0]);
@@ -201,7 +203,7 @@
 
             const tempQuad = C3.New(C3.Quad);
 
-            if (this.loaded && this.gtlfPath != 'path')
+            if (this.loaded && this.gltfPath != 'path')
             {
                 this.gltf.render(renderer, x, y, z, tempQuad);
                 wi.SetSize(this.maxBB[0]-this.minBB[0], this.maxBB[1]-this.minBB[1]);
