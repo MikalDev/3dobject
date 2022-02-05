@@ -82,7 +82,7 @@
             this.UpdateBbox = true
         },
         LoadModel(gltfPath) {
-            if (!gltfPath || gltfPath == '') return
+            if (!gltfPath || gltfPath == '' || gltfPath == 'path') return
             if (this.instanceModel&&this.dataLoaded) return
             if (!this.instanceModel&&this.sdkType.dataLoaded) return
 
@@ -90,18 +90,16 @@
                 this.gltfData = new globalThis.GltfData(this.runtime, this);
                 this.gltfData.load(gltfPath, true, this.debug);
                 this.gltfData.dynamicTexturesLoaded = false;
+                this.doingInit = false;
+                this.loaded = false;    
             } else {
                 let sdkType = this.sdkType;
-                if (sdkType.initOwner == -1)
-                {
-                    sdkType.initOwner = this.uid;
-                    sdkType.gltfData.load(gltfPath, true, this.debug);
-                }
+                sdkType.initOwner = this.uid;
+                sdkType.gltfData.load(gltfPath, true, this.debug);
                 sdkType.gltfData.dynamicTexturesLoaded = false;
+                this.doingInit = false;
+                this.loaded = false;        
             }
-            this.doingInit = false;
-            this.loaded = false;
-
         }
-    };
+    }
 }

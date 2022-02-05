@@ -19,6 +19,7 @@ class GltfData
     */
     async load(gltfPath, isRuntime, debug)
     {
+        console.log('load gltf: ' + gltfPath);
         let runtime = this._runtime;
 		let sdkType = this._sdkType;
 
