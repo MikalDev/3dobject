@@ -31,20 +31,20 @@
             if (gltfData.dynamicTexturesLoaded === true || gltfData.dynamicTexturesLoaded === null) return;
 
             // const gltf = this.gltfData.gltf;
-            if (!gltf.imageBitmap) {
+            if (!gltfData.imageBitmap) {
                 gltfData.dynamicTexturesLoaded = true;
                 return;
             }
             gltfData.dynamicTexturesLoaded = null;
-            for (let i=0;i<gltf.imageBitmap.length;i++) {
-                const width = gltf.imageBitmap[i].width;
-                const height = gltf.imageBitmap[i].height;
+            for (let i=0;i<gltfData.imageBitmap.length;i++) {
+                const width = gltfData.imageBitmap[i].width;
+                const height = gltfData.imageBitmap[i].height;
                 textures.push(renderer.CreateDynamicTexture(width, height));
-                await renderer.UpdateTexture(gltf.imageBitmap[i], textures[i])
+                await renderer.UpdateTexture(gltfData.imageBitmap[i], textures[i])
             }
             gltfData.dynamicTexturesLoaded = true;
             if (instanceModel) {
-                // gltfData = null
+                gltfData = null
             }
         }
 

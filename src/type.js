@@ -19,20 +19,21 @@
 
         async LoadDynamicTextures(renderer, gltfData, textures, instanceModel)
         {
+            console.log("LoadDynamicTextures");
             const gltf = gltfData.gltf;
 
             if (gltfData.dynamicTexturesLoaded === true || gltfData.dynamicTexturesLoaded === null) return;
 
-            if (!gltf.imageBitmap) {
+            if (!gltfData.imageBitmap) {
                 gltfData.dynamicTexturesLoaded = true;
                 return;
             }
             gltfData.dynamicTexturesLoaded = null;
-            for (let i=0;i<gltf.imageBitmap.length;i++) {
-                const width = gltf.imageBitmap[i].width;
-                const height = gltf.imageBitmap[i].height;
+            for (let i=0;i<gltfData.imageBitmap.length;i++) {
+                const width = gltfData.imageBitmap[i].width;
+                const height = gltfData.imageBitmap[i].height;
                 textures.push(renderer.CreateDynamicTexture(width, height));
-                await renderer.UpdateTexture(gltf.imageBitmap[i], textures[i])
+                await renderer.UpdateTexture(gltfData.imageBitmap[i], textures[i])
             }
             gltfData.dynamicTexturesLoaded = true;
             if (instanceModel) {

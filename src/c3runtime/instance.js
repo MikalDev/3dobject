@@ -89,7 +89,6 @@
                 this.gltf = new globalThis.GltfModel(this._runtime, this.sdkType, this);
             }
             await this.gltf.init();
-            console.log('doInit', this.gltf);
             this.loaded = true;
             this.drawVerts = [];
             this.drawUVs = [];
