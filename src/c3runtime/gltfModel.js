@@ -18,6 +18,7 @@ class GltfModel
     async init() {
 		// Deep copy
 		// For instance version, may only need points, others remain stable, full copy for now
+        this._sdkType.gltfData.gltf.buffers = null;
         this.gltfData = await this.structuralClone(this._sdkType.gltfData.gltf)
         if ('buffers' in this.gltfData) {
             this.gltfData.buffers = null

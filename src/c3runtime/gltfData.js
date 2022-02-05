@@ -10,6 +10,7 @@ class GltfData
         this._sdkType = sdkType;
         this.gltf = {};
         this.dynamicTexturesLoaded = false;
+        this.imageBitmap = [];
 	}
 
     /*
@@ -295,12 +296,29 @@ class GltfData
             }
             const blob = await new Blob( [ imageBuffer ] );
             const url = await URL.createObjectURL( blob );
-            const imageBitmap = await createImageBitmap(blob);
-            if (!gltf.imageBitmap) gltf.imageBitmap = []
-            gltf.imageBitmap[i] = imageBitmap
+            let imageBitmap;
+            if (globalThis.createImageBitmap) {
+                imageBitmap = await createImageBitmap(blob);
+            } else {
+                imageBitmap = await this.createImageBitmap(blob);
+            }
+            this.imageBitmap.push(imageBitmap)
         }
 
         return gltf
+    }
+
+    /* Safari and Edge polyfill for createImageBitmap
+     * https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/createImageBitmap
+     */
+    async createImageBitmap(blob) {
+        return new Promise((resolve,reject) => {
+            let img = document.createElement('img');
+            img.addEventListener('load', function() {
+                resolve(this);
+            });
+            img.src = URL.createObjectURL(blob);
+        });
     }
 }
 
