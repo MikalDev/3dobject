@@ -13,6 +13,9 @@ class GltfModel
         this._blendTarget = [];
         this._blendTime = 0;
         this._lastIndex = 0;
+        this.drawMeshes = [];
+        this.drawMeshesIndex = 0;
+        this.currentColor = [-1,-1,-1,-1];
     }
 
     async init() {
@@ -36,54 +39,92 @@ class GltfModel
         });
     }
 
-    render(renderer, x, y, z, tempQuad)
+    render(renderer, x, y, z, tempQuad, whiteTexture, instanceC3Color)
     {
-        let scale = this.inst.scale;
-        let zScale = this.inst.scale/this.inst.zScale
         let totalTriangles = 0;
-        for (let ii=0; ii<this.inst.drawVerts.length; ii++)
+        let currentColor = [-1,-1,-1,-1];
+        let currentTexture = null;
+
+        const vec4 = globalThis.glMatrix3D.vec4;
+
+        const instanceColor = [instanceC3Color.getR(), instanceC3Color.getG(), instanceC3Color.getB(), instanceC3Color.getA()];
+
+
+        const finalColor = vec4.create();
+
+        // Default color
+        renderer.SetColor(instanceC3Color);
+
+        for (let j=0; j<= this.drawMeshesIndex; j++)
         {
-            let v = this.inst.drawVerts[ii];
-            let uv = this.inst.drawUVs[ii];
-            let ind = this.inst.drawIndices[ii];
+            const drawVerts = this.drawMeshes[j].drawVerts;
+            const drawUVs = this.drawMeshes[j].drawUVs;
+            const drawIndices = this.drawMeshes[j].drawIndices;
+            const material = this.drawMeshes[j].material;
+            const hasTexture = ('baseColorTexture' in material?.pbrMetallicRoughness)
 
-            let triangleCount = ind.length/3;
-            let center = [0,0,0];
-            totalTriangles += triangleCount;
-            for(let i = 0; i<triangleCount; i++)
-            {
-                if (true)
-                {
-                    tempQuad.set(
-                    uv[ind[i*3+0]*2+0], uv[ind[i*3+0]*2+1],
-                    uv[ind[i*3+1]*2+0], uv[ind[i*3+1]*2+1],
-                    uv[ind[i*3+2]*2+0], uv[ind[i*3+2]*2+1],
-                    uv[ind[i*3+2]*2+0], uv[ind[i*3+2]*2+1]
-                    );
-                } else
-                {
-                    // Set face to color if possible
-                    tempQuad.set(0,0,1,0,0,1,0,1);
+            const color = material?.pbrMetallicRoughness?.baseColorFactor;
+            if (color?.length == 4) {
+                vec4.multiply(finalColor, instanceColor, color);
+                if (vec4.equals(finalColor, currentColor) == false) {
+                    vec4.copy(currentColor, finalColor);
+                    renderer.SetColorRgba(finalColor[0], finalColor[1], finalColor[2], finalColor[3]);
                 }
-                
-                let i3 = i*3;
-                let x0 = x+(v[ind[i3+0]*3+0]);
-                let y0 = y-(v[ind[i3+0]*3+1]);
-                let z0 = z+(v[ind[i3+0]*3+2]);
-                let x1 = x+(v[ind[i3+1]*3+0]);
-                let y1 = y-(v[ind[i3+1]*3+1]);
-                let z1 = z+(v[ind[i3+1]*3+2]);
-                let x2 = x+(v[ind[i3+2]*3+0]);
-                let y2 = y-(v[ind[i3+2]*3+1]);
-                let z2 = z+(v[ind[i3+2]*3+2]);
+            }
 
-                renderer.Quad3D2(
-                    x0, y0, z0,
-                    x1, y1, z1,
-                    x2, y2, z2,
-                    x2, y2, z2,
-                    tempQuad
-                    );
+            // XXX update for each texture, don't change if already set
+            if (!hasTexture) {
+                if (currentTexture != whiteTexture) {
+                    renderer.SetTexture(whiteTexture);
+                    currentTexture = whiteTexture;
+                }
+            }
+
+
+            for (let ii=0; ii<drawVerts.length; ii++)
+            {
+                let v = drawVerts[ii];
+                let uv = drawUVs[ii];
+                let ind = drawIndices[ii];
+
+                let triangleCount = ind.length/3;
+                let center = [0,0,0];
+                totalTriangles += triangleCount;
+                for(let i = 0; i<triangleCount; i++)
+                {
+                    if (hasTexture)
+                    {
+                        tempQuad.set(
+                        uv[ind[i*3+0]*2+0], uv[ind[i*3+0]*2+1],
+                        uv[ind[i*3+1]*2+0], uv[ind[i*3+1]*2+1],
+                        uv[ind[i*3+2]*2+0], uv[ind[i*3+2]*2+1],
+                        uv[ind[i*3+2]*2+0], uv[ind[i*3+2]*2+1]
+                        );
+                    } else
+                    {
+                        // Set face to color if possible
+                        tempQuad.set(0,0,1,0,0,1,0,1);
+                    }
+                    
+                    let i3 = i*3;
+                    let x0 = x+(v[ind[i3+0]*3+0]);
+                    let y0 = y-(v[ind[i3+0]*3+1]);
+                    let z0 = z+(v[ind[i3+0]*3+2]);
+                    let x1 = x+(v[ind[i3+1]*3+0]);
+                    let y1 = y-(v[ind[i3+1]*3+1]);
+                    let z1 = z+(v[ind[i3+1]*3+2]);
+                    let x2 = x+(v[ind[i3+2]*3+0]);
+                    let y2 = y-(v[ind[i3+2]*3+1]);
+                    let z2 = z+(v[ind[i3+2]*3+2]);
+
+                    renderer.Quad3D2(
+                        x0, y0, z0,
+                        x1, y1, z1,
+                        x2, y2, z2,
+                        x2, y2, z2,
+                        tempQuad
+                        );
+                }
             }
         }
     }
@@ -125,15 +166,34 @@ class GltfModel
         // unskinned meshes
         if(node.mesh != undefined && node.skin == undefined)  
         {
-            let transformedVerts = [];
             this.inst.minBB = [Number.POSITIVE_INFINITY,Number.POSITIVE_INFINITY,Number.POSITIVE_INFINITY];
             this.inst.maxBB = [Number.NEGATIVE_INFINITY,Number.NEGATIVE_INFINITY,Number.NEGATIVE_INFINITY];
 
             
             for(let i = 0; i < node.mesh.primitives.length; i++)
             {
+                let transformedVerts = [];
                 transformedVerts.length = 0;
                 let posData = node.mesh.primitives[i].attributes.POSITION.data;
+                
+                this.drawMeshesIndex++;
+                if (!this.drawMeshes[this.drawMeshesIndex]) {
+                    this.drawMeshes.push(
+                        {
+                            drawVerts: [],
+                            drawUVs: [],
+                            drawIndices: [],
+                            material: node.mesh.primitives[i]?.material
+                        }
+                    )
+                }
+
+                const drawVerts = this.drawMeshes[this.drawMeshesIndex].drawVerts;
+                const drawUVs = this.drawMeshes[this.drawMeshesIndex].drawUVs;
+                const drawIndices = this.drawMeshes[this.drawMeshesIndex].drawIndices;
+
+                // reset draw array for new values
+                drawVerts.length = 0;
                 
                 let v = [0,0,0];			
                 for(let j=0; j<posData.length/3; j++)
@@ -166,9 +226,12 @@ class GltfModel
                         // this.inst.drawVerts = this.inst.drawVerts.concat(transformedVerts);
                         // this.inst.drawUVs = this.inst.drawUVs.concat(Array.from(node.mesh.primitives[i].attributes.TEXCOORD_0.data));
                         // this.inst.drawIndices = this.inst.drawIndices.concat(node.mesh.primitives[i].indices.data);
-                        this.inst.drawVerts.push(transformedVerts);
-                        this.inst.drawUVs.push(Array.from(node.mesh.primitives[i].attributes.TEXCOORD_0.data));
-                        this.inst.drawIndices.push(Array.from(node.mesh.primitives[i].indices.data));
+                        drawVerts.push(transformedVerts);
+                        // Only need to set once
+                        if (drawUVs.length === 0 && node.mesh.primitives[i].attributes?.TEXCOORD_0?.data?.length > 0) {
+                            drawUVs.push(Array.from(node.mesh.primitives[i].attributes?.TEXCOORD_0?.data));
+                        }
+                        if (drawIndices.length === 0) drawIndices.push(Array.from(node.mesh.primitives[i].indices.data));
                     }
                 }
             }
@@ -191,6 +254,7 @@ class GltfModel
         const gltf = this.gltfData;
         const scale = this.inst.scale;
         const zScale = this.inst.scale/this.inst.zScale;
+        this.drawMeshesIndex = -1;
         
         let rotationQuat = quat.create();
         let parentMatrix = mat4.create();        
@@ -209,6 +273,7 @@ class GltfModel
         quat.fromEuler(rotationQuat, this.inst.xAngle, this.inst.yAngle, this.inst.zAngle);
         for(let ii = 0; ii < gltf.skinnedNodes.length; ii++)
         {
+            
             let node = gltf.skinnedNodes[ii];
             node.rotation = rotationQuat;
             
@@ -223,18 +288,36 @@ class GltfModel
                 // mat4.multiply(joint.boneMatrix, joint.invBindMatrix);
             }
             
-            let transformedVerts = [];
             this.inst.minBB = [Number.POSITIVE_INFINITY,Number.POSITIVE_INFINITY,Number.POSITIVE_INFINITY];
             this.inst.maxBB = [Number.NEGATIVE_INFINITY,Number.NEGATIVE_INFINITY,Number.NEGATIVE_INFINITY];
             
             for(let i = 0; i < node.mesh.primitives.length; i++)
             {
-                transformedVerts.length=0;
+                this.drawMeshesIndex++;
+                if (!this.drawMeshes[this.drawMeshesIndex]) {
+                    this.drawMeshes.push(
+                        {
+                            drawVerts: [],
+                            drawUVs: [],
+                            drawIndices: [],
+                            material: node.mesh.primitives[i]?.material
+                        }
+                    )
+                }
+
+                const drawVerts = this.drawMeshes[this.drawMeshesIndex].drawVerts;
+                const drawUVs = this.drawMeshes[this.drawMeshesIndex].drawUVs;
+                const drawIndices = this.drawMeshes[this.drawMeshesIndex].drawIndices;
+
+                // reset draw array for new values
+                drawVerts.length = 0;
+                let transformedVerts = [];
+
                 
                 let posData = node.mesh.primitives[i].attributes.POSITION.data;
                 let weights = node.mesh.primitives[i].attributes.WEIGHTS_0.data;
                 let joints = node.mesh.primitives[i].attributes.JOINTS_0.data;
-                
+                                
                 for(let j=0; j<posData.length/3; j++)
                 {
                     let w = weights.subarray(j*4, j*4+4);
@@ -273,9 +356,12 @@ class GltfModel
                             gltf.pointBatch.push(transformedVerts[ii]);
                     else
                     {
-                        this.inst.drawVerts.push(transformedVerts);
-                        this.inst.drawUVs.push(Array.from(node.mesh.primitives[i].attributes.TEXCOORD_0.data));
-                        this.inst.drawIndices.push(Array.from(node.mesh.primitives[i].indices.data));
+                        drawVerts.push(transformedVerts);
+                        // Only need to set once
+                        if (drawUVs.length === 0 && node.mesh.primitives[i].attributes?.TEXCOORD_0?.data?.length > 0) {
+                            drawUVs.push(Array.from(node.mesh.primitives[i].attributes?.TEXCOORD_0?.data));
+                        } 
+                        if (drawIndices.length === 0) drawIndices.push(Array.from(node.mesh.primitives[i].indices.data));
                     }
                 }
             }
@@ -315,7 +401,6 @@ class GltfModel
                     this._blendTime = 0;
                     this._blendTarget = JSON.parse(JSON.stringify(this._lastTarget));
                     this._lastIndex = index;
-//                    console.log('[3DObject] blendTarget capture')
                     }
                 break;
             case 'blend':
@@ -324,7 +409,6 @@ class GltfModel
                     this._blendTime = 0;
                     this._blendTarget = JSON.parse(JSON.stringify(this._lastTarget));
                     this._lastIndex = index;
-//                    console.log('[3DObject] blendTarget capture')
                     break;
                 }            
                 if (this._blendTime > animationBlend) {
@@ -339,7 +423,6 @@ class GltfModel
                     this._blendTime = 0;
                     this._blendTarget = JSON.parse(JSON.stringify(this._lastTarget));
                     this._lastIndex = index;
-//                    console.log('[3DObject] blendTarget capture')
                 }
                 break;
             default:
@@ -409,7 +492,6 @@ class GltfModel
             // Blend to last animation if during blend
             if (this._blendState == 'blend') {
                 const blend = this._blendTime == 0 ? 0 : this._blendTime/animationBlend;
-                // console.log('bt:', blend);
                 const blendTarget = this._blendTarget[i];
                 if (blendTarget != null) {
                     if(target.path == "translation" && blendTarget.path == "translation")

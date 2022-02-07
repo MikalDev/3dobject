@@ -17,12 +17,16 @@
             this.dataLoaded = false;
         }
 
-        async LoadDynamicTextures(renderer, gltfData, textures, instanceModel)
+        async LoadDynamicTextures(renderer, gltfData, textures, whiteTextureOwner, instanceModel)
         {
-            console.log("LoadDynamicTextures");
-            const gltf = gltfData.gltf;
 
             if (gltfData.dynamicTexturesLoaded === true || gltfData.dynamicTexturesLoaded === null) return;
+
+            // White texture for solid color
+            const width = gltfData.whiteImageBitmap.width;
+            const height = gltfData.whiteImageBitmap.height;
+            whiteTextureOwner.whiteTexture = renderer.CreateDynamicTexture(width, height);
+            await renderer.UpdateTexture(gltfData.whiteImageBitmap, whiteTextureOwner.whiteTexture);
 
             if (!gltfData.imageBitmap) {
                 gltfData.dynamicTexturesLoaded = true;
@@ -32,7 +36,11 @@
             for (let i=0;i<gltfData.imageBitmap.length;i++) {
                 const width = gltfData.imageBitmap[i].width;
                 const height = gltfData.imageBitmap[i].height;
-                textures.push(renderer.CreateDynamicTexture(width, height));
+
+                // XXX Once we know how to get sampling in editor, set this to the correct value
+                let options =  {}
+
+                textures.push(renderer.CreateDynamicTexture(width, height, options));
                 await renderer.UpdateTexture(gltfData.imageBitmap[i], textures[i])
             }
             gltfData.dynamicTexturesLoaded = true;

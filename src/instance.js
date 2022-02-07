@@ -79,6 +79,7 @@
                 } else {                    
                     iRenderer.SetTexture(texture);
                 }
+
                 iRenderer.SetColor(this._inst.GetColor());
 
                 if (!this.scale) this.scale = this._inst.GetPropertyValue('scale');
@@ -93,22 +94,23 @@
                 }
 
                 let textures = this.instanceModel ? this.texture : this.sdkType.texture
+                let whiteTextureOwner = this.instanceModel ? this : this.sdkType
                 let gltfData = this.instanceModel ? this.gltfData : this.sdkType.gltfData
-
+    
                 if (this.instanceModel && this.gltfPath != 'path' && this.gltfPath != '' && !this.gltfDataLoad)
                 {
                     this.gltfDataLoad = true;
-                    await this.gltfData.load(this.gltfPath, false, this.debug);
-                    await this.sdkType.LoadDynamicTextures(iRenderer, gltfData, textures, this.instanceModel)
-                    } 
+                    await gltfData.load(this.gltfPath, false, this.debug);
+                    await this.sdkType.LoadDynamicTextures(iRenderer, gltfData, textures, whiteTextureOwner, this.instanceModel);
+                } 
 
 
-                if (!this.instanceModel && this.gltfPath != 'path' && sdkType.initOwner == -1)
+                if (!this.instanceModel && this.gltfPath != 'path' && this.gltfPath != '' && sdkType.initOwner == -1)
                 {
                     sdkType.initOwner = this.uid; 
-                    await sdkType.gltfData.load(this.gltfPath, false, this.debug);
-                    await this.sdkType.LoadDynamicTextures(iRenderer, gltfData, textures, this.instanceModel)
-                    }
+                    await gltfData.load(this.gltfPath, false, this.debug);
+                    await this.sdkType.LoadDynamicTextures(iRenderer, gltfData, textures, whiteTextureOwner, this.instanceModel);
+                }
 
                 if (!this.loaded)
                 {
@@ -124,7 +126,7 @@
                 
                 if (this.loaded)
                 {
-                    if (textures) {
+                    if (textures?.length > 0) {
                         iRenderer.SetTexture(textures[0]);
                     } else {
                         iRenderer.SetTexture(texture);
@@ -143,7 +145,7 @@
                         this.drawUVs = [];
                         this.drawIndices = [];
                         this.gltf.getPolygons();
-                        this.gltf.render(iRenderer, x, y, z, tempQuad);
+                        this.gltf.render(iRenderer, x, y, z, tempQuad, whiteTextureOwner.whiteTexture, this._inst.GetColor());
                         // this.layoutView.Refresh();
                         const wi = this._inst;
                         wi.SetSize(this.maxBB[0]-this.minBB[0], this.maxBB[1]-this.minBB[1]);

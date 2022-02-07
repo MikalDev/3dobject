@@ -25,7 +25,7 @@
             this.animationPlay = true;
             this.animationFinished = false;
             this.animationName = '';
-            this.zScale = 6;
+            this.zScale = 1;
             this.debug = false;
             this.renderOnce = false;
             this.currentAnimationTime = 0;
@@ -39,6 +39,8 @@
             this.instanceModel = false
             this.texture = [];
             this.dataLoaded = false;
+            this.drawMeshes = [];
+            this.whiteTexture = null;
 
             if (properties)
             {
@@ -191,10 +193,11 @@
             const z = 0;
 
             let textures = this.instanceModel ? this.texture : this.sdkType.texture
+            let whiteTextureOwner = this.instanceModel ? this : this.sdkType
             let gltfData = this.instanceModel ? this.gltfData : this.sdkType.gltfData
-            this.sdkType.LoadDynamicTextures(renderer, gltfData, textures, this.instanceModel);
+            this.sdkType.LoadDynamicTextures(renderer, gltfData, textures, whiteTextureOwner, this.instanceModel);
 
-            if (textures) {
+            if (textures?.length > 0) {
                 renderer.SetTexture(textures[0]);
             } else {
                 renderer.SetTexture(texture);
@@ -204,7 +207,7 @@
 
             if (this.loaded && this.gltfPath != 'path')
             {
-                this.gltf.render(renderer, x, y, z, tempQuad);
+                this.gltf.render(renderer, x, y, z, tempQuad, whiteTextureOwner.whiteTexture, wi.GetPremultipliedColor());
                 wi.SetSize(this.maxBB[0]-this.minBB[0], this.maxBB[1]-this.minBB[1]);
                 if (this.updateBbox)
                 {

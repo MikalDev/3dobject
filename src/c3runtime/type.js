@@ -24,11 +24,18 @@
             this.texture = [];
         }
 
-        async LoadDynamicTextures(renderer, gltfData, textures, instanceModel)
+        async LoadDynamicTextures(renderer, gltfData, textures, whiteTextureOwner, instanceModel)
         {
             const gltf = gltfData.gltf;
 
             if (gltfData.dynamicTexturesLoaded === true || gltfData.dynamicTexturesLoaded === null) return;
+
+
+            // White texture for solid color
+            const width = gltfData.whiteImageBitmap.width;
+            const height = gltfData.whiteImageBitmap.height;
+            whiteTextureOwner.whiteTexture = renderer.CreateDynamicTexture(width, height);
+            await renderer.UpdateTexture(gltfData.whiteImageBitmap, whiteTextureOwner.whiteTexture);
 
             // const gltf = this.gltfData.gltf;
             if (!gltfData.imageBitmap) {
@@ -39,9 +46,13 @@
             for (let i=0;i<gltfData.imageBitmap.length;i++) {
                 const width = gltfData.imageBitmap[i].width;
                 const height = gltfData.imageBitmap[i].height;
-                textures.push(renderer.CreateDynamicTexture(width, height));
+                const sampling = this._runtime.GetSampling();
+                let options =  { sampling: sampling }
+    
+                textures.push(renderer.CreateDynamicTexture(width, height, options));
                 await renderer.UpdateTexture(gltfData.imageBitmap[i], textures[i])
             }
+
             gltfData.dynamicTexturesLoaded = true;
             if (instanceModel) {
                 gltfData = null

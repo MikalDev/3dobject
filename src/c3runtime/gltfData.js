@@ -19,7 +19,6 @@ class GltfData
     */
     async load(gltfPath, isRuntime, debug)
     {
-        console.log('load gltf: ' + gltfPath);
         let runtime = this._runtime;
 		let sdkType = this._sdkType;
 
@@ -260,7 +259,7 @@ class GltfData
                 let p = m.primitives[j];
                 
                 p.indices = gltf.accessors[p.indices];
-                if (p.material) p.material = gltf.materials[p.material];
+                if (typeof(p.material) != 'undefined' && p.material != null) p.material = gltf.materials[p.material];
                 
                 Object.keys(p.attributes).forEach(function(key){
                     p.attributes[key] = gltf.accessors[p.attributes[key]];
@@ -304,6 +303,16 @@ class GltfData
                 imageBitmap = await this.createImageBitmap(blob);
             }
             this.imageBitmap.push(imageBitmap)
+        }
+
+        // Create white texture
+        const whiteData = new Uint8ClampedArray(16*16*4); // 4 for RBGA
+        whiteData.fill(255);
+        const whiteImageData = new ImageData(whiteData, 16,16);
+        if (globalThis.createImageBitmap) {
+            this.whiteImageBitmap = await createImageBitmap(whiteImageData);
+        } else {
+            this.whiteImageBitmap = await this.createImageBitmap(whiteImageData);
         }
 
         return gltf
