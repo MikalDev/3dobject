@@ -65,6 +65,7 @@ class GltfModel
 
             const color = material?.pbrMetallicRoughness?.baseColorFactor;
             if (color?.length == 4) {
+                color[3] = 1;
                 vec4.multiply(finalColor, instanceColor, color);
                 if (vec4.equals(finalColor, currentColor) == false) {
                     vec4.copy(currentColor, finalColor);
