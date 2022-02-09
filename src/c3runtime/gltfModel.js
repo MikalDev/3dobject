@@ -39,7 +39,7 @@ class GltfModel
         });
     }
 
-    render(renderer, x, y, z, tempQuad, whiteTexture, instanceC3Color)
+    render(renderer, x, y, z, tempQuad, whiteTexture, instanceC3Color, textures)
     {
         let totalTriangles = 0;
         let currentColor = [-1,-1,-1,-1];
@@ -61,10 +61,15 @@ class GltfModel
             const drawUVs = this.drawMeshes[j].drawUVs;
             const drawIndices = this.drawMeshes[j].drawIndices;
             const material = this.drawMeshes[j].material;
-            const hasTexture = ('baseColorTexture' in material?.pbrMetallicRoughness)
+            const hasTexture = ('baseColorTexture' in material.pbrMetallicRoughness)
 
-            const color = material?.pbrMetallicRoughness?.baseColorFactor;
-            if (color?.length == 4) {
+            let color;
+            if ('pbrMetallicRoughness' in material && 'baseColorFactor' in material.pbrMetallicRoughness) {
+                color = material.pbrMetallicRoughness.baseColorFactor
+            } else {
+                color = null;
+            }
+            if (color && color.length == 4) {
                 color[3] = 1;
                 vec4.multiply(finalColor, instanceColor, color);
                 if (vec4.equals(finalColor, currentColor) == false) {
@@ -73,11 +78,16 @@ class GltfModel
                 }
             }
 
-            // XXX update for each texture, don't change if already set
             if (!hasTexture) {
                 if (currentTexture != whiteTexture) {
                     renderer.SetTexture(whiteTexture);
                     currentTexture = whiteTexture;
+                }
+            } else {
+                const texture = textures[material.pbrMetallicRoughness.baseColorTexture.index];
+                if (texture != currentTexture) {
+                    renderer.SetTexture(texture);
+                    currentTexture = texture;
                 }
             }
 
@@ -179,12 +189,18 @@ class GltfModel
                 
                 this.drawMeshesIndex++;
                 if (!this.drawMeshes[this.drawMeshesIndex]) {
+                    let material;
+                    if ('material' in node.mesh.primitives[i]) {
+                        material = node.mesh.primitives[i].material;
+                    } else {
+                        material = null;
+                    }
                     this.drawMeshes.push(
                         {
                             drawVerts: [],
                             drawUVs: [],
                             drawIndices: [],
-                            material: node.mesh.primitives[i]?.material
+                            material: material
                         }
                     )
                 }
@@ -229,8 +245,8 @@ class GltfModel
                         // this.inst.drawIndices = this.inst.drawIndices.concat(node.mesh.primitives[i].indices.data);
                         drawVerts.push(transformedVerts);
                         // Only need to set once
-                        if (drawUVs.length === 0 && node.mesh.primitives[i].attributes?.TEXCOORD_0?.data?.length > 0) {
-                            drawUVs.push(Array.from(node.mesh.primitives[i].attributes?.TEXCOORD_0?.data));
+                        if (drawUVs.length === 0 && ('TEXCOORD_0' in node.mesh.primitives[i].attributes)) {
+                            drawUVs.push(Array.from(node.mesh.primitives[i].attributes.TEXCOORD_0.data));
                         }
                         if (drawIndices.length === 0) drawIndices.push(Array.from(node.mesh.primitives[i].indices.data));
                     }
@@ -270,7 +286,7 @@ class GltfModel
         }
         
         //todo loop over skinned nodes.
-        //todo: limit to ones in scene?
+        //todo: limit to ones in scene
         quat.fromEuler(rotationQuat, this.inst.xAngle, this.inst.yAngle, this.inst.zAngle);
         for(let ii = 0; ii < gltf.skinnedNodes.length; ii++)
         {
@@ -296,12 +312,18 @@ class GltfModel
             {
                 this.drawMeshesIndex++;
                 if (!this.drawMeshes[this.drawMeshesIndex]) {
+                    let material;
+                    if ('material' in node.mesh.primitives[i]) {
+                        material = node.mesh.primitives[i].material;
+                    } else {
+                        material = null;
+                    }
                     this.drawMeshes.push(
                         {
                             drawVerts: [],
                             drawUVs: [],
                             drawIndices: [],
-                            material: node.mesh.primitives[i]?.material
+                            material: material
                         }
                     )
                 }
@@ -359,8 +381,8 @@ class GltfModel
                     {
                         drawVerts.push(transformedVerts);
                         // Only need to set once
-                        if (drawUVs.length === 0 && node.mesh.primitives[i].attributes?.TEXCOORD_0?.data?.length > 0) {
-                            drawUVs.push(Array.from(node.mesh.primitives[i].attributes?.TEXCOORD_0?.data));
+                        if (drawUVs.length === 0 && ('TEXCOORD_0' in node.mesh.primitives[i].attributes)) {
+                            drawUVs.push(Array.from(node.mesh.primitives[i].attributes.TEXCOORD_0.data));
                         } 
                         if (drawIndices.length === 0) drawIndices.push(Array.from(node.mesh.primitives[i].indices.data));
                     }

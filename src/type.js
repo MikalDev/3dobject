@@ -27,6 +27,7 @@
             const height = gltfData.whiteImageBitmap.height;
             whiteTextureOwner.whiteTexture = renderer.CreateDynamicTexture(width, height);
             await renderer.UpdateTexture(gltfData.whiteImageBitmap, whiteTextureOwner.whiteTexture);
+            gltfData.whiteImageBitmap.close();
 
             if (!gltfData.imageBitmap) {
                 gltfData.dynamicTexturesLoaded = true;
@@ -42,6 +43,7 @@
 
                 textures.push(renderer.CreateDynamicTexture(width, height, options));
                 await renderer.UpdateTexture(gltfData.imageBitmap[i], textures[i])
+                gltfData.imageBitmap[i].close();
             }
             gltfData.dynamicTexturesLoaded = true;
             if (instanceModel) {

@@ -197,9 +197,7 @@
             let gltfData = this.instanceModel ? this.gltfData : this.sdkType.gltfData
             this.sdkType.LoadDynamicTextures(renderer, gltfData, textures, whiteTextureOwner, this.instanceModel);
 
-            if (textures?.length > 0) {
-                renderer.SetTexture(textures[0]);
-            } else {
+            if (textures.length === 0) {
                 renderer.SetTexture(texture);
             }
 
@@ -207,7 +205,7 @@
 
             if (this.loaded && this.gltfPath != 'path')
             {
-                this.gltf.render(renderer, x, y, z, tempQuad, whiteTextureOwner.whiteTexture, wi.GetPremultipliedColor());
+                this.gltf.render(renderer, x, y, z, tempQuad, whiteTextureOwner.whiteTexture, wi.GetPremultipliedColor(), textures);
                 wi.SetSize(this.maxBB[0]-this.minBB[0], this.maxBB[1]-this.minBB[1]);
                 if (this.updateBbox)
                 {
@@ -252,6 +250,52 @@
         SetPropertyValueByIndex(index, value)
         {
             //set property value here
+        }
+
+        Release()
+        {
+            if (this.texture.length > 0) {
+                for (let i = 0; i < this.texture.length; i++) {
+                    this.renderer.DeleteTexture(this.texture[i]);
+                }
+            }
+            if (this.whiteTexture) {
+                this.renderer.DeleteTexture(this.whiteTexture);
+            }
+            this.sdkType = null;
+            this.runtime = null;
+            this.renderer = null;
+            this.uid = null;
+            this.loaded = null;
+            this.animationTime = null;
+            this.drawVerts = null;
+            this.drawUVs = null;
+            this.drawIndices = null;
+            this.animationIndex = null;
+            this.animationSpeed = null;
+            this.animationLastTime = null;
+            this.animationRate = null;
+            this.animationLoop = null;
+            this.animationPlay = null;
+            this.animationFinished = null;
+            this.animationName = null;
+            this.zScale = null;
+            this.debug = null;
+            this.renderOnce = null;
+            this.currentAnimationTime = null;
+            this.currentAnimationFrame = null;
+            this.drawVertsCache = null;
+            this.drawUVsCache = null;
+            this.minBB = null;
+            this.maxBB = null;
+            this.updateBbox = null;
+            this.gltfData = null;
+            this.instanceModel = null;
+            this.texture = null;
+            this.dataLoaded = null;
+            this.drawMeshes = null;
+            this.whiteTexture = null;
+            super.Release();
         }
     };
 }

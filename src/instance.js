@@ -126,9 +126,7 @@
                 
                 if (this.loaded)
                 {
-                    if (textures?.length > 0) {
-                        iRenderer.SetTexture(textures[0]);
-                    } else {
+                    if (textures.length === 0) {
                         iRenderer.SetTexture(texture);
                     }
                     
@@ -145,7 +143,7 @@
                         this.drawUVs = [];
                         this.drawIndices = [];
                         this.gltf.getPolygons();
-                        this.gltf.render(iRenderer, x, y, z, tempQuad, whiteTextureOwner.whiteTexture, this._inst.GetColor());
+                        this.gltf.render(iRenderer, x, y, z, tempQuad, whiteTextureOwner.whiteTexture, this._inst.GetColor(), textures);
                         // this.layoutView.Refresh();
                         const wi = this._inst;
                         wi.SetSize(this.maxBB[0]-this.minBB[0], this.maxBB[1]-this.minBB[1]);
