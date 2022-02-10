@@ -276,17 +276,32 @@ class GltfModel
         let rotationQuat = quat.create();
         let parentMatrix = mat4.create();        
 
-        quat.fromEuler(rotationQuat, 360-this.inst.xAngle, 360-this.inst.yAngle, 360-this.inst.zAngle);
-        mat4.fromRotationTranslation(parentMatrix, rotationQuat, [0,0,0])
+        let aAngle = this.inst.xAngle;
+        let bAngle = this.inst.yAngle;
+        let cAngle = this.inst.zAngle;
+
+        if (aAngle === -90 && bAngle != 0) {
+            aAngle = this.inst.xAngle;
+            bAngle = this.inst.zAngle;
+            cAngle = this.inst.yAngle;
+        }
+
+        quat.fromEuler(rotationQuat, 360-aAngle, 360-bAngle, 360-cAngle);
+        // mat4.fromRotationTranslation(parentMatrix, rotationQuat, [0,0,0])
+
+        parentMatrix = null
+        // quat.fromEuler(rotationQuat, this.inst.xAngle, this.inst.yAngle, this.inst.zAngle);
 
         // update all scene matrixes.
         for(let i = 0; i < gltf.scene.nodes.length; i++)
         {
+            gltf.scene.nodes[i].rotation = rotationQuat;
             this.transformNode(gltf.scene.nodes[i], parentMatrix);
         }
         
         //todo loop over skinned nodes.
         //todo: limit to ones in scene
+        // XXX quat.fromEuler(rotationQuat, this.inst.xAngle, this.inst.yAngle, this.inst.zAngle);
         quat.fromEuler(rotationQuat, this.inst.xAngle, this.inst.yAngle, this.inst.zAngle);
         for(let ii = 0; ii < gltf.skinnedNodes.length; ii++)
         {

@@ -36,7 +36,7 @@
             const height = gltfData.whiteImageBitmap.height;
             whiteTextureOwner.whiteTexture = renderer.CreateDynamicTexture(width, height);
             await renderer.UpdateTexture(gltfData.whiteImageBitmap, whiteTextureOwner.whiteTexture);
-            gltfData.whiteImageBitmap.close();
+            if (typeof gltfData.whiteImageBitmap.close === "function") gltfData.whiteImageBitmap.close();
 
             if (!gltfData.imageBitmap || gltfData.imageBitmap.length === 0) {
                 gltfData.dynamicTexturesLoaded = true;
@@ -51,7 +51,7 @@
     
                 textures.push(renderer.CreateDynamicTexture(width, height, options));
                 await renderer.UpdateTexture(gltfData.imageBitmap[i], textures[i])
-                gltfData.imageBitmap[i].close();
+                if (typeof gltfData.imageBitmap[i].close === "function") gltfData.imageBitmap[i].close();
             }
 
             gltfData.dynamicTexturesLoaded = true;
