@@ -38,7 +38,7 @@
             for (const imageName in gltfData.imageBitmap) {
                 const width = gltfData.imageBitmap[imageName].width;
                 const height = gltfData.imageBitmap[imageName].height;
-                let options =  {};
+                let options =  { wrapX: 'repeat', wrapY: 'repeat',};
     
                 textures[imageName] = renderer.CreateDynamicTexture(width, height, options);
                 await renderer.UpdateTexture(gltfData.imageBitmap[imageName], textures[imageName]);

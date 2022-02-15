@@ -48,7 +48,9 @@
                 const width = gltfData.imageBitmap[imageName].width;
                 const height = gltfData.imageBitmap[imageName].height;
                 const sampling = this._runtime.GetSampling();
-                let options =  { sampling: sampling }
+                let options =  { sampling: sampling,
+                    wrapX: 'repeat',
+                    wrapY: 'repeat',};
     
                 textures[imageName] = renderer.CreateDynamicTexture(width, height, options);
                 await renderer.UpdateTexture(gltfData.imageBitmap[imageName], textures[imageName]);
