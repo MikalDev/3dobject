@@ -223,7 +223,78 @@
                 "initialValue": ""
               }
             ]
-          }                                         
+          },
+          {
+            "id": "load-material",
+            "isAsync": true,
+            "scriptName": "LoadMaterial",
+            "highlight": false,
+            "params": [
+              {
+                "id": "material-path",
+                "type": "string",
+                "initialValue": ""
+              },
+              {
+                "id": "material-name",
+                "type": "string",
+                "initialValue": ""
+              }
+            ]
+          },
+          {
+            "id": "set-mesh-material",
+            "scriptName": "SetMeshMaterial",
+            "highlight": false,
+            "params": [
+              {
+                "id": "mesh-name",
+                "type": "string",
+                "initialValue": ""
+              },
+              {
+                "id": "material-name",
+                "type": "string",
+                "initialValue": ""
+              }
+            ]
+          },
+          {
+            "id": "delete-material",
+            "scriptName": "DeleteMaterial",
+            "highlight": false,
+            "params": [
+              {
+                "id": "material-name",
+                "type": "string",
+                "initialValue": ""
+              }
+            ]
+          },
+          {
+            "id": "set-origin-x",
+            "scriptName": "SetOriginX",
+            "highlight": false,
+            "params": [
+                {
+                "id": "origin-x",
+                "type": "number",
+                "initialValue": "0.5"
+                }
+            ]
+          },
+          {
+            "id": "set-origin-y",
+            "scriptName": "SetOriginY",
+            "highlight": false,
+            "params": [
+                {
+                "id": "origin-y",
+                "type": "number",
+                "initialValue": "1"
+                }
+            ]
+          }
       ],
       "expressions": [
         {

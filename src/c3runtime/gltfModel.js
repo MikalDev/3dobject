@@ -16,6 +16,7 @@ class GltfModel
         this.drawMeshes = [];
         this.drawMeshesIndex = 0;
         this.currentColor = [-1,-1,-1,-1];
+        this.nodeMeshMap = {};
     }
 
     async init() {
@@ -28,6 +29,12 @@ class GltfModel
         }
         if ('imageBitmap' in this.gltfData) {
             this.gltfData.imageBitmap = null
+        }
+        // Create node mesh map
+        for (let ii=0; ii<this.gltfData.nodes.length; ii++) {
+            let node = this.gltfData.nodes[ii];
+            if (!node.mesh) continue;
+            this.nodeMeshMap[node.name] = node.mesh.name;
         }
     }
     
@@ -61,10 +68,10 @@ class GltfModel
             const drawUVs = this.drawMeshes[j].drawUVs;
             const drawIndices = this.drawMeshes[j].drawIndices;
             const material = this.drawMeshes[j].material;
-            const hasTexture = ('baseColorTexture' in material.pbrMetallicRoughness)
+            const hasTexture = (material && 'pbrMetallicRoughness' in material && 'baseColorTexture' in material.pbrMetallicRoughness);
 
             let color;
-            if ('pbrMetallicRoughness' in material && 'baseColorFactor' in material.pbrMetallicRoughness) {
+            if (material && 'pbrMetallicRoughness' in material && 'baseColorFactor' in material.pbrMetallicRoughness) {
                 color = material.pbrMetallicRoughness.baseColorFactor
             } else {
                 color = null;
@@ -84,7 +91,9 @@ class GltfModel
                     currentTexture = whiteTexture;
                 }
             } else {
-                const texture = textures[material.pbrMetallicRoughness.baseColorTexture.index];
+                const texture = textures[material.name];
+                // If texture is not loaded, skip rendering
+                if (!texture) continue;
                 if (texture != currentTexture) {
                     renderer.SetTexture(texture);
                     currentTexture = texture;
@@ -177,9 +186,6 @@ class GltfModel
         // unskinned meshes
         if(node.mesh != undefined && node.skin == undefined)  
         {
-            this.inst.minBB = [Number.POSITIVE_INFINITY,Number.POSITIVE_INFINITY,Number.POSITIVE_INFINITY];
-            this.inst.maxBB = [Number.NEGATIVE_INFINITY,Number.NEGATIVE_INFINITY,Number.NEGATIVE_INFINITY];
-
             
             for(let i = 0; i < node.mesh.primitives.length; i++)
             {
@@ -189,20 +195,20 @@ class GltfModel
                 
                 this.drawMeshesIndex++;
                 if (!this.drawMeshes[this.drawMeshesIndex]) {
-                    let material;
-                    if ('material' in node.mesh.primitives[i]) {
-                        material = node.mesh.primitives[i].material;
-                    } else {
-                        material = null;
-                    }
                     this.drawMeshes.push(
                         {
                             drawVerts: [],
                             drawUVs: [],
                             drawIndices: [],
-                            material: material
                         }
                     )
+                }
+
+                // Update material each time, in case an ACE changes it
+                if ('material' in node.mesh.primitives[i]) {
+                    this.drawMeshes[this.drawMeshesIndex].material = node.mesh.primitives[i].material;
+                } else {
+                    this.drawMeshes[this.drawMeshesIndex].material = null;
                 }
 
                 const drawVerts = this.drawMeshes[this.drawMeshesIndex].drawVerts;
@@ -287,15 +293,14 @@ class GltfModel
         }
 
         quat.fromEuler(rotationQuat, 360-aAngle, 360-bAngle, 360-cAngle);
-        // mat4.fromRotationTranslation(parentMatrix, rotationQuat, [0,0,0])
+        mat4.fromRotationTranslation(parentMatrix, rotationQuat, [0,0,0])
 
-        parentMatrix = null
-        // quat.fromEuler(rotationQuat, this.inst.xAngle, this.inst.yAngle, this.inst.zAngle);
+        this.inst.minBB = [0,0,0];
+        this.inst.maxBB = [0,0,0];
 
         // update all scene matrixes.
         for(let i = 0; i < gltf.scene.nodes.length; i++)
         {
-            gltf.scene.nodes[i].rotation = rotationQuat;
             this.transformNode(gltf.scene.nodes[i], parentMatrix);
         }
         
@@ -320,27 +325,24 @@ class GltfModel
                 // mat4.multiply(joint.boneMatrix, joint.invBindMatrix);
             }
             
-            this.inst.minBB = [Number.POSITIVE_INFINITY,Number.POSITIVE_INFINITY,Number.POSITIVE_INFINITY];
-            this.inst.maxBB = [Number.NEGATIVE_INFINITY,Number.NEGATIVE_INFINITY,Number.NEGATIVE_INFINITY];
-            
             for(let i = 0; i < node.mesh.primitives.length; i++)
             {
                 this.drawMeshesIndex++;
                 if (!this.drawMeshes[this.drawMeshesIndex]) {
-                    let material;
-                    if ('material' in node.mesh.primitives[i]) {
-                        material = node.mesh.primitives[i].material;
-                    } else {
-                        material = null;
-                    }
                     this.drawMeshes.push(
                         {
                             drawVerts: [],
                             drawUVs: [],
                             drawIndices: [],
-                            material: material
                         }
                     )
+                }
+
+                // Update material each time, in case an ACE changes it
+                if ('material' in node.mesh.primitives[i]) {
+                    this.drawMeshes[this.drawMeshesIndex].material = node.mesh.primitives[i].material;
+                } else {
+                    this.drawMeshes[this.drawMeshesIndex].material = null;
                 }
 
                 const drawVerts = this.drawMeshes[this.drawMeshesIndex].drawVerts;

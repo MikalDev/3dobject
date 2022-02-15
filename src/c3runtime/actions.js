@@ -1,5 +1,7 @@
+// @ts-check
 "use strict";
 {
+    //@ts-ignorets-ignore
     self.C3.Plugins.Mikal_3DObject.Acts = {
         Rotate(angle, axis) {
             if (!this.loaded) return;
@@ -87,6 +89,7 @@
             if (!this.instanceModel&&this.sdkType.dataLoaded) return
 
             if (this.instanceModel) {
+                //@ts-ignore
                 this.gltfData = new globalThis.GltfData(this.runtime, this);
                 this.gltfData.load(gltfPath, true, this.debug);
                 this.gltfData.dynamicTexturesLoaded = false;
@@ -100,6 +103,96 @@
                 this.doingInit = false;
                 this.loaded = false;        
             }
+        },
+
+        async LoadMaterial(materialPath, materialName) {
+            if (!this.loaded) return;
+            const textures = this.instanceModel ? this.texture : this.sdkType.texture;
+
+            if (!textures) return;
+            if (!materialName || !materialPath) return;
+            const renderer = this.renderer;
+            let textureURI = await this.runtime.GetAssetManager().GetProjectFileUrl(materialPath);
+            let response = await fetch(textureURI, {mode:'cors'});
+            let blob = await response.blob()
+            let imageBitmap;
+            if (globalThis.createImageBitmap) {
+                imageBitmap = await createImageBitmap(blob);
+            } else {
+                //@ts-ignore
+                imageBitmap = await globalThis.GltfData.createImageBitmap(blob);
+            }
+
+            if (!imageBitmap) return;
+
+            const width = imageBitmap.width;
+            const height = imageBitmap.height;
+            const sampling = this.runtime.GetSampling();
+            let options =  { sampling: sampling }
+            
+            textures[materialName] = renderer.CreateDynamicTexture(width, height, options);
+            await renderer.UpdateTexture(imageBitmap, textures[materialName]);
+            if (typeof imageBitmap.close === "function") imageBitmap.close();
+        },
+
+        SetMeshMaterial(nodeName, materialName) {
+            const meshName = this.gltf.nodeMeshMap[nodeName];
+            if (!meshName) return;
+
+            const textures = this.instanceModel ? this.texture : this.sdkType.texture;
+            if (!(materialName in textures)) return
+            for(let ii = 0; ii < this.gltf.gltfData.skinnedNodes.length; ii++) {
+                let node = this.gltf.gltfData.skinnedNodes[ii];
+                let mesh = node.mesh;
+                if (!mesh) continue;
+                if (mesh.name === meshName) {
+                    for (let jj = 0; jj < mesh.primitives.length; jj++) {
+                        let primitive = mesh.primitives[jj];
+                        if ('material' in primitive) primitive.material =
+                            {   name: materialName,
+                                pbrMetallicRoughness:{baseColorTexture:{index:0}}};
+                    }
+                }
+            }
+
+            for(let ii = 0; ii < this.gltf.gltfData.nodes.length; ii++) {
+                let node = this.gltf.gltfData.nodes[ii];
+                let mesh = node.mesh;
+                if (!mesh) continue;
+                if (mesh.name === meshName) {
+                    for (let jj = 0; jj < mesh.primitives.length; jj++) {
+                        let primitive = mesh.primitives[jj];
+                        if (!primitive) continue;
+                        if ('material' in primitive) primitive.material = 
+                        {   name: materialName,
+                            pbrMetallicRoughness:{baseColorTexture:{index:0}}};
+                        }
+                }
+            }
+
+        },
+
+        DeleteMaterial(materialName) {
+            const renderer = this.renderer
+            const textures = this.instanceModel ? this.texture : this.sdkType.texture;
+            if ((materialName in textures)) {
+                renderer.DeleteTexture(textures[materialName]);
+                delete textures[materialName];
+            }
+        },
+
+        SetOriginX(xOrigin) {
+            const wi = this.GetWorldInfo();
+            wi.SetOriginX(xOrigin);
+            wi.SetBboxChanged();
+        },
+
+        SetOriginY(yOrigin) {
+            const wi = this.GetWorldInfo();
+            wi.SetOriginY(yOrigin);
+            wi.SetBboxChanged();
+            console.log(wi.GetOriginY(), wi.GetOriginX());
         }
+
     }
 }

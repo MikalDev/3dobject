@@ -37,7 +37,7 @@
             this.updateBbox = true
             this.gltfData = null;
             this.instanceModel = false
-            this.texture = [];
+            this.texture = {};
             this.dataLoaded = false;
             this.drawMeshes = [];
             this.whiteTexture = null;
@@ -286,8 +286,8 @@
             this.currentAnimationFrame = null;
             this.drawVertsCache = null;
             this.drawUVsCache = null;
-            this.minBB = null;
-            this.maxBB = null;
+            this.minBB = [0,0,0];
+            this.maxBB = [0,0,0];
             this.updateBbox = null;
             this.gltfData = null;
             this.instanceModel = null;

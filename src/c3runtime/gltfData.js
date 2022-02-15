@@ -10,7 +10,7 @@ class GltfData
         this._sdkType = sdkType;
         this.gltf = {};
         this.dynamicTexturesLoaded = false;
-        this.imageBitmap = [];
+        this.imageBitmap = {};
 	}
 
     /*
@@ -259,7 +259,13 @@ class GltfData
                 let p = m.primitives[j];
                 
                 p.indices = gltf.accessors[p.indices];
-                if (typeof(p.material) != 'undefined' && p.material != null) p.material = gltf.materials[p.material];
+                if (typeof(p.material) != 'undefined' && p.material != null) {
+                    p.material = gltf.materials[p.material];
+                    // Set material name to image name
+                    // Might be redundant, but it's a good idea to have a name for the material
+                    const hasTexture = ('baseColorTexture' in p.material.pbrMetallicRoughness)
+                    if (hasTexture) p.material.name = gltf.images[p.material.pbrMetallicRoughness.baseColorTexture.index].name;
+                }
                 
                 Object.keys(p.attributes).forEach(function(key){
                     p.attributes[key] = gltf.accessors[p.attributes[key]];
@@ -304,7 +310,8 @@ class GltfData
                 } else {
                     imageBitmap = await this.createImageBitmap(blob);
                 }
-                this.imageBitmap.push(imageBitmap)
+                // this.imageBitmap.push(imageBitmap)
+                this.imageBitmap[image.name] = imageBitmap;
             }
         }   
         // Create white texture

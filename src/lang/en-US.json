@@ -280,7 +280,71 @@
                       "desc": "Gltf/glb projet file name or URL to Gltf/glb file (with URL, it will not show in editor.)"
                   }
               }
+          },
+          "load-material": {
+            "list-name": "Load material",
+            "display-text": "Load material {1} from {0}",
+            "description": "Load material from path.",
+            "params": {
+              "material-path": {
+                  "name": "Material path",
+                  "desc": "Material project filename or URL to material (png) file."
+              },
+              "material-name": {
+                "name": "Material name",
+                "desc": "Material name."
+              }
+            }
+          },
+          "set-mesh-material": {
+            "list-name": "Set mesh material",
+            "display-text": "Set mesh {0} to material {1}",
+            "description": "Set mesh to use a material.",
+            "params": {
+              "mesh-name": {
+                  "name": "Mesh name",
+                  "desc": "Mesh name to set material to."
+              },
+              "material-name": {
+                "name": "Material name",
+                "desc": "Material name (exisitng or the material name used when loading."
+              }
+            }
+          },
+          "delete-material": {
+            "list-name": "Delete material",
+            "display-text": "Delete material {0}",
+            "description": "Delete material (remove from GPU memory.)",
+            "params": {
+              "material-name": {
+                "name": "Material name",
+                "desc": "Material name (exisitng or the material name used when loading."
+              }
+            }
+          },
+          "set-origin-x": {
+            "list-name": "Set origin x",
+            "display-text": "Set origin x to {0}",
+            "description": "Set origin x. (Normalized value, 0.5 is center.)",
+            "params": {
+                  "origin-x": {
+                      "name": "X origin",
+                      "desc": "X origin (Normalized value, 0.5 is center.)"
+                  }
+              }
+          },
+          "set-origin-y": {
+            "list-name": "Set origin y",
+            "display-text": "Set origin y to {0}",
+            "description": "Set origin y. (Normalized value, 0.5 is center.)",
+            "params": {
+                  "origin-y": {
+                      "name": "Y origin",
+                      "desc": "Y origin (Normalized value, 0.5 is center.)"
+                  }
+              }
           }
+
         },
         "expressions": {
           "animation-names": {
@@ -316,6 +380,16 @@
           "z-scale": {
             "description": "Get z scale.",
             "translated-name": "ZScale",
+            "params": {}
+          },
+          "mesh-names": {
+            "description": "Get mesh names.",
+            "translated-name": "MeshNames",
+            "params": {}
+          },
+          "material-names": {
+            "description": "Get material names.",
+            "translated-name": "MaterialNames",
             "params": {}
           }
         }

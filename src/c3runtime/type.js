@@ -21,7 +21,7 @@
             this.dataLoaded = false;
             this.gltfData = new globalThis.GltfData(this._runtime, this);
             this.dynamicTexturesLoaded = false;
-            this.texture = [];
+            this.texture = {};
         }
 
         async LoadDynamicTextures(renderer, gltfData, textures, whiteTextureOwner, instanceModel)
@@ -38,20 +38,21 @@
             await renderer.UpdateTexture(gltfData.whiteImageBitmap, whiteTextureOwner.whiteTexture);
             if (typeof gltfData.whiteImageBitmap.close === "function") gltfData.whiteImageBitmap.close();
 
-            if (!gltfData.imageBitmap || gltfData.imageBitmap.length === 0) {
+            if (!gltfData.imageBitmap || Object.keys(gltfData.imageBitmap).length === 0) {
                 gltfData.dynamicTexturesLoaded = true;
                 return;
             }
+
             gltfData.dynamicTexturesLoaded = null;
-            for (let i=0;i<gltfData.imageBitmap.length;i++) {
-                const width = gltfData.imageBitmap[i].width;
-                const height = gltfData.imageBitmap[i].height;
+            for (const imageName in gltfData.imageBitmap) {
+                const width = gltfData.imageBitmap[imageName].width;
+                const height = gltfData.imageBitmap[imageName].height;
                 const sampling = this._runtime.GetSampling();
                 let options =  { sampling: sampling }
     
-                textures.push(renderer.CreateDynamicTexture(width, height, options));
-                await renderer.UpdateTexture(gltfData.imageBitmap[i], textures[i])
-                if (typeof gltfData.imageBitmap[i].close === "function") gltfData.imageBitmap[i].close();
+                textures[imageName] = renderer.CreateDynamicTexture(width, height, options);
+                await renderer.UpdateTexture(gltfData.imageBitmap[imageName], textures[imageName]);
+                if (typeof gltfData.imageBitmap[imageName].close === "function") gltfData.imageBitmap[imageName].close();
             }
 
             gltfData.dynamicTexturesLoaded = true;

@@ -13,7 +13,7 @@
             this.initOwner = -1;
             this.loaded = false;
             this.gltfData = new globalThis.GltfData(this._project, this);
-            this.texture = [];
+            this.texture = {};
             this.dataLoaded = false;
         }
 
@@ -34,16 +34,15 @@
                 return;
             }
             gltfData.dynamicTexturesLoaded = null;
-            for (let i=0;i<gltfData.imageBitmap.length;i++) {
-                const width = gltfData.imageBitmap[i].width;
-                const height = gltfData.imageBitmap[i].height;
-
-                // XXX Once we know how to get sampling in editor, set this to the correct value
-                let options =  {}
-
-                textures.push(renderer.CreateDynamicTexture(width, height, options));
-                await renderer.UpdateTexture(gltfData.imageBitmap[i], textures[i])
-                gltfData.imageBitmap[i].close();
+            gltfData.dynamicTexturesLoaded = null;
+            for (const imageName in gltfData.imageBitmap) {
+                const width = gltfData.imageBitmap[imageName].width;
+                const height = gltfData.imageBitmap[imageName].height;
+                let options =  {};
+    
+                textures[imageName] = renderer.CreateDynamicTexture(width, height, options);
+                await renderer.UpdateTexture(gltfData.imageBitmap[imageName], textures[imageName]);
+                if (typeof gltfData.imageBitmap[imageName].close === "function") gltfData.imageBitmap[imageName].close();
             }
             gltfData.dynamicTexturesLoaded = true;
             if (instanceModel) {
