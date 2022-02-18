@@ -35,6 +35,7 @@
             this.zElevation =  this._inst.GetPropertyValue('z-elevation');
             this.debug = this._inst.GetPropertyValue('debug');
             this.instanceModel = this._inst.GetPropertyValue('instance-model');
+            this.instanceTexture = this._inst.GetPropertyValue('image-texture');
             this.gltfData = null;
 
             const wi = this._inst;
@@ -74,7 +75,7 @@
             if (texture)
             {
                 this._inst.ApplyBlendMode(iRenderer);
-                if (this.sdkType.texture) {
+                if (this.sdkType.texture && !this.instanceTexture) {
                     // iRenderer.SetTexture(this.sdkType.texture);
                 } else {                    
                     iRenderer.SetTexture(texture);
@@ -126,7 +127,7 @@
                 
                 if (this.loaded)
                 {
-                    if (textures.length === 0) {
+                    if (textures.length === 0 || !this.instanceTexture) {
                         iRenderer.SetTexture(texture);
                     }
                     
@@ -143,7 +144,7 @@
                         this.drawUVs = [];
                         this.drawIndices = [];
                         this.gltf.getPolygons();
-                        this.gltf.render(iRenderer, x, y, z, tempQuad, whiteTextureOwner.whiteTexture, this._inst.GetColor(), textures);
+                        this.gltf.render(iRenderer, x, y, z, tempQuad, whiteTextureOwner.whiteTexture, this._inst.GetColor(), textures, this.instanceTexture);
                         // this.layoutView.Refresh();
                         const wi = this._inst;
                         wi.SetSize(this.maxBB[0]-this.minBB[0], this.maxBB[1]-this.minBB[1]);
@@ -238,6 +239,12 @@
                     break
                 case 'debug':
                     this.debug = this._inst.GetPropertyValue('debug');
+                    break;
+                case 'image-texture':
+                    this.instanceTexture = this._inst.GetPropertyValue('image-texture');
+                    break;
+                case 'instance-model':
+                    // this.instanceModel = this._inst.GetPropertyValue('instance-model');
                     break;
                 default:
                     break;

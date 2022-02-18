@@ -41,6 +41,7 @@
             this.dataLoaded = false;
             this.drawMeshes = [];
             this.whiteTexture = null;
+            this.instanceTexture = false;
 
             if (properties)
             {
@@ -56,6 +57,7 @@
                 this.debug = properties[7];
                 this.animationBlend = properties[8];
                 this.instanceModel = properties[9];
+                this.instanceTexture = properties[10];
             }
 
             this.localCenter = [0,0,0]
@@ -197,7 +199,7 @@
             let gltfData = this.instanceModel ? this.gltfData : this.sdkType.gltfData
             this.sdkType.LoadDynamicTextures(renderer, gltfData, textures, whiteTextureOwner, this.instanceModel);
 
-            if (textures.length === 0) {
+            if (textures.length === 0 || this.instanceTexture) {
                 renderer.SetTexture(texture);
             }
 
@@ -205,7 +207,7 @@
 
             if (this.loaded && this.gltfPath != 'path')
             {
-                this.gltf.render(renderer, x, y, z, tempQuad, whiteTextureOwner.whiteTexture, wi.GetPremultipliedColor(), textures);
+                this.gltf.render(renderer, x, y, z, tempQuad, whiteTextureOwner.whiteTexture, wi.GetPremultipliedColor(), textures, this.instanceTexture);
                 wi.SetSize(this.maxBB[0]-this.minBB[0], this.maxBB[1]-this.minBB[1]);
                 if (this.updateBbox)
                 {

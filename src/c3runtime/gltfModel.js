@@ -46,7 +46,7 @@ class GltfModel
         });
     }
 
-    render(renderer, x, y, z, tempQuad, whiteTexture, instanceC3Color, textures)
+    render(renderer, x, y, z, tempQuad, whiteTexture, instanceC3Color, textures, instanceTexture)
     {
         let totalTriangles = 0;
         let currentColor = [-1,-1,-1,-1];
@@ -85,18 +85,20 @@ class GltfModel
                 }
             }
 
-            if (!hasTexture) {
-                if (currentTexture != whiteTexture) {
-                    renderer.SetTexture(whiteTexture);
-                    currentTexture = whiteTexture;
-                }
-            } else {
-                const texture = textures[material.name];
-                // If texture is not loaded, skip rendering
-                if (!texture) continue;
-                if (texture != currentTexture) {
-                    renderer.SetTexture(texture);
-                    currentTexture = texture;
+            if (!instanceTexture) {
+                if (!hasTexture) {
+                    if (currentTexture != whiteTexture) {
+                        renderer.SetTexture(whiteTexture);
+                        currentTexture = whiteTexture;
+                    }
+                } else {
+                    const texture = textures[material.name];
+                    // If texture is not loaded, skip rendering
+                    if (!texture) continue;
+                    if (texture != currentTexture) {
+                        renderer.SetTexture(texture);
+                        currentTexture = texture;
+                    }
                 }
             }
 

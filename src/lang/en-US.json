@@ -68,6 +68,10 @@
           "instance-model": {
             "name": "Instance model data",
             "desc": "Model data per instance"
+          },
+          "image-texture": {
+            "name": "Image texture",
+            "desc": "Use only image texture, ignore materials and other textures."
           }
         },
         "aceCategories": {
