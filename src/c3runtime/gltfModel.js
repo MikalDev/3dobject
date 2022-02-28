@@ -167,6 +167,8 @@ class GltfModel
         let dummyMat4Out = mat4.create();
 
         const scale = this.inst.scale;
+        const xScale = this.inst.scale/this.inst.xScale;
+        const yScale = this.inst.scale/this.inst.yScale;        
         const zScale = this.inst.scale/this.inst.zScale;
 
         if(parentMat != undefined)
@@ -226,8 +228,8 @@ class GltfModel
                     vec3.transformMat4(v, posData.subarray(j*3, j*3+3), node.matrix);
                     // mat4.multiplyVec3(node.matrix, posData.subarray(j*3, j*3+3), v);
 
-                    const x = v[0]*scale
-                    const y = v[1]*scale
+                    const x = v[0]*xScale
+                    const y = v[1]*yScale
                     const z = v[2]*zScale
 
                     if (this.inst.minBB[0] > x) this.inst.minBB[0] = x
@@ -278,6 +280,8 @@ class GltfModel
         const quat = globalThis.glMatrix3D.quat;
         const gltf = this.gltfData;
         const scale = this.inst.scale;
+        const xScale = this.inst.scale/this.inst.xScale;
+        const yScale = this.inst.scale/this.inst.yScale;
         const zScale = this.inst.scale/this.inst.zScale;
         this.drawMeshesIndex = -1;
         
@@ -377,8 +381,8 @@ class GltfModel
                         // vec3.add(vsum, v);
                     }
 
-                    const x = vsum[0]*scale
-                    const y = vsum[1]*scale
+                    const x = vsum[0]*xScale
+                    const y = vsum[1]*yScale
                     const z = vsum[2]*zScale
 
                     if (this.inst.minBB[0] > x) this.inst.minBB[0] = x

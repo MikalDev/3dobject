@@ -77,6 +77,12 @@
         UnpauseAnimation() {
             this.animationPlay = true;
         },
+        SetXScale(xScale) {
+            this.xScale = xScale;
+        },
+        SetYScale(yScale) {
+            this.yScale = yScale;
+        },
         SetZScale(zScale) {
             this.zScale = zScale;
         },
@@ -191,7 +197,6 @@
             const wi = this.GetWorldInfo();
             wi.SetOriginY(yOrigin);
             wi.SetBboxChanged();
-            console.log(wi.GetOriginY(), wi.GetOriginX());
         }
 
     }

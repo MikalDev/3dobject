@@ -25,6 +25,8 @@
             this.animationPlay = true;
             this.animationFinished = false;
             this.animationName = '';
+            this.xScale = 1;
+            this.yScale = 1;
             this.zScale = 1;
             this.debug = false;
             this.renderOnce = false;
@@ -281,6 +283,8 @@
             this.animationPlay = null;
             this.animationFinished = null;
             this.animationName = null;
+            this.xScale = null;
+            this.yScale = null;
             this.zScale = null;
             this.debug = null;
             this.renderOnce = null;

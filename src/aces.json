@@ -194,6 +194,30 @@
             ]
           },
           {
+            "id": "set-x-scale",
+            "scriptName": "SetXScale",
+            "highlight": false,
+            "params": [
+                {
+                "id": "x-scale",
+                "type": "number",
+                "initialValue": "1"
+                }
+            ]
+          },
+          {
+            "id": "set-y-scale",
+            "scriptName": "SetYScale",
+            "highlight": false,
+            "params": [
+                {
+                "id": "y-scale",
+                "type": "number",
+                "initialValue": "1"
+                }
+            ]
+          },
+          {
             "id": "set-z-scale",
             "scriptName": "SetZScale",
             "highlight": false,
@@ -352,9 +376,54 @@
           ]  
         },
         {
+          "id": "x-scale",
+          "scriptName": "XScale",
+          "expressionName": "XScale",
+          "returnType": "number",
+          "highlight": false,
+          "params": [
+          ]  
+        },
+        {
+          "id": "y-scale",
+          "scriptName": "YScale",
+          "expressionName": "YScale",
+          "returnType": "number",
+          "highlight": false,
+          "params": [
+          ]  
+        },
+        {
           "id": "z-scale",
           "scriptName": "ZScale",
           "expressionName": "ZScale",
+          "returnType": "number",
+          "highlight": false,
+          "params": [
+          ]  
+        },
+        {
+          "id": "x-angle",
+          "scriptName": "XAngle",
+          "expressionName": "XAngle",
+          "returnType": "number",
+          "highlight": false,
+          "params": [
+          ]  
+        },
+        {
+          "id": "y-angle",
+          "scriptName": "YAngle",
+          "expressionName": "YAngle",
+          "returnType": "number",
+          "highlight": false,
+          "params": [
+          ]  
+        },
+        {
+          "id": "z-angle",
+          "scriptName": "ZAngle",
+          "expressionName": "ZAngle",
           "returnType": "number",
           "highlight": false,
           "params": [

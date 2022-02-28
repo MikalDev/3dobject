@@ -13,6 +13,8 @@
             this.localCenter = [0,0,0]
             this.uid = inst.GetUID();
             this.layout = inst.GetLayout();
+            this.xScale = 1;
+            this.yScale = 1;
             this.zScale = 1;
             this.debug = false;
             this.minBB = [0,0,0]

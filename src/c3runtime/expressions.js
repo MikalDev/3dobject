@@ -19,8 +19,23 @@
             Scale() {
                 return this.scale;
             },
+            XScale() {
+                return this.xScale;
+            },
+            YScale() {
+                return this.yScale;
+            },
             ZScale() {
                 return this.zScale;
+            },
+            XAngle() {
+                return this.xAngle;
+            },
+            YAngle() {
+                return this.yAngle;
+            },
+            ZAngle() {
+                return this.zAngle;
             }
         };
 }

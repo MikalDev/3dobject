@@ -256,6 +256,28 @@
                   }
               }
           },
+          "set-x-scale": {
+            "list-name": "Set x scale",
+            "display-text": "Set x scale to {0}",
+            "description": "Set x scale.",
+            "params": {
+                  "x-scale": {
+                      "name": "X scale",
+                      "desc": "X scale."
+                  }
+              }
+          },
+          "set-y-scale": {
+            "list-name": "Set y scale",
+            "display-text": "Set y scale to {0}",
+            "description": "Set y scale.",
+            "params": {
+                  "y-scale": {
+                      "name": "Y scale",
+                      "desc": "Y scale."
+                  }
+              }
+          },
           "set-z-scale": {
             "list-name": "Set z scale",
             "display-text": "Set z scale to {0}",
@@ -381,6 +403,16 @@
             "translated-name": "Scale",
             "params": {}
           },
+          "x-scale": {
+            "description": "Get x scale.",
+            "translated-name": "XScale",
+            "params": {}
+          },
+          "y-scale": {
+            "description": "Get y scale.",
+            "translated-name": "YScale",
+            "params": {}
+          },
           "z-scale": {
             "description": "Get z scale.",
             "translated-name": "ZScale",
@@ -394,6 +426,21 @@
           "material-names": {
             "description": "Get material names.",
             "translated-name": "MaterialNames",
+            "params": {}
+          },
+          "x-angle": {
+            "description": "Get x angle.",
+            "translated-name": "XAngle",
+            "params": {}
+          },
+          "y-angle": {
+            "description": "Get y angle.",
+            "translated-name": "YAngle",
+            "params": {}
+          },
+          "z-angle": {
+            "description": "Get z angle.",
+            "translated-name": "ZAngle",
             "params": {}
           }
         }
