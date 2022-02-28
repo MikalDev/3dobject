@@ -175,7 +175,7 @@
                         }
                 }
             }
-
+            this.renderOnce = true;
         },
 
         DeleteMaterial(materialName) {
