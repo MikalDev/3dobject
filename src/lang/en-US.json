@@ -72,6 +72,18 @@
           "image-texture": {
             "name": "Image texture",
             "desc": "Use only image texture, ignore materials and other textures."
+          },
+          "x-scale": {
+            "name": "X scale",
+            "desc": "X scale (divisor, larger value makes model smaller)"
+          },
+          "y-scale": {
+            "name": "Y scale",
+            "desc": "Y scale (divisor, larger value makes model smaller)"
+          },
+          "z-scale": {
+            "name": "Z scale",
+            "desc": "Z scale (divisor, larger value makes model smaller)"
           }
         },
         "aceCategories": {
