@@ -3,7 +3,7 @@
     const SDK = self.SDK;
 
     const PLUGIN_ID = "Mikal_3DObject";
-    const PLUGIN_VERSION = "2.19.1";
+    const PLUGIN_VERSION = "2.20.0";
     const PLUGIN_CATEGORY = "3d";
 
     const PLUGIN_CLASS = SDK.Plugins.Mikal_3DObject = class Object3DPlugin extends SDK.IPluginBase
@@ -93,7 +93,19 @@
             }),
             new SDK.PluginProperty("check", "image-texture", false, {
                 "interpolatable": false
-            })
+            }),
+            new SDK.PluginProperty("float", "x-scale", 1,
+            {
+                "interpolatable": true
+            }),
+            new SDK.PluginProperty("float", "y-scale", 1,
+            {
+                "interpolatable": true
+            }),
+            new SDK.PluginProperty("float", "z-scale", 1,
+            {
+                "interpolatable": true
+            }),
             ]);
 
             this._info.AddFileDependency(

@@ -39,6 +39,10 @@
             this.instanceModel = this._inst.GetPropertyValue('instance-model');
             this.instanceTexture = this._inst.GetPropertyValue('image-texture');
             this.gltfData = null;
+            this.xScale = this._inst.GetPropertyValue('x-scale');
+            this.yScale = this._inst.GetPropertyValue('y-scale');
+            this.zScale = this._inst.GetPropertyValue('z-scale');
+            this.inEditor = true;
 
             const wi = this._inst;
             wi.SetOriginY(1);
@@ -247,6 +251,18 @@
                     break;
                 case 'instance-model':
                     // this.instanceModel = this._inst.GetPropertyValue('instance-model');
+                    break;
+                case 'x-scale':
+                    this.xScale = this._inst.GetPropertyValue('x-scale');
+                    if (this.layoutView) this.layoutView.Refresh();
+                    break;
+                case 'y-scale':
+                    this.yScale = this._inst.GetPropertyValue('y-scale');
+                    if (this.layoutView) this.layoutView.Refresh();
+                    break;
+                case 'z-scale':
+                    this.zScale = this._inst.GetPropertyValue('z-scale');
+                    if (this.layoutView) this.layoutView.Refresh();
                     break;
                 default:
                     break;

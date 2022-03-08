@@ -60,6 +60,9 @@
                 this.animationBlend = properties[8];
                 this.instanceModel = properties[9];
                 this.instanceTexture = properties[10];
+                this.xScale = properties[11];
+                this.yScale = properties[12];
+                this.zScale = properties[13];
             }
 
             this.localCenter = [0,0,0]
@@ -211,8 +214,12 @@
             {
                 this.gltf.render(renderer, x, y, z, tempQuad, whiteTextureOwner.whiteTexture, wi.GetPremultipliedColor(), textures, this.instanceTexture);
                 wi.SetSize(this.maxBB[0]-this.minBB[0], this.maxBB[1]-this.minBB[1]);
-                if (this.updateBbox)
+                // if (this.updateBbox)
+                if (true)
                 {
+                    this._setZHeight(this.maxBB[2]-this.minBB[2]);
+                    wi.SetOriginX(0.5);
+                    wi.SetOriginY(this.maxBB[1]/Math.abs(this.maxBB[1]-this.minBB[1]));
                     wi.SetBboxChanged()
                     this.updateBbox = false
                 }
