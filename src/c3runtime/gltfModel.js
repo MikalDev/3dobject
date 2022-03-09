@@ -63,8 +63,7 @@ class GltfModel
 
         const tmpModelView = mat4.create();
         // mat4.copy(tmpProjection, this._matP);
-        debugger
-        if (!this.inst.inEditor) {
+        if (!this.inst.isEditor) {
             mat4.copy(tmpModelView, renderer._matMV);
             const xAngle = this.inst.xAngle;
             const yAngle = this.inst.yAngle;
@@ -73,11 +72,7 @@ class GltfModel
             quat.fromEuler(rotate, xAngle, yAngle, zAngle);
             const modelRotate = mat4.create();
             const view = mat4.create();
-            // mat4.fromQuat(modelRotate, rotate);
-            // mat4.fromRotationTranslation(modelRotate, rotate, [this.inst.x, this.inst.y, this.inst.z]);
             mat4.fromRotationTranslationScale(modelRotate, rotate, [x,y,z], [1,-1,1]);
-            mat4.lookAt(view, [854/2,480/2,500], [854/2,480/2,0],[0,1,0]);
-            // mat4.multiply(modelRotate, view, modelRotate);
             mat4.multiply(modelRotate, tmpModelView, modelRotate);
             renderer.SetModelViewMatrix(modelRotate);
         }
@@ -152,27 +147,29 @@ class GltfModel
                     }
                     
                     let i3 = i*3;
-                    /*
-                    let x0 = x+(v[ind[i3+0]*3+0]);
-                    let y0 = y-(v[ind[i3+0]*3+1]);
-                    let z0 = z+(v[ind[i3+0]*3+2]);
-                    let x1 = x+(v[ind[i3+1]*3+0]);
-                    let y1 = y-(v[ind[i3+1]*3+1]);
-                    let z1 = z+(v[ind[i3+1]*3+2]);
-                    let x2 = x+(v[ind[i3+2]*3+0]);
-                    let y2 = y-(v[ind[i3+2]*3+1]);
-                    let z2 = z+(v[ind[i3+2]*3+2]);
-                    */
+                    let x0, y0, z0, x1, y1, z1, x2, y2, z2;
 
-                    let x0 = (v[ind[i3+0]*3+0]);
-                    let y0 = (v[ind[i3+0]*3+1]);
-                    let z0 = (v[ind[i3+0]*3+2]);
-                    let x1 = (v[ind[i3+1]*3+0]);
-                    let y1 = (v[ind[i3+1]*3+1]);
-                    let z1 = (v[ind[i3+1]*3+2]);
-                    let x2 = (v[ind[i3+2]*3+0]);
-                    let y2 = (v[ind[i3+2]*3+1]);
-                    let z2 = (v[ind[i3+2]*3+2]);
+                    if (this.inst.isEditor) {
+                        x0 = x+(v[ind[i3+0]*3+0]);
+                        y0 = y-(v[ind[i3+0]*3+1]);
+                        z0 = z+(v[ind[i3+0]*3+2]);
+                        x1 = x+(v[ind[i3+1]*3+0]);
+                        y1 = y-(v[ind[i3+1]*3+1]);
+                        z1 = z+(v[ind[i3+1]*3+2]);
+                        x2 = x+(v[ind[i3+2]*3+0]);
+                        y2 = y-(v[ind[i3+2]*3+1]);
+                        z2 = z+(v[ind[i3+2]*3+2]);
+                    } else {
+                        x0 = (v[ind[i3+0]*3+0]);
+                        y0 = (v[ind[i3+0]*3+1]);
+                        z0 = (v[ind[i3+0]*3+2])-z;
+                        x1 = (v[ind[i3+1]*3+0]);
+                        y1 = (v[ind[i3+1]*3+1]);
+                        z1 = (v[ind[i3+1]*3+2])-z;
+                        x2 = (v[ind[i3+2]*3+0]);
+                        y2 = (v[ind[i3+2]*3+1]);
+                        z2 = (v[ind[i3+2]*3+2])-z;
+                    }
 
                     renderer.Quad3D2(
                         x0, y0, z0,
@@ -185,7 +182,7 @@ class GltfModel
             }
         }
         // Restore modelview matrix
-        if (!this.inst.inEditor) {
+        if (!this.inst.isEditor) {
             renderer.SetModelViewMatrix(tmpModelView);
         }
     }
@@ -337,8 +334,12 @@ class GltfModel
             cAngle = this.inst.yAngle;
         }
 
-        // XXX quat.fromEuler(rotationQuat, 360-aAngle, 360-bAngle, 360-cAngle);
-        quat.fromEuler(rotationQuat, 0, 0, 0);
+        if (this.inst.isEditor) {
+            quat.fromEuler(rotationQuat, 360-aAngle, 360-bAngle, 360-cAngle);
+        } else {
+            quat.fromEuler(rotationQuat, 0, 0, 0);
+        }
+
         mat4.fromRotationTranslation(parentMatrix, rotationQuat, [0,0,0])
 
         this.inst.minBB = [0,0,0];
@@ -352,9 +353,12 @@ class GltfModel
         
         //todo loop over skinned nodes.
         //todo: limit to ones in scene
-        // XXX quat.fromEuler(rotationQuat, this.inst.xAngle, this.inst.yAngle, this.inst.zAngle);
-        // quat.fromEuler(rotationQuat, this.inst.xAngle, this.inst.yAngle, this.inst.zAngle);
-        quat.fromEuler(rotationQuat, 0, 0, 0);
+        if (this.inst.isEditor) {
+            quat.fromEuler(rotationQuat, this.inst.xAngle, this.inst.yAngle, this.inst.zAngle);
+        } else {
+            quat.fromEuler(rotationQuat, 0, 0, 0);
+        }
+
         for(let ii = 0; ii < gltf.skinnedNodes.length; ii++)
         {
             let node = gltf.skinnedNodes[ii];

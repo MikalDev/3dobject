@@ -197,7 +197,7 @@
             const x = wi.GetX();
             const y = wi.GetY();
             // z elevation handles offset on draw
-            const z = 0;
+            const z = wi.GetZElevation();
 
             let textures = this.instanceModel ? this.texture : this.sdkType.texture
             let whiteTextureOwner = this.instanceModel ? this : this.sdkType
