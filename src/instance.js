@@ -42,7 +42,7 @@
             this.xScale = this._inst.GetPropertyValue('x-scale');
             this.yScale = this._inst.GetPropertyValue('y-scale');
             this.zScale = this._inst.GetPropertyValue('z-scale');
-            this.inEditor = true;
+            this.isEditor = true;
 
             const wi = this._inst;
             wi.SetOriginY(1);
