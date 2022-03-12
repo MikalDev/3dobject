@@ -136,9 +136,9 @@
             }
 
             // Animate gltf model
-            if (this.loaded && this.animationPlay)
+            if (this.loaded)
             {
-                if (this.gltf.gltfData.hasOwnProperty('animations'))
+                if (this.animationPlay && this.gltf.gltfData.hasOwnProperty('animations'))
                 {
                     this.animationTime += this._runtime.GetDt()*this.animationSpeed;
                     const deltaTime = this.animationTime - this.animationLastTime;

@@ -335,13 +335,13 @@
             }
           },
           "set-mesh-material": {
-            "list-name": "Set mesh material",
-            "display-text": "Set mesh {0} to material {1}",
-            "description": "Set mesh to use a material.",
+            "list-name": "Set node material",
+            "display-text": "Set node {0} to material {1}",
+            "description": "Set node to use a material.",
             "params": {
               "mesh-name": {
-                  "name": "Mesh name",
-                  "desc": "Mesh name to set material to."
+                  "name": "Node name",
+                  "desc": "Node name to set material to."
               },
               "material-name": {
                 "name": "Material name",

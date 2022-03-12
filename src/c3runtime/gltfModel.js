@@ -57,12 +57,9 @@ class GltfModel
         const quat = globalThis.glMatrix3D.quat;
 
         const instanceColor = [instanceC3Color.getR(), instanceC3Color.getG(), instanceC3Color.getB(), instanceC3Color.getA()];
-
-
         const finalColor = vec4.create();
 
         const tmpModelView = mat4.create();
-        // mat4.copy(tmpProjection, this._matP);
         if (!this.inst.isEditor) {
             mat4.copy(tmpModelView, renderer._matMV);
             const xAngle = this.inst.xAngle;
@@ -71,7 +68,6 @@ class GltfModel
             const rotate = quat.create();
             quat.fromEuler(rotate, xAngle, yAngle, zAngle);
             const modelRotate = mat4.create();
-            const view = mat4.create();
             mat4.fromRotationTranslationScale(modelRotate, rotate, [x,y,z], [1,-1,1]);
             mat4.multiply(modelRotate, tmpModelView, modelRotate);
             renderer.SetModelViewMatrix(modelRotate);

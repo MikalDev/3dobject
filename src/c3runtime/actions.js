@@ -143,10 +143,16 @@
 
         SetMeshMaterial(nodeName, materialName) {
             const meshName = this.gltf.nodeMeshMap[nodeName];
-            if (!meshName) return;
+            if (!meshName) {
+                if (this.debug) console.warn('[3DObject] SetMeshMaterial node not found', nodeName);
+                return;
+            }
 
             const textures = this.instanceModel ? this.texture : this.sdkType.texture;
-            if (!(materialName in textures)) return
+            if (!(materialName in textures)) {
+                if (this.debug) console.warn('[3DObject] SetMeshMaterial material not found', materialName);
+                return;
+            }
             for(let ii = 0; ii < this.gltf.gltfData.skinnedNodes.length; ii++) {
                 let node = this.gltf.gltfData.skinnedNodes[ii];
                 let mesh = node.mesh;
