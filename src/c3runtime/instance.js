@@ -44,6 +44,7 @@
             this.drawMeshes = [];
             this.whiteTexture = null;
             this.instanceTexture = false;
+            this.wi = this.GetWorldInfo();
 
             if (properties)
             {
@@ -213,11 +214,16 @@
             if (this.loaded && this.gltfPath != 'path')
             {
                 this.gltf.render(renderer, x, y, z, tempQuad, whiteTextureOwner.whiteTexture, wi.GetPremultipliedColor(), textures, this.instanceTexture);
-                wi.SetSize(this.maxBB[0]-this.minBB[0], this.maxBB[1]-this.minBB[1]);
+
+                const xScale = this.scale/(this.xScale == 0 ? 1 : this.xScale);
+                const yScale = this.scale/(this.yScale == 0 ? 1 : this.yScale);        
+                const zScale = this.scale/(this.zScale == 0 ? 1 : this.zScale);
+        
+                wi.SetSize((this.maxBB[0]-this.minBB[0])*xScale, (this.maxBB[1]-this.minBB[1])*yScale);
                 // if (this.updateBbox)
                 if (true)
                 {
-                    this._setZHeight(this.maxBB[2]-this.minBB[2]);
+                    this._setZHeight((this.maxBB[2]-this.minBB[2])*zScale);
                     wi.SetOriginX(0.5);
                     wi.SetOriginY(this.maxBB[1]/Math.abs(this.maxBB[1]-this.minBB[1]));
                     wi.SetBboxChanged()

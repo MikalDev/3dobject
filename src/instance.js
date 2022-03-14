@@ -248,6 +248,7 @@
                     break;
                 case 'image-texture':
                     this.instanceTexture = this._inst.GetPropertyValue('image-texture');
+                    if (this.layoutView) this.layoutView.Refresh();
                     break;
                 case 'instance-model':
                     // this.instanceModel = this._inst.GetPropertyValue('instance-model');

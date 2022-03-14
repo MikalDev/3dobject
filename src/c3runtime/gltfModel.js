@@ -65,10 +65,13 @@ class GltfModel
             const xAngle = this.inst.xAngle;
             const yAngle = this.inst.yAngle;
             const zAngle = this.inst.zAngle;
+            const xScale = this.inst.scale/(this.inst.xScale == 0 ? 1 : this.inst.xScale);
+            const yScale = this.inst.scale/(this.inst.yScale == 0 ? 1 : this.inst.yScale);        
+            const zScale = this.inst.scale/(this.inst.zScale == 0 ? 1 : this.inst.zScale);
             const rotate = quat.create();
             quat.fromEuler(rotate, xAngle, yAngle, zAngle);
             const modelRotate = mat4.create();
-            mat4.fromRotationTranslationScale(modelRotate, rotate, [x,y,z], [1,-1,1]);
+            mat4.fromRotationTranslationScale(modelRotate, rotate, [x,y,z], [xScale,-yScale,zScale]);
             mat4.multiply(modelRotate, tmpModelView, modelRotate);
             renderer.SetModelViewMatrix(modelRotate);
         }
@@ -145,27 +148,15 @@ class GltfModel
                     let i3 = i*3;
                     let x0, y0, z0, x1, y1, z1, x2, y2, z2;
 
-                    if (this.inst.isEditor) {
-                        x0 = x+(v[ind[i3+0]*3+0]);
-                        y0 = y-(v[ind[i3+0]*3+1]);
-                        z0 = z+(v[ind[i3+0]*3+2]);
-                        x1 = x+(v[ind[i3+1]*3+0]);
-                        y1 = y-(v[ind[i3+1]*3+1]);
-                        z1 = z+(v[ind[i3+1]*3+2]);
-                        x2 = x+(v[ind[i3+2]*3+0]);
-                        y2 = y-(v[ind[i3+2]*3+1]);
-                        z2 = z+(v[ind[i3+2]*3+2]);
-                    } else {
-                        x0 = (v[ind[i3+0]*3+0]);
-                        y0 = (v[ind[i3+0]*3+1]);
-                        z0 = (v[ind[i3+0]*3+2])-z;
-                        x1 = (v[ind[i3+1]*3+0]);
-                        y1 = (v[ind[i3+1]*3+1]);
-                        z1 = (v[ind[i3+1]*3+2])-z;
-                        x2 = (v[ind[i3+2]*3+0]);
-                        y2 = (v[ind[i3+2]*3+1]);
-                        z2 = (v[ind[i3+2]*3+2])-z;
-                    }
+                    x0 = (v[ind[i3+0]*3+0]);
+                    y0 = (v[ind[i3+0]*3+1]);
+                    z0 = (v[ind[i3+0]*3+2])-z;
+                    x1 = (v[ind[i3+1]*3+0]);
+                    y1 = (v[ind[i3+1]*3+1]);
+                    z1 = (v[ind[i3+1]*3+2])-z;
+                    x2 = (v[ind[i3+2]*3+0]);
+                    y2 = (v[ind[i3+2]*3+1]);
+                    z2 = (v[ind[i3+2]*3+2])-z;
 
                     renderer.Quad3D2(
                         x0, y0, z0,
@@ -187,7 +178,7 @@ class GltfModel
         Updates a node's matrix and all it's children nodes.
         After that it transforms unskinned mesh points and sends them to c2.
     */
-    transformNode(node, parentMat)
+    transformNode(node, parentMat, modelScaleRotate)
     {
         // @ts-ignore
         const mat4 = globalThis.glMatrix3D.mat4;       
@@ -254,15 +245,20 @@ class GltfModel
                 // reset draw array for new values
                 drawVerts.length = 0;
                 
-                let v = [0,0,0];			
+                let v = [0,0,0];
+
                 for(let j=0; j<posData.length/3; j++)
                 {
                     vec3.transformMat4(v, posData.subarray(j*3, j*3+3), node.matrix);
+
+                    // vec3.transformMat4(v, vv, node.matrix);
                     // mat4.multiplyVec3(node.matrix, posData.subarray(j*3, j*3+3), v);
 
-                    const x = v[0]*xScale
-                    const y = v[1]*yScale
-                    const z = v[2]*zScale
+                    vec3.transformMat4(v, v, modelScaleRotate);
+
+                    const x = v[0]
+                    const y = v[1]
+                    const z = v[2]
 
                     if (this.inst.minBB[0] > x) this.inst.minBB[0] = x
                     if (this.inst.minBB[1] > y) this.inst.minBB[1] = y
@@ -281,10 +277,6 @@ class GltfModel
                             gltf.pointBatch.push(transformedVerts[ii]);
                     else
                     {
-                        // Push triangle data to draw
-                        // this.inst.drawVerts = this.inst.drawVerts.concat(transformedVerts);
-                        // this.inst.drawUVs = this.inst.drawUVs.concat(Array.from(node.mesh.primitives[i].attributes.TEXCOORD_0.data));
-                        // this.inst.drawIndices = this.inst.drawIndices.concat(node.mesh.primitives[i].indices.data);
                         drawVerts.push(transformedVerts);
                         // Only need to set once
                         if (drawUVs.length === 0 && ('TEXCOORD_0' in node.mesh.primitives[i].attributes)) {
@@ -298,7 +290,7 @@ class GltfModel
         
         if(node.children != undefined)
             for(let i = 0; i < node.children.length; i++)
-                this.transformNode(node.children[i], node.matrix);
+                this.transformNode(node.children[i], node.matrix, modelScaleRotate);
     }
 
     //	Updates scene graph, and as a second step sends transformed skinned mesh points to c2.
@@ -316,6 +308,23 @@ class GltfModel
         const yScale = this.inst.scale/(this.inst.yScale == 0 ? 1 : this.inst.yScale);        
         const zScale = this.inst.scale/(this.inst.zScale == 0 ? 1 : this.inst.zScale);
         this.drawMeshesIndex = -1;
+
+
+        const modelScaleRotate = mat4.create();
+
+        if (this.inst.isEditor) {
+            const xAngle = this.inst.xAngle;
+            const yAngle = this.inst.yAngle;
+            const zAngle = this.inst.zAngle;
+
+            const x = this.inst._inst.GetX();
+            const y = this.inst._inst.GetY();
+            const z = this.inst.zElevation;
+
+            const rotate = quat.create();
+            quat.fromEuler(rotate, xAngle, yAngle, zAngle);
+            mat4.fromRotationTranslationScale(modelScaleRotate, rotate, [x,y,z], [xScale,-yScale,zScale]);
+        }
         
         let rotationQuat = quat.create();
         let parentMatrix = mat4.create();        
@@ -330,30 +339,21 @@ class GltfModel
             cAngle = this.inst.yAngle;
         }
 
-        if (this.inst.isEditor) {
-            quat.fromEuler(rotationQuat, 360-aAngle, 360-bAngle, 360-cAngle);
-        } else {
-            quat.fromEuler(rotationQuat, 0, 0, 0);
-        }
+        quat.fromEuler(rotationQuat, 0, 0, 0);
 
         mat4.fromRotationTranslation(parentMatrix, rotationQuat, [0,0,0])
+        
 
-        this.inst.minBB = [0,0,0];
-        this.inst.maxBB = [0,0,0];
+        this.inst.minBB = [100000,10000,10000];
+        this.inst.maxBB = [-10000,-10000,-10000];
 
         // update all scene matrixes.
         for(let i = 0; i < gltf.scene.nodes.length; i++)
         {
-            this.transformNode(gltf.scene.nodes[i], parentMatrix);
+            this.transformNode(gltf.scene.nodes[i], parentMatrix, modelScaleRotate);
         }
         
-        //todo loop over skinned nodes.
-        //todo: limit to ones in scene
-        if (this.inst.isEditor) {
-            quat.fromEuler(rotationQuat, this.inst.xAngle, this.inst.yAngle, this.inst.zAngle);
-        } else {
-            quat.fromEuler(rotationQuat, 0, 0, 0);
-        }
+        quat.fromEuler(rotationQuat, 0, 0, 0);
 
         for(let ii = 0; ii < gltf.skinnedNodes.length; ii++)
         {
@@ -421,9 +421,11 @@ class GltfModel
                         // vec3.add(vsum, v);
                     }
 
-                    const x = vsum[0]*xScale
-                    const y = vsum[1]*yScale
-                    const z = vsum[2]*zScale
+                    vec3.transformMat4(vsum, vsum, modelScaleRotate );
+
+                    const x = vsum[0]
+                    const y = vsum[1]
+                    const z = vsum[2]
 
                     if (this.inst.minBB[0] > x) this.inst.minBB[0] = x
                     if (this.inst.minBB[1] > y) this.inst.minBB[1] = y

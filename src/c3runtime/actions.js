@@ -25,6 +25,7 @@
 
         SetScale(scale) {
             this.scale = scale;
+            this.runtime.UpdateRender();
         },
         
         SetRotationZXY(x,y,z) {
@@ -38,7 +39,7 @@
             this.xAngle = x;
             this.yAngle = y;
             this.zAngle = z;
-            this.renderOnce = true;
+            this.runtime.UpdateRender();
         },
 
         PlayAnimation(animation, loop) {
@@ -79,12 +80,15 @@
         },
         SetXScale(xScale) {
             this.xScale = xScale;
+            this.runtime.UpdateRender();
         },
         SetYScale(yScale) {
             this.yScale = yScale;
+            this.runtime.UpdateRender();
         },
         SetZScale(zScale) {
             this.zScale = zScale;
+            this.runtime.UpdateRender();
         },
         UpdateBbox() {
             this.UpdateBbox = true
@@ -109,6 +113,7 @@
                 this.doingInit = false;
                 this.loaded = false;        
             }
+            this.runtime.UpdateRender();
         },
 
         async LoadMaterial(materialPath, materialName) {
