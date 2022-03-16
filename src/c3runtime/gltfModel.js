@@ -254,7 +254,9 @@ class GltfModel
                     // vec3.transformMat4(v, vv, node.matrix);
                     // mat4.multiplyVec3(node.matrix, posData.subarray(j*3, j*3+3), v);
 
-                    vec3.transformMat4(v, v, modelScaleRotate);
+                    if (this.inst.isEditor) {
+                        vec3.transformMat4(v, v, modelScaleRotate);
+                    }
 
                     const x = v[0]
                     const y = v[1]
@@ -420,8 +422,9 @@ class GltfModel
                         vec3.add(vsum, vsum, v);
                         // vec3.add(vsum, v);
                     }
-
-                    vec3.transformMat4(vsum, vsum, modelScaleRotate );
+                    if (this.inst.isEditor) {
+                        vec3.transformMat4(vsum, vsum, modelScaleRotate );
+                    }
 
                     const x = vsum[0]
                     const y = vsum[1]

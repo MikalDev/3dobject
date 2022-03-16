@@ -3,11 +3,11 @@
   "type": "plugin",
   "name": "3D object",
   "id": "Mikal_3DObject",
-  "version": "2.22.0",
+  "version": "2.22.1",
   "author": "Mikal",
   "website": "https://www.construct.net",
   "documentation": "https://www.construct.net",
-  "description": "3D Object created using the obj/mtl 3D format.",
+  "description": "3D Object created using the gltf/glb 3D format.",
   "editor-scripts": [
     "plugin.js",
     "type.js",

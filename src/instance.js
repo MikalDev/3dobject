@@ -45,7 +45,7 @@
             this.isEditor = true;
 
             const wi = this._inst;
-            wi.SetOriginY(1);
+            wi.SetOriginY(0.5);
         }
 
         OnPlacedInLayout()
@@ -154,6 +154,9 @@
                         // this.layoutView.Refresh();
                         const wi = this._inst;
                         wi.SetSize(this.maxBB[0]-this.minBB[0], this.maxBB[1]-this.minBB[1]);
+                        wi.SetOriginX(-(this.minBB[0]-x)/(this.maxBB[0]-this.minBB[0]));
+                        wi.SetOriginY(-(this.minBB[1]-y)/(this.maxBB[1]-this.minBB[1]));
+                        // wi.SetOriginX((0-this.minBB[0])/(this.maxBB[0]-this.minBB[0]));
                     } else
                     {
                         return
