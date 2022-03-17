@@ -12,6 +12,7 @@
             const wi = this.GetWorldInfo();
             wi.SetZElevation(z);
             wi._UpdateZElevation();
+            this.updateBbox = true
         },
 
         SetLocalCenter(x,y,z) {
@@ -26,12 +27,14 @@
         SetScale(scale) {
             this.scale = scale;
             this.runtime.UpdateRender();
+            this.updateBbox = true
         },
         
         SetRotationZXY(x,y,z) {
             // Order of rotation based on Unity's procedure: Z,X,Y
             if (!this.loaded) return;
             this.model3D.rotateZXY(x,y,z);
+            this.updateBbox = true
         },
         
         SetRotationOrdered(x,y,z,order) {
@@ -40,6 +43,7 @@
             this.yAngle = y;
             this.zAngle = z;
             this.runtime.UpdateRender();
+            this.updateBbox = true
         },
 
         PlayAnimation(animation, loop) {
@@ -62,12 +66,14 @@
                 this.animationPlay = true;
                 this.animationFinished = false;
             }
+            this.updateBbox = true
         },
         SetAnimationRate(rate) {
             this.animationRate = rate;
         },
         SetZHeight(h) {
             this._setZHeight(h);
+            this.updateBbox = true
         },
         SetAnimationSpeed(speed) {
             this.animationSpeed = speed;
@@ -81,17 +87,20 @@
         SetXScale(xScale) {
             this.xScale = xScale;
             this.runtime.UpdateRender();
+            this.updateBbox = true
         },
         SetYScale(yScale) {
             this.yScale = yScale;
             this.runtime.UpdateRender();
+            this.updateBbox = true
         },
         SetZScale(zScale) {
             this.zScale = zScale;
             this.runtime.UpdateRender();
+            this.updateBbox = true
         },
         UpdateBbox() {
-            this.UpdateBbox = true
+            this.updateBbox = true
         },
         LoadModel(gltfPath) {
             if (!gltfPath || gltfPath == '' || gltfPath == 'path') return
@@ -114,6 +123,7 @@
                 this.loaded = false;        
             }
             this.runtime.UpdateRender();
+            this.updateBbox = true
         },
 
         async LoadMaterial(materialPath, materialName) {

@@ -4,6 +4,8 @@ class GltfModel
 {
     constructor(runtime, sdkType, inst)
 	{
+        const mat4 = globalThis.glMatrix3D.mat4;
+
 		this._runtime = runtime;
         this._sdkType = sdkType;
 		this.inst = inst;
@@ -17,6 +19,7 @@ class GltfModel
         this.drawMeshesIndex = 0;
         this.currentColor = [-1,-1,-1,-1];
         this.nodeMeshMap = {};
+        this.modelRotate = mat4.create();
     }
 
     async init() {
@@ -60,6 +63,7 @@ class GltfModel
         const finalColor = vec4.create();
 
         const tmpModelView = mat4.create();
+        const modelRotate = mat4.create();
         if (!this.inst.isEditor) {
             mat4.copy(tmpModelView, renderer._matMV);
             const xAngle = this.inst.xAngle;
@@ -70,8 +74,8 @@ class GltfModel
             const zScale = this.inst.scale/(this.inst.zScale == 0 ? 1 : this.inst.zScale);
             const rotate = quat.create();
             quat.fromEuler(rotate, xAngle, yAngle, zAngle);
-            const modelRotate = mat4.create();
             mat4.fromRotationTranslationScale(modelRotate, rotate, [x,y,z], [xScale,-yScale,zScale]);
+            mat4.copy(this.modelRotate, modelRotate);
             mat4.multiply(modelRotate, tmpModelView, modelRotate);
             renderer.SetModelViewMatrix(modelRotate);
         }
@@ -329,22 +333,11 @@ class GltfModel
         }
         
         let rotationQuat = quat.create();
-        let parentMatrix = mat4.create();        
-
-        let aAngle = this.inst.xAngle;
-        let bAngle = this.inst.yAngle;
-        let cAngle = this.inst.zAngle;
-
-        if (aAngle === -90 && bAngle != 0) {
-            aAngle = this.inst.xAngle;
-            bAngle = this.inst.zAngle;
-            cAngle = this.inst.yAngle;
-        }
+        let parentMatrix = mat4.create();       
 
         quat.fromEuler(rotationQuat, 0, 0, 0);
 
         mat4.fromRotationTranslation(parentMatrix, rotationQuat, [0,0,0])
-        
 
         this.inst.minBB = [100000,10000,10000];
         this.inst.maxBB = [-10000,-10000,-10000];

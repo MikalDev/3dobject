@@ -89,7 +89,6 @@
             
             this._StartTicking();
             const wi = this.GetWorldInfo();
-            wi.SetOriginY(1);
         }
 
         async doInit() {
@@ -153,7 +152,8 @@
                         if (onScreen)
                         {
                             this.gltf.getPolygons();    
-                            this.runtime.UpdateRender();    
+                            this.runtime.UpdateRender();
+                            this.updateBbox = true
                         }
                     }
                 } else if (this.renderOnce)
@@ -164,6 +164,7 @@
                     this.drawIndices = [];
                     this.gltf.getPolygons();    
                     this.runtime.UpdateRender();
+                    this.updateBbox = true
                 }    
             }
         }
@@ -219,20 +220,58 @@
                 const yScale = this.scale/(this.yScale == 0 ? 1 : this.yScale);        
                 const zScale = this.scale/(this.zScale == 0 ? 1 : this.zScale);
         
-                wi.SetSize((this.maxBB[0]-this.minBB[0])*xScale, (this.maxBB[1]-this.minBB[1])*yScale);
-                // if (this.updateBbox)
-                if (true)
+                if (this.updateBbox)
                 {
-                    this._setZHeight((this.maxBB[2]-this.minBB[2])*zScale);
-                    wi.SetOriginX(0.5);
-                    wi.SetOriginY(this.maxBB[1]/Math.abs(this.maxBB[1]-this.minBB[1]));
+                    this._updateBoundingBox(x,y,z);
+                    // wi.SetOriginY(this.maxBB[1]/Math.abs(this.maxBB[1]-this.minBB[1]));
                     wi.SetBboxChanged()
                     this.updateBbox = false
                 }
-            } else
-            {
-                return
             }
+        }
+
+        _updateBoundingBox(x, y, z) {
+            const maxBB = this.maxBB
+            const minBB = this.minBB
+            const cube = [
+                [minBB[0], minBB[1], minBB[2]],
+                [maxBB[0], minBB[1], minBB[2]],
+                [maxBB[0], maxBB[1], minBB[2]],
+                [minBB[0], maxBB[1], minBB[2]],
+                [minBB[0], minBB[1], maxBB[2]],
+                [maxBB[0], minBB[1], maxBB[2]],
+                [maxBB[0], maxBB[1], maxBB[2]],
+                [minBB[0], maxBB[1], maxBB[2]]   
+            ];
+            const modelRotate = this.gltf.modelRotate;
+            if (!modelRotate) return;
+
+            const xMinBB = [100000, 100000, 100000];
+            const xMaxBB = [-100000, -100000, -100000];
+            const vec3 = globalThis.glMatrix3D.vec3;
+
+            const rotatedPoint = vec3.create();
+            for (let i = 0; i < cube.length; i++) {
+                const cubePoint = cube[i];
+                const point = vec3.fromValues(cubePoint[0], cubePoint[1], cubePoint[2]);
+                vec3.transformMat4(rotatedPoint, point, modelRotate);
+                if (xMinBB[0] > rotatedPoint[0]) xMinBB[0] = rotatedPoint[0]
+                if (xMinBB[1] > rotatedPoint[1]) xMinBB[1] = rotatedPoint[1]
+                if (xMinBB[2] > rotatedPoint[2]) xMinBB[2] = rotatedPoint[2]
+                if (xMaxBB[0] < rotatedPoint[0]) xMaxBB[0] = rotatedPoint[0]
+                if (xMaxBB[1] < rotatedPoint[1]) xMaxBB[1] = rotatedPoint[1]
+                if (xMaxBB[2] < rotatedPoint[2]) xMaxBB[2] = rotatedPoint[2]
+                console.log(JSON.stringify(rotatedPoint))
+            }
+            const wi = this.GetWorldInfo();
+            wi.SetSize(xMaxBB[0]-xMinBB[0], xMaxBB[1]-xMinBB[1]);
+            wi.SetOriginX(-(xMinBB[0]-x)/(xMaxBB[0]-xMinBB[0]));
+            wi.SetOriginY(-(xMinBB[1]-y)/(xMaxBB[1]-xMinBB[1]));
+            this._setZHeight((xMaxBB[2]-xMinBB[2]));
+            // wi.SetOriginX(0.5);
+            // wi.SetOriginY(0.5);
+            (xMinBB[1], xMaxBB[1], y, (xMinBB[1]+y)/(xMaxBB[1]-xMinBB[1]));
+
         }
 
         SaveToJson()

@@ -299,6 +299,7 @@
             "id": "set-origin-x",
             "scriptName": "SetOriginX",
             "highlight": false,
+            "isDeprecated": true,
             "params": [
                 {
                 "id": "origin-x",
@@ -311,6 +312,7 @@
             "id": "set-origin-y",
             "scriptName": "SetOriginY",
             "highlight": false,
+            "isDeprecated": true,
             "params": [
                 {
                 "id": "origin-y",
