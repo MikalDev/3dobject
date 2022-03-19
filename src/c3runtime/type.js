@@ -65,9 +65,8 @@
 
         LoadTextures(renderer)
         {
-            return this.GetImageInfo().LoadStaticTexture(renderer,
-            {
-                linearSampling: this._runtime.IsLinearSampling()
+            return this.GetImageInfo().LoadStaticTexture(renderer, {
+                sampling: this._runtime.GetSampling()
             });
         }
 
