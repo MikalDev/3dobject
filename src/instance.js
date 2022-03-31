@@ -153,9 +153,13 @@
                         this.gltf.render(iRenderer, x, y, z, tempQuad, whiteTextureOwner.whiteTexture, this._inst.GetColor(), textures, this.instanceTexture);
                         // this.layoutView.Refresh();
                         const wi = this._inst;
-                        wi.SetSize(this.maxBB[0]-this.minBB[0], this.maxBB[1]-this.minBB[1]);
-                        wi.SetOriginX(-(this.minBB[0]-x)/(this.maxBB[0]-this.minBB[0]));
-                        wi.SetOriginY(-(this.minBB[1]-y)/(this.maxBB[1]-this.minBB[1]));
+                        let width = this.maxBB[0]-this.minBB[0];
+                        let height = this.maxBB[1]-this.minBB[1];
+                        height = height == 0 ? 1 : height;
+                        width = width == 0 ? 1 : width;
+                        wi.SetSize(width, height);
+                        wi.SetOriginX(-(this.minBB[0]-x)/(width));
+                        wi.SetOriginY(-(this.minBB[1]-y)/(height));
                         // wi.SetOriginX((0-this.minBB[0])/(this.maxBB[0]-this.minBB[0]));
                     } else
                     {

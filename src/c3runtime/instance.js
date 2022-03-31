@@ -261,17 +261,17 @@
                 if (xMaxBB[0] < rotatedPoint[0]) xMaxBB[0] = rotatedPoint[0]
                 if (xMaxBB[1] < rotatedPoint[1]) xMaxBB[1] = rotatedPoint[1]
                 if (xMaxBB[2] < rotatedPoint[2]) xMaxBB[2] = rotatedPoint[2]
-                console.log(JSON.stringify(rotatedPoint))
             }
-            const wi = this.GetWorldInfo();
-            wi.SetSize(xMaxBB[0]-xMinBB[0], xMaxBB[1]-xMinBB[1]);
-            wi.SetOriginX(-(xMinBB[0]-x)/(xMaxBB[0]-xMinBB[0]));
-            wi.SetOriginY(-(xMinBB[1]-y)/(xMaxBB[1]-xMinBB[1]));
-            this._setZHeight((xMaxBB[2]-xMinBB[2]));
-            // wi.SetOriginX(0.5);
-            // wi.SetOriginY(0.5);
-            (xMinBB[1], xMaxBB[1], y, (xMinBB[1]+y)/(xMaxBB[1]-xMinBB[1]));
 
+            const wi = this.GetWorldInfo();
+            let width = xMaxBB[0]-xMinBB[0];
+            let height = xMaxBB[1]-xMinBB[1];
+            height = height == 0 ? 1 : height;
+            width = width == 0 ? 1 : width;
+            wi.SetSize(width, height);
+            wi.SetOriginX(-(xMinBB[0]-x)/(width));
+            wi.SetOriginY(-(xMinBB[1]-y)/(height));
+            this._setZHeight((xMaxBB[2]-xMinBB[2]));
         }
 
         SaveToJson()
