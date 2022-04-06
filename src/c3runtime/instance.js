@@ -45,6 +45,9 @@
             this.whiteTexture = null;
             this.instanceTexture = false;
             this.wi = this.GetWorldInfo();
+            this.cannonBody = null;
+            this.quaternion = null;
+            this.cannonSetRotation = false;
 
             if (properties)
             {
@@ -166,6 +169,14 @@
                     this.runtime.UpdateRender();
                     this.updateBbox = true
                 }    
+            }
+            if (this.cannonBody) {
+                const wi = this.wi;
+                wi.SetXY(this.cannonBody.position.x, this.cannonBody.position.y);
+                wi.SetZElevation(this.cannonBody.position.z);
+                wi._UpdateZElevation();
+                this.quaternion = this.cannonBody.quaternion;
+                this.runtime.UpdateRender();
             }
         }
 
@@ -354,6 +365,37 @@
             this.drawMeshes = null;
             this.whiteTexture = null;
             super.Release();
+        }
+
+        _setCannonBody(body, setRotaion) {
+            this.cannonBody = body;
+            this.cannonSetRotation = setRotaion;
+        }
+
+        GetScriptInterfaceClass()
+		{
+            // @ts-ignore
+			return self.I3DObjectInstance;
+		}
+    };
+
+    // Script interface. Use a WeakMap to safely hide the internal implementation details from the
+	// caller using the script interface.
+	const map = new WeakMap();
+    // @ts-ignore
+    self.I3DObjectInstance = class I3DObjectInstance extends self.IWorldInstance {
+		constructor()
+		{
+			super();
+            // Map by SDK instance
+            // @ts-ignore
+			map.set(this, self.IInstance._GetInitInst().GetSdkInstance());
+            // @ts-ignore
+		}
+
+        setCannonBody(body, setRotaion = true)
+        {
+            map.get(this)._setCannonBody(body, setRotaion);
         }
     };
 }

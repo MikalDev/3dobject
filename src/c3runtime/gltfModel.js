@@ -73,7 +73,11 @@ class GltfModel
             const yScale = this.inst.scale/(this.inst.yScale == 0 ? 1 : this.inst.yScale);        
             const zScale = this.inst.scale/(this.inst.zScale == 0 ? 1 : this.inst.zScale);
             const rotate = quat.create();
-            quat.fromEuler(rotate, xAngle, yAngle, zAngle);
+            if (this.inst.cannonBody && this.inst.cannonSetRotation) {
+                quat.set(rotate, this.inst.cannonBody.quaternion.x, this.inst.cannonBody.quaternion.y, this.inst.cannonBody.quaternion.z, this.inst.cannonBody.quaternion.w);
+            } else {
+                quat.fromEuler(rotate, xAngle, yAngle, zAngle);
+            }
             mat4.fromRotationTranslationScale(modelRotate, rotate, [x,y,z], [xScale,-yScale,zScale]);
             mat4.copy(this.modelRotate, modelRotate);
             mat4.multiply(modelRotate, tmpModelView, modelRotate);
