@@ -177,6 +177,7 @@
                 wi._UpdateZElevation();
                 this.quaternion = this.cannonBody.quaternion;
                 this.runtime.UpdateRender();
+                this.updateBbox = true
             }
         }
 
@@ -364,12 +365,19 @@
             this.dataLoaded = null;
             this.drawMeshes = null;
             this.whiteTexture = null;
+            this.cannonBody = null;
+            this.cannonSetRotation = null;
             super.Release();
         }
 
         _setCannonBody(body, setRotaion) {
             this.cannonBody = body;
             this.cannonSetRotation = setRotaion;
+        }
+
+        _removeCannonBody() {
+            this.cannonBody = null;
+            this.cannonSetRotation = false;
         }
 
         GetScriptInterfaceClass()
@@ -396,6 +404,11 @@
         setCannonBody(body, setRotaion = true)
         {
             map.get(this)._setCannonBody(body, setRotaion);
+        }
+
+        removeCannonBody()
+        {
+            map.get(this)._removeCannonBody();
         }
     };
 }
