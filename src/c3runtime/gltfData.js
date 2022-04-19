@@ -250,6 +250,34 @@ class GltfData
             }
         }
 
+
+        // images
+        if (('images' in gltf) && (gltf.images.length > 0)) 
+        {
+            for(let i = 0; i < gltf.images.length; i++) {
+                // If image has no name, set it to the index.
+                if (!('name' in gltf.images[i])) gltf.images[i].name = 'image-index-' + i;
+                const image = gltf.images[i]
+                const bufview = gltf.bufferViews[image.bufferView]
+                let imageBuffer;
+                if (binBuffer) {
+                    imageBuffer = binBuffer.slice(bufview.byteOffset, bufview.byteOffset + bufview.byteLength)
+                } else {
+                    imageBuffer = gltf.buffers[0].slice(bufview.byteOffset, bufview.byteOffset + bufview.byteLength)
+                }
+                const blob = await new Blob( [ imageBuffer ] );
+                const url = await URL.createObjectURL( blob );
+                let imageBitmap;
+                if (globalThis.createImageBitmap) {
+                    imageBitmap = await createImageBitmap(blob);
+                } else {
+                    imageBitmap = await this.createImageBitmap(blob);
+                }
+                // this.imageBitmap.push(imageBitmap)
+                this.imageBitmap[image.name] = imageBitmap;
+            }
+        }   
+
         //meshes
         for(let i = 0; i < gltf.meshes.length; i++)
         {
@@ -289,31 +317,6 @@ class GltfData
                 }
             }
         }
-
-        // images
-        if (('images' in gltf) && (gltf.images.length > 0)) 
-        {
-            for(let i = 0; i < gltf.images.length; i++) {
-                const image = gltf.images[i]
-                const bufview = gltf.bufferViews[image.bufferView]
-                let imageBuffer;
-                if (binBuffer) {
-                    imageBuffer = binBuffer.slice(bufview.byteOffset, bufview.byteOffset + bufview.byteLength)
-                } else {
-                    imageBuffer = gltf.buffers[0].slice(bufview.byteOffset, bufview.byteOffset + bufview.byteLength)
-                }
-                const blob = await new Blob( [ imageBuffer ] );
-                const url = await URL.createObjectURL( blob );
-                let imageBitmap;
-                if (globalThis.createImageBitmap) {
-                    imageBitmap = await createImageBitmap(blob);
-                } else {
-                    imageBitmap = await this.createImageBitmap(blob);
-                }
-                // this.imageBitmap.push(imageBitmap)
-                this.imageBitmap[image.name] = imageBitmap;
-            }
-        }   
         // Create white texture
         const whitePNGURI ="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAQAAAC1+jfqAAAAFElEQVR42mP8/58BL2AcVTCSFAAA0rYf8R32RV0AAAAASUVORK5CYII=";
         const blob = await (await fetch(whitePNGURI)).blob();
