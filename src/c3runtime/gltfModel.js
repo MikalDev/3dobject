@@ -82,6 +82,8 @@ class GltfModel
             mat4.copy(this.modelRotate, modelRotate);
             mat4.multiply(modelRotate, tmpModelView, modelRotate);
             renderer.SetModelViewMatrix(modelRotate);
+        } else {
+            z = 0;
         }
 
         // Default color

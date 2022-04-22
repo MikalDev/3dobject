@@ -30,12 +30,19 @@ class GltfData
 		{
             if (gltfPath.includes('http')) {
                 // Can't load from URL in editor
-                return
+                alert('Cannot load from URL in editor');
+                return false
             } else {
 			// Get iProjectFiles
             gltfURI = await runtime.GetProjectFileByName(gltfPath);
             }
 		}
+
+        if (gltfURI === null) {
+            alert('gltfPath not found: ' + gltfPath);
+            console.warn('glfPath not found:', gltfPath)
+            return false
+        }
 
         const isBinary = gltfPath.includes(".glb") || gltfPath.includes("ext=glb");
 
@@ -46,6 +53,7 @@ class GltfData
         } catch( err ) {
             alert('Error loading GLTF:'+err)
             console.error('Error loading GLTF:',err)
+            return false
         }
 
         if (resultgltf)
@@ -55,9 +63,12 @@ class GltfData
 		} else
 		{
 			console.warn('[3DObject] Unable to load gltf files');
+            alert('Unable to load gltf files');
+            return false;
 		}
 
         this.gltf = resultgltf;
+        return true;
     }
 
 /*

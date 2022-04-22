@@ -22,6 +22,7 @@
             this._runtime = sdkType._project;
             this.dataLoaded = false;
             this.texture = [];
+            this.loadFailed = false;
         }
 
         Release()
@@ -75,6 +76,8 @@
 
         async Draw(iRenderer, iDrawParams)
         {
+            if (this.loadFailed) return;
+
             if (!this.layoutView) this.layoutView = iDrawParams.GetLayoutView();
             const texture = this.GetTexture();
 
@@ -107,7 +110,12 @@
                 if (this.instanceModel && this.gltfPath != 'path' && this.gltfPath != '' && !this.gltfDataLoad)
                 {
                     this.gltfDataLoad = true;
-                    await gltfData.load(this.gltfPath, false, this.debug);
+                    const result = await gltfData.load(this.gltfPath, false, this.debug);
+                    if (!result) {
+                        this.loadFailed = true;
+                        this.gltfDataLoad = false;
+                        return;
+                    }
                     await this.sdkType.LoadDynamicTextures(iRenderer, gltfData, textures, whiteTextureOwner, this.instanceModel);
                 } 
 
@@ -115,7 +123,12 @@
                 if (!this.instanceModel && this.gltfPath != 'path' && this.gltfPath != '' && sdkType.initOwner == -1)
                 {
                     sdkType.initOwner = this.uid; 
-                    await gltfData.load(this.gltfPath, false, this.debug);
+                    const result = await gltfData.load(this.gltfPath, false, this.debug);
+                    if (!result) {
+                        sdkType.initOwner = -1; 
+                        this.loadFailed = true;
+                        return;
+                    }
                     await this.sdkType.LoadDynamicTextures(iRenderer, gltfData, textures, whiteTextureOwner, this.instanceModel);
                 }
 
@@ -249,6 +262,7 @@
                         if (this.layoutView) this.layoutView.Refresh();
                     }
                     */
+                    this.loadFailed = false;
                     break
                 case 'debug':
                     this.debug = this._inst.GetPropertyValue('debug');
