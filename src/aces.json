@@ -296,6 +296,23 @@
             ]
           },
           {
+            "id": "enable-node",
+            "scriptName": "EnableNode",
+            "highlight": false,
+            "params": [
+              {
+                "id": "node-name",
+                "type": "string",
+                "initialValue": ""
+              },
+              {
+                "id": "enable",
+                "type": "boolean",
+                "initialValue": "false"
+              }
+            ]
+          },
+          {
             "id": "set-origin-x",
             "scriptName": "SetOriginX",
             "highlight": false,
@@ -426,6 +443,60 @@
           "id": "z-angle",
           "scriptName": "ZAngle",
           "expressionName": "ZAngle",
+          "returnType": "number",
+          "highlight": false,
+          "params": [
+          ]  
+        },
+        {
+          "id": "x-bb-min",
+          "scriptName": "XBBMin",
+          "expressionName": "XBBMin",
+          "returnType": "number",
+          "highlight": false,
+          "params": [
+          ]  
+        },
+        {
+          "id": "y-bb-min",
+          "scriptName": "YBBMin",
+          "expressionName": "YBBMin",
+          "returnType": "number",
+          "highlight": false,
+          "params": [
+          ]  
+        },
+        {
+          "id": "z-bb-min",
+          "scriptName": "ZBBMin",
+          "expressionName": "ZBBMin",
+          "returnType": "number",
+          "highlight": false,
+          "params": [
+          ]  
+        },
+        {
+          "id": "x-bb-max",
+          "scriptName": "XBBMax",
+          "expressionName": "XBBMax",
+          "returnType": "number",
+          "highlight": false,
+          "params": [
+          ]  
+        },
+        {
+          "id": "y-bb-max",
+          "scriptName": "YBBMax",
+          "expressionName": "YBBMax",
+          "returnType": "number",
+          "highlight": false,
+          "params": [
+          ]  
+        },
+        {
+          "id": "z-bb-max",
+          "scriptName": "ZBBMax",
+          "expressionName": "ZBBMax",
           "returnType": "number",
           "highlight": false,
           "params": [

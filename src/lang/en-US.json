@@ -349,6 +349,21 @@
               }
             }
           },
+          "enable-node": {
+            "list-name": "Enable node",
+            "display-text": "Set node {0} enable to {1}",
+            "description": "Enable or disable node for render.",
+            "params": {
+              "node-name": {
+                  "name": "Node name",
+                  "desc": "Node name to enable or disable."
+              },
+              "enable": {
+                "name": "Enable",
+                "desc": "Enable or disable node for render."
+              }
+            }
+          },
           "delete-material": {
             "list-name": "Delete material",
             "display-text": "Delete material {0}",
@@ -453,6 +468,36 @@
           "z-angle": {
             "description": "Get z angle.",
             "translated-name": "ZAngle",
+            "params": {}
+          },
+          "x-bb-min": {
+            "description": "Get x bounding box min.",
+            "translated-name": "XBBMin",
+            "params": {}
+          },
+          "y-bb-min": {
+            "description": "Get y bounding box min.",
+            "translated-name": "YBBMin",
+            "params": {}
+          },
+          "z-bb-min": {
+            "description": "Get z bounding box min.",
+            "translated-name": "ZBBMin",
+            "params": {}
+          },
+          "x-bb-max": {
+            "description": "Get x bounding box max.",
+            "translated-name": "XBBMax",
+            "params": {}
+          },
+          "y-bb-max": {
+            "description": "Get y bounding box max.",
+            "translated-name": "YBBMax",
+            "params": {}
+          },
+          "z-bb-max": {
+            "description": "Get z bounding box max.",
+            "translated-name": "ZBBMax",
             "params": {}
           }
         }

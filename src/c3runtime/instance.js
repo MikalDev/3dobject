@@ -48,6 +48,8 @@
             this.cannonBody = null;
             this.quaternion = null;
             this.cannonSetRotation = false;
+            this.xMinBB = [0,0,0];
+            this.xMaxBB = [0,0,0];
 
             if (properties)
             {
@@ -258,8 +260,10 @@
             const modelRotate = this.gltf.modelRotate;
             if (!modelRotate) return;
 
-            const xMinBB = [100000, 100000, 100000];
-            const xMaxBB = [-100000, -100000, -100000];
+            this.xMinBB = [100000, 100000, 100000];
+            this.xMaxBB = [-100000, -100000, -100000];
+            const xMinBB = this.xMinBB;
+            const xMaxBB = this.xMaxBB;
             const vec3 = globalThis.glMatrix3D.vec3;
 
             const rotatedPoint = vec3.create();

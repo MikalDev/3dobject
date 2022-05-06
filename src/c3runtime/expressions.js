@@ -36,6 +36,30 @@
             },
             ZAngle() {
                 return this.zAngle;
-            }
+            },
+            XBBMin() {
+                if (!this.xMinBB) return 0;
+                return this.xMinBB[0];
+            },
+            YBBMin() {
+                if (!this.xMinBB) return 0;
+                return this.xMinBB[1];
+            },
+            ZBBMin() {
+                if (!this.xMinBB) return 0;
+                return this.xMinBB[2];
+            },                        
+            XBBMax() {
+                if (!this.xMaxBB) return 0;
+                return this.xMaxBB[0];
+            },
+            YBBMax() {
+                if (!this.xMaxBB) return 0;
+                return this.xMaxBB[1];
+            },
+            ZBBMax() {
+                if (!this.xMaxBB) return 0;
+                return this.xMaxBB[2];
+            },               
         };
 }

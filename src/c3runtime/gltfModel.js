@@ -91,6 +91,9 @@ class GltfModel
 
         for (let j=0; j<= this.drawMeshesIndex; j++)
         {
+            // Skip render if disabled
+            if (this.drawMeshes[j].disabled) continue;
+
             const drawVerts = this.drawMeshes[j].drawVerts;
             const drawUVs = this.drawMeshes[j].drawUVs;
             const drawIndices = this.drawMeshes[j].drawIndices;
@@ -237,9 +240,12 @@ class GltfModel
                             drawVerts: [],
                             drawUVs: [],
                             drawIndices: [],
+                            disabled: false,
                         }
                     )
                 }
+
+                this.drawMeshes[this.drawMeshesIndex].disabled = node.disabled;
 
                 // Update material each time, in case an ACE changes it
                 if ('material' in node.mesh.primitives[i]) {
@@ -381,9 +387,12 @@ class GltfModel
                             drawVerts: [],
                             drawUVs: [],
                             drawIndices: [],
+                            disabled: true,
                         }
                     )
                 }
+
+                this.drawMeshes[this.drawMeshesIndex].disabled = node.disabled;
 
                 // Update material each time, in case an ACE changes it
                 if ('material' in node.mesh.primitives[i]) {

@@ -199,6 +199,28 @@
             this.renderOnce = true;
         },
 
+        EnableNode(nodeName, enable) {
+            if (!this.gltf) return;
+            if (!this.gltf.gltfData) return;
+            
+            for(let ii = 0; ii < this.gltf.gltfData.skinnedNodes.length; ii++) {
+                let node = this.gltf.gltfData.skinnedNodes[ii];
+                if (node.name == nodeName) {
+                    node.disabled = !enable;
+                    break;
+                }
+            }
+
+            for(let ii = 0; ii < this.gltf.gltfData.nodes.length; ii++) {
+                let node = this.gltf.gltfData.nodes[ii];
+                if (node.name == nodeName) {
+                    node.disabled = !enable;
+                    break;
+                }
+            }
+            this.renderOnce = true;
+        },        
+
         DeleteMaterial(materialName) {
             const renderer = this.renderer
             const textures = this.instanceModel ? this.texture : this.sdkType.texture;
