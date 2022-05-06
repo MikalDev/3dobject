@@ -184,6 +184,10 @@ class GltfData
             }
             let compcount = {"SCALAR":1, "VEC2":2, "VEC3":3, "VEC4":4, "MAT2":4, "MAT3":9, "MAT4":16}[a.type];
             let bufview = gltf.bufferViews[a.bufferView];
+
+            // Check for case where there is no byteOffset prop, which means byteOffset is 0.
+            if (!('byteOffset' in bufview)) bufview.byteOffset = 0;
+
             if ('byteStride' in bufview) {
                 const stride = bufview.byteStride;
                 const offset = a.byteOffset;
@@ -269,15 +273,19 @@ class GltfData
                 // If image has no name, set it to the index.
                 if (!('name' in gltf.images[i])) gltf.images[i].name = 'image-index-' + i;
                 const image = gltf.images[i]
-                const bufview = gltf.bufferViews[image.bufferView]
-                let imageBuffer;
-                if (binBuffer) {
-                    imageBuffer = binBuffer.slice(bufview.byteOffset, bufview.byteOffset + bufview.byteLength)
+                let blob;
+                if ('bufferView' in image) {
+                    const bufview = gltf.bufferViews[image.bufferView]
+                    let imageBuffer;
+                    if (binBuffer) {
+                        imageBuffer = binBuffer.slice(bufview.byteOffset, bufview.byteOffset + bufview.byteLength)
+                    } else {
+                        imageBuffer = gltf.buffers[0].slice(bufview.byteOffset, bufview.byteOffset + bufview.byteLength)
+                    }
+                    blob = await new Blob( [ imageBuffer ] );
                 } else {
-                    imageBuffer = gltf.buffers[0].slice(bufview.byteOffset, bufview.byteOffset + bufview.byteLength)
+                    blob = await (await fetch(image.uri)).blob(); 
                 }
-                const blob = await new Blob( [ imageBuffer ] );
-                const url = await URL.createObjectURL( blob );
                 let imageBitmap;
                 if (globalThis.createImageBitmap) {
                     imageBitmap = await createImageBitmap(blob);
