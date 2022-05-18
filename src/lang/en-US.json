@@ -5,7 +5,7 @@
     "plugins": {
       "mikal_3dobject": {
         "name": "3D object",
-        "description": "3D Object created using the obj/mtl 3D format. Alpha",
+        "description": "3D Object created using the obj/mtl 3D format.",
         "help-url": "https://github.com/armandoalonso/c3IDE",
         "properties": {
           "obj-path": {
@@ -394,6 +394,17 @@
                   "origin-y": {
                       "name": "Y origin",
                       "desc": "Y origin (Normalized value, 0.5 is center.)"
+                  }
+              }
+          },
+          "set-bbox-scale": {
+            "list-name": "Set bounding box scale",
+            "display-text": "Set bounding box scale to {0}",
+            "description": "Set bounding box scale.",
+            "params": {
+                  "scale": {
+                      "name": "Scale",
+                      "desc": "Scale factor for bounding box."
                   }
               }
           }

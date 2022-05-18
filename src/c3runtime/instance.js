@@ -50,6 +50,7 @@
             this.cannonSetRotation = false;
             this.xMinBB = [0,0,0];
             this.xMaxBB = [0,0,0];
+            this.bboxScale = 1;
 
             if (properties)
             {
@@ -284,10 +285,10 @@
             let height = xMaxBB[1]-xMinBB[1];
             height = height == 0 ? 1 : height;
             width = width == 0 ? 1 : width;
-            wi.SetSize(width, height);
+            wi.SetSize(width*this.bboxScale, height*this.bboxScale);
             wi.SetOriginX(-(xMinBB[0]-x)/(width));
             wi.SetOriginY(-(xMinBB[1]-y)/(height));
-            this._setZHeight((xMaxBB[2]-xMinBB[2]));
+            this._setZHeight((xMaxBB[2]-xMinBB[2])*this.bboxScale);
         }
 
         SaveToJson()
@@ -371,6 +372,9 @@
             this.whiteTexture = null;
             this.cannonBody = null;
             this.cannonSetRotation = null;
+            this.bboxScale = null;
+            this.maxBB = null;
+            this.minBB = null;
             super.Release();
         }
 
@@ -382,6 +386,10 @@
         _removeCannonBody() {
             this.cannonBody = null;
             this.cannonSetRotation = false;
+        }
+
+        _setBBoxScale(scale) {
+            this.bboxScale = scale;
         }
 
         GetScriptInterfaceClass()
@@ -413,6 +421,11 @@
         removeCannonBody()
         {
             map.get(this)._removeCannonBody();
+        }
+
+        setBBoxScale(scale)
+        {
+            map.get(this)._setBBoxScale(scale);
         }
     };
 }

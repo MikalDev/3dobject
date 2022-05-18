@@ -240,6 +240,10 @@
             const wi = this.GetWorldInfo();
             wi.SetOriginY(yOrigin);
             wi.SetBboxChanged();
+        },
+
+        SetBBoxScale(scale) {
+            this._setBBoxScale(scale);
         }
 
     }

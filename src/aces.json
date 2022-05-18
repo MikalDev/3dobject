@@ -337,6 +337,19 @@
                 "initialValue": "1"
                 }
             ]
+          },
+          {
+            "id": "set-bbox-scale",
+            "scriptName": "SetBBoxScale",
+            "highlight": false,
+            "isDeprecated": false,
+            "params": [
+                {
+                "id": "scale",
+                "type": "number",
+                "initialValue": "1"
+                }
+            ]
           }
       ],
       "expressions": [
