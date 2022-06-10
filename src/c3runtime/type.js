@@ -29,6 +29,7 @@
             const gltf = gltfData.gltf;
 
             if (gltfData.dynamicTexturesLoaded === true || gltfData.dynamicTexturesLoaded === null) return;
+            gltfData.dynamicTexturesLoaded = null;
 
 
             // White texture for solid color
@@ -43,7 +44,6 @@
                 return;
             }
 
-            gltfData.dynamicTexturesLoaded = null;
             for (const imageName in gltfData.imageBitmap) {
                 const width = gltfData.imageBitmap[imageName].width;
                 const height = gltfData.imageBitmap[imageName].height;
