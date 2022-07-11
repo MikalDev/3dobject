@@ -3,7 +3,7 @@
     const SDK = self.SDK;
 
     const PLUGIN_ID = "Mikal_3DObject";
-    const PLUGIN_VERSION = "2.28.1";
+    const PLUGIN_VERSION = "2.29.0";
     const PLUGIN_CATEGORY = "3d";
 
     const PLUGIN_CLASS = SDK.Plugins.Mikal_3DObject = class Object3DPlugin extends SDK.IPluginBase
@@ -105,6 +105,10 @@
             new SDK.PluginProperty("float", "z-scale", 1,
             {
                 "interpolatable": true
+            }),
+            new SDK.PluginProperty("check", "wireframe", false,
+            {
+                "interpolatable": false
             }),
             ]);
 

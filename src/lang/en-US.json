@@ -84,6 +84,10 @@
           "z-scale": {
             "name": "Z scale",
             "desc": "Z scale (divisor, larger value makes model smaller)"
+          },
+          "wireframe": {
+            "name": "Wireframe",
+            "desc": "Render as wireframe"
           }
         },
         "aceCategories": {
@@ -109,6 +113,11 @@
             "list-name": "On animation finished",
             "display-text": "On animation finished ",
             "description": "Triggers when the animation has finished (only triggered if not looping)."
+          },
+          "is-wireframe-enabled": {
+            "list-name": "Is wireframe enabled",
+            "display-text": "Is wireframe enabled",
+            "description": "True if wireframe is enabled."
           }
         },
         "actions": {
@@ -407,8 +416,37 @@
                       "desc": "Scale factor for bounding box."
                   }
               }
+          },
+          "enable-wireframe": {
+            "list-name": "Enable wireframe",
+            "display-text": "Set wireframe enable to {0}",
+            "description": "Enable or disable wireframe render.",
+            "params": {
+              "enable": {
+                "name": "Enable",
+                "desc": "Enable or disable node wireframe render."
+              }
+            }
+          },
+          "set-wireframe-widths": {
+            "list-name": "Set wireframe  x, y, z line widths",
+            "display-text": "Set wireframe line widths to {0}, {1}, {2}",
+            "description": "Set wireframe x, y, z widths.",
+            "params": {
+              "x-wireframe-width": {
+                  "name": "X width",
+                  "desc": "X wireframe width."
+              },
+              "y-wireframe-width": {
+                "name": "Y width",
+                "desc": "Y wireframe width."
+              },
+              "z-wireframe-width": {
+                "name": "Z width",
+                "desc": "Z wireframe width."
+              }
+            }
           }
-
         },
         "expressions": {
           "animation-names": {
@@ -509,6 +547,21 @@
           "z-bb-max": {
             "description": "Get z bounding box max.",
             "translated-name": "ZBBMax",
+            "params": {}
+          },
+          "x-wireframe-width": {
+            "description": "X wireframe line width.",
+            "translated-name": "XWireframeWidth",
+            "params": {}
+          },
+          "y-wireframe-width": {
+            "description": "Y wireframe line width.",
+            "translated-name": "YWireframeWidth",
+            "params": {}
+          },
+          "z-wireframe-width": {
+            "description": "Z wireframe line width.",
+            "translated-name": "ZWireframeWidth",
             "params": {}
           }
         }

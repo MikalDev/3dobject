@@ -12,6 +12,9 @@
         },
         IsAnimationFinished() {
             return this.IsAnimationFinished;
+        },
+        IsWireframeEnabled() {
+            return this.wireframe;
         }
     };
 }

@@ -61,5 +61,15 @@
                 if (!this.xMaxBB) return 0;
                 return this.xMaxBB[2];
             },               
+            XWireframeWidth() {
+                return this.xWireframeWidth;
+            },               
+            YWireframeWidth() {
+                return this.yWireframeWidth;
+            },               
+            ZWireframeWidth() {
+                return this.zWireframeWidth;
+            },               
+
         };
 }

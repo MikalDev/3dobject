@@ -51,6 +51,10 @@
             this.xMinBB = [0,0,0];
             this.xMaxBB = [0,0,0];
             this.bboxScale = 1;
+            this.wireframe = false;
+            this.xWireframeWidth = 1;
+            this.yWireframeWidth = 1;
+            this.zWireframeWidth = 1;
 
             if (properties)
             {
@@ -70,6 +74,7 @@
                 this.xScale = properties[11];
                 this.yScale = properties[12];
                 this.zScale = properties[13];
+                this.wireframe = properties[14];
             }
 
             this.localCenter = [0,0,0]
@@ -280,15 +285,20 @@
                 if (xMaxBB[2] < rotatedPoint[2]) xMaxBB[2] = rotatedPoint[2]
             }
 
-            const wi = this.GetWorldInfo();
-            let width = xMaxBB[0]-xMinBB[0];
-            let height = xMaxBB[1]-xMinBB[1];
-            height = height == 0 ? 1 : height;
-            width = width == 0 ? 1 : width;
-            wi.SetSize(width*this.bboxScale, height*this.bboxScale);
-            wi.SetOriginX(-(xMinBB[0]-x)/(width));
-            wi.SetOriginY(-(xMinBB[1]-y)/(height));
-            this._setZHeight((xMaxBB[2]-xMinBB[2])*this.bboxScale);
+            if (this.maxBB[0] != Number.POSITIVE_INFINITY &&
+                this.minBB[0] != Number.NEGATIVE_INFINITY &&
+                this.maxBB[1] != Number.POSITIVE_INFINITY &&
+                this.minBB[1] != Number.NEGATIVE_INFINITY) {
+                const wi = this.GetWorldInfo();
+                let width = xMaxBB[0]-xMinBB[0];
+                let height = xMaxBB[1]-xMinBB[1];
+                height = height == 0 ? 1 : height;
+                width = width == 0 ? 1 : width;
+                wi.SetSize(width*this.bboxScale, height*this.bboxScale);
+                wi.SetOriginX(-(xMinBB[0]-x)/(width));
+                wi.SetOriginY(-(xMinBB[1]-y)/(height));
+                this._setZHeight((xMaxBB[2]-xMinBB[2])*this.bboxScale);
+            }
         }
 
         SaveToJson()
@@ -375,6 +385,10 @@
             this.bboxScale = null;
             this.maxBB = null;
             this.minBB = null;
+            this.wireframe = null;
+            this.xWireframeWidth = null;
+            this.yWireframeWidth = null;
+            this.zWireframeWidth = null;
             super.Release();
         }
 

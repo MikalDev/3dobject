@@ -59,6 +59,19 @@ class GltfModel
         const mat4 = globalThis.glMatrix3D.mat4;
         const quat = globalThis.glMatrix3D.quat;
 
+        let xWireframeWidth, yWireframeWidth, zWireframeWidth;
+
+        if (this.inst.wireframe) {
+            const xScale = this.inst.scale/(this.inst.xScale == 0 ? 1 : this.inst.xScale);
+            const yScale = this.inst.scale/(this.inst.yScale == 0 ? 1 : this.inst.yScale);        
+            const zScale = this.inst.scale/(this.inst.zScale == 0 ? 1 : this.inst.zScale);
+
+            xWireframeWidth = this.inst.isEditor ? this.inst.xWireframeWidth : this.inst.xWireframeWidth/xScale;
+            yWireframeWidth = this.inst.isEditor ? this.inst.yWireframeWidth : this.inst.yWireframeWidth/yScale;
+            zWireframeWidth = this.inst.isEditor ? this.inst.zWireframeWidth : this.inst.zWireframeWidth/zScale;
+        }
+
+
         const instanceColor = [instanceC3Color.getR(), instanceC3Color.getG(), instanceC3Color.getB(), instanceC3Color.getA()];
         const finalColor = vec4.create();
 
@@ -171,13 +184,17 @@ class GltfModel
                     y2 = (v[ind[i3+2]*3+1]);
                     z2 = (v[ind[i3+2]*3+2])-z;
 
-                    renderer.Quad3D2(
-                        x0, y0, z0,
-                        x1, y1, z1,
-                        x2, y2, z2,
-                        x2, y2, z2,
-                        tempQuad
-                        );
+                    if (this.inst.wireframe) {
+                        this.drawWireFrame(renderer, whiteTexture, tempQuad, x0, y0, z0, x1, y1, z1, x2, y2, z2, xWireframeWidth, yWireframeWidth, zWireframeWidth);
+                    } else {
+                        renderer.Quad3D2(
+                            x0, y0, z0,
+                            x1, y1, z1,
+                            x2, y2, z2,
+                            x2, y2, z2,
+                            tempQuad
+                            );
+                    }
                 }
             }
         }
@@ -351,8 +368,8 @@ class GltfModel
 
         mat4.fromRotationTranslation(parentMatrix, rotationQuat, [0,0,0])
 
-        this.inst.minBB = [100000,10000,10000];
-        this.inst.maxBB = [-10000,-10000,-10000];
+        this.inst.minBB = [Number.POSITIVE_INFINITY,Number.POSITIVE_INFINITY,Number.POSITIVE_INFINITY];
+        this.inst.maxBB = [Number.NEGATIVE_INFINITY,Number.NEGATIVE_INFINITY,Number.NEGATIVE_INFINITY];
 
         // update all scene matrixes.
         for(let i = 0; i < gltf.scene.nodes.length; i++)
@@ -478,6 +495,33 @@ class GltfModel
             names.push(gltf.animations[i].name);
 
         return names;
+    }
+
+    drawWireFrame(renderer, whiteTexture, tempQuad, x0,y0,z0,x1,y1,z1, x2, y2,z2, xWidth, yWidth, zWidth ){
+        renderer.SetTexture(whiteTexture);
+        tempQuad.set(0,0,1,0,0,1,0,1);
+
+        renderer.Quad3D2(
+            x0, y0, z0,
+            x0+xWidth, y0+yWidth, z0+zWidth,
+            x1, y1, z1,
+            x1+xWidth, y1+yWidth, z1+zWidth,
+            tempQuad
+        );
+        renderer.Quad3D2(
+            x1, y1, z1,
+            x1+xWidth, y1+yWidth, z1+zWidth,
+            x2, y2, z2,
+            x2+xWidth, y2+yWidth, z2+zWidth,
+            tempQuad
+        );
+        renderer.Quad3D2(
+            x2, y2, z2,
+            x2+xWidth, y2+yWidth, z2+zWidth,
+            x0, y0, z0,
+            x0+xWidth, y0+yWidth, z0+zWidth,
+            tempQuad
+        );        
     }
 
     // Updates animation at index to be at time.  Is used to play animation.  

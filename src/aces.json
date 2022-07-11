@@ -26,7 +26,15 @@
           "isTrigger": true,
           "isInvertible": false,
           "isCompatibleWithTriggers": false
-        }    
+        },
+        {
+          "id": "is-wireframe-enabled",
+          "scriptName": "IsWireframeEnabled",
+          "highlight": false,
+          "isTrigger": false,
+          "isInvertible": false,
+          "isCompatibleWithTriggers": false
+        }     
       ],
       "actions": [
         {
@@ -350,6 +358,41 @@
                 "initialValue": "1"
                 }
             ]
+          },
+          {
+            "id": "enable-wireframe",
+            "scriptName": "EnableWireframe",
+            "highlight": false,
+            "params": [
+              {
+                "id": "enable",
+                "type": "boolean",
+                "initialValue": "true"
+              }
+            ]
+          },
+          {
+            "id": "set-wireframe-widths",
+            "scriptName": "SetWireframeWidths",
+            "highlight": false,
+            "isDeprecated": false,
+            "params": [
+              {
+                "id": "x-wireframe-width",
+                "type": "number",
+                "initialValue": "1"
+                },
+                {
+                "id": "y-wireframe-width",
+                "type": "number",
+                "initialValue": "1"
+                },
+                {
+                "id": "z-wireframe-width",
+                "type": "number",
+                "initialValue": "1"
+              }
+            ]
           }
       ],
       "expressions": [
@@ -514,7 +557,35 @@
           "highlight": false,
           "params": [
           ]  
+        },
+        {
+          "id": "x-wireframe-width",
+          "scriptName": "XWireframeWidth",
+          "expressionName": "XWireframeWidth",
+          "returnType": "number",
+          "highlight": false,
+          "params": [
+          ]  
+        },
+        {
+          "id": "y-wireframe-width",
+          "scriptName": "YWireframeWidth",
+          "expressionName": "YWireframeWidth",
+          "returnType": "number",
+          "highlight": false,
+          "params": [
+          ]  
+        },
+        {
+          "id": "z-wireframe-width",
+          "scriptName": "ZWireframeWidth",
+          "expressionName": "ZWireframeWidth",
+          "returnType": "number",
+          "highlight": false,
+          "params": [
+          ]  
         }
+
       ]
     }
   }

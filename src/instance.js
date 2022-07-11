@@ -43,7 +43,11 @@
             this.xScale = this._inst.GetPropertyValue('x-scale');
             this.yScale = this._inst.GetPropertyValue('y-scale');
             this.zScale = this._inst.GetPropertyValue('z-scale');
+            this.wireframe = this._inst.GetPropertyValue('wireframe');
             this.isEditor = true;
+            this.xWireframeWidth = 1;
+            this.yWireframeWidth = 1;
+            this.zWireframeWidth = 1;
 
             const wi = this._inst;
             wi.SetOriginY(0.5);
@@ -165,14 +169,19 @@
                         this.gltf.getPolygons();
                         this.gltf.render(iRenderer, x, y, z, tempQuad, whiteTextureOwner.whiteTexture, this._inst.GetColor(), textures, this.instanceTexture);
                         // this.layoutView.Refresh();
-                        const wi = this._inst;
-                        let width = this.maxBB[0]-this.minBB[0];
-                        let height = this.maxBB[1]-this.minBB[1];
-                        height = height == 0 ? 1 : height;
-                        width = width == 0 ? 1 : width;
-                        wi.SetSize(width, height);
-                        wi.SetOriginX(-(this.minBB[0]-x)/(width));
-                        wi.SetOriginY(-(this.minBB[1]-y)/(height));
+                        if ( this.maxBB[0] != Number.POSITIVE_INFINITY &&
+                             this.minBB[0] != Number.NEGATIVE_INFINITY &&
+                             this.maxBB[1] != Number.POSITIVE_INFINITY &&
+                             this.minBB[1] != Number.NEGATIVE_INFINITY) {
+                            const wi = this._inst;
+                            let width = this.maxBB[0]-this.minBB[0];
+                            let height = this.maxBB[1]-this.minBB[1];
+                            height = height == 0 ? 1 : height;
+                            width = width == 0 ? 1 : width;
+                            wi.SetSize(width, height);
+                            wi.SetOriginX(-(this.minBB[0]-x)/(width));
+                            wi.SetOriginY(-(this.minBB[1]-y)/(height));
+                        }
                         // wi.SetOriginX((0-this.minBB[0])/(this.maxBB[0]-this.minBB[0]));
                     } else
                     {
@@ -284,6 +293,10 @@
                     break;
                 case 'z-scale':
                     this.zScale = this._inst.GetPropertyValue('z-scale');
+                    if (this.layoutView) this.layoutView.Refresh();
+                    break;
+                case 'wireframe':
+                    this.wireframe = this._inst.GetPropertyValue('wireframe');
                     if (this.layoutView) this.layoutView.Refresh();
                     break;
                 default:

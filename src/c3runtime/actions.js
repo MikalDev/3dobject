@@ -137,7 +137,7 @@
             let response = await fetch(textureURI, {mode:'cors'});
             let blob = await response.blob()
             let imageBitmap;
-            if (globalThis.createImageBitmap) {
+            if (typeof globalThis.createImageBitmap === 'function') {
                 imageBitmap = await createImageBitmap(blob);
             } else {
                 //@ts-ignore
@@ -244,7 +244,16 @@
 
         SetBBoxScale(scale) {
             this._setBBoxScale(scale);
-        }
+        },
 
+        EnableWireframe(enable) {
+            this.wireframe = enable;
+        },
+
+        SetWireframeWidths(x, y, z) {
+            this.xWireframeWidth = x;
+            this.yWireframeWidth = y;
+            this.zWireframeWidth = z;
+        }
     }
 }
