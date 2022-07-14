@@ -503,23 +503,23 @@ class GltfModel
 
         renderer.Quad3D2(
             x0, y0, z0,
-            x0+xWidth, y0+yWidth, z0+zWidth,
             x1, y1, z1,
-            x1+xWidth, y1+yWidth, z1+zWidth,
+            x1+xWidth*(y0-y1)/(Math.sqrt((x0-x1)^2+(y0-y1)^2)), y1+yWidth*(x1-x0)/(Math.sqrt((x0-x1)^2+(y0-y1)^2)), z1+zWidth,
+            x0+xWidth*(y0-y1)/(Math.sqrt((x0-x1)^2+(y0-y1)^2)), y0+yWidth*(x1-x0)/(Math.sqrt((x0-x1)^2+(y0-y1)^2)), z0+zWidth,
             tempQuad
         );
         renderer.Quad3D2(
             x1, y1, z1,
-            x1+xWidth, y1+yWidth, z1+zWidth,
             x2, y2, z2,
-            x2+xWidth, y2+yWidth, z2+zWidth,
+            x2+xWidth*(y1-y2)/(Math.sqrt((x1-x2)^2+(y1-y2)^2)), y2+yWidth*(x2-x1)/(Math.sqrt((x1-x2)^2+(y1-y2)^2)), z2+zWidth,
+            x1+xWidth*(y1-y2)/(Math.sqrt((x1-x2)^2+(y1-y2)^2)), y1+yWidth*(x2-x1)/(Math.sqrt((x1-x2)^2+(y1-y2)^2)), z1+zWidth,
             tempQuad
         );
         renderer.Quad3D2(
             x2, y2, z2,
-            x2+xWidth, y2+yWidth, z2+zWidth,
             x0, y0, z0,
-            x0+xWidth, y0+yWidth, z0+zWidth,
+            x0+xWidth*(y2-y0)/(Math.sqrt((x2-x0)^2+(y2-y0)^2)), y0+yWidth*(x0-x2)/(Math.sqrt((x2-x0)^2+(y2-y0)^2)), z0+zWidth,
+            x2+xWidth*(y2-y0)/(Math.sqrt((x2-x0)^2+(y2-y0)^2)), y2+yWidth*(x0-x2)/(Math.sqrt((x2-x0)^2+(y2-y0)^2)), z2+zWidth,
             tempQuad
         );        
     }
