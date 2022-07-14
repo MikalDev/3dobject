@@ -501,13 +501,44 @@ class GltfModel
         renderer.SetTexture(whiteTexture);
         tempQuad.set(0,0,1,0,0,1,0,1);
 
+        const vec3 = globalThis.glMatrix3D.vec3;
+        const start = vec3.fromValues(x0,y0,z0);
+        const end = vec3.fromValues(x1,y1,z1);
+        const normal = vec3.create();
+        const side = vec3.create();
+        const diff = vec3.create();
+        const a = vec3.create();
+        const b = vec3.create();
+        const c = vec3.create();
+        const d = vec3.create();
+        const lineWidth = vec3.fromValues(xWidth/2,yWidth/2,zWidth/2);
+        const sideWidth = vec3.create();
+
+        // Vector3 normal = Vector3.Cross(start, end);
+        vec3.cross(normal, start, end);
+        // Vector3 side = Vector3.Cross(normal, end-start);
+        vec3.sub(diff, end, start);
+        vec3.cross(side, normal, diff);
+        // side.Normalize();
+        vec3.normalize(side, side);
+        vec3.multiply(sideWidth, side, lineWidth);
+        // Vector3 a = start + side * (lineWidth / 2);
+        vec3.add(a, start, sideWidth);
+        // Vector3 b = start + side * (lineWidth / -2);
+        vec3.sub(b, start, sideWidth);
+        // Vector3 c = end + side * (lineWidth / 2);
+        vec3.add(c, end, sideWidth);
+        // Vector3 d = end + side * (lineWidth / -2);
+        vec3.sub(d, end, sideWidth);
+
         renderer.Quad3D2(
-            x0, y0, z0,
-            x1, y1, z1,
-            x1+xWidth*(y0-y1)/(Math.sqrt((x0-x1)^2+(y0-y1)^2)), y1+yWidth*(x1-x0)/(Math.sqrt((x0-x1)^2+(y0-y1)^2)), z1+zWidth,
-            x0+xWidth*(y0-y1)/(Math.sqrt((x0-x1)^2+(y0-y1)^2)), y0+yWidth*(x1-x0)/(Math.sqrt((x0-x1)^2+(y0-y1)^2)), z0+zWidth,
+            a[0], a[1], a[2],
+            c[0], c[1], c[2],
+            d[0], d[1], d[2],
+            b[0], b[1], b[2],
             tempQuad
         );
+        /*
         renderer.Quad3D2(
             x1, y1, z1,
             x2, y2, z2,
@@ -515,13 +546,16 @@ class GltfModel
             x1+xWidth*(y1-y2)/(Math.sqrt((x1-x2)^2+(y1-y2)^2)), y1+yWidth*(x2-x1)/(Math.sqrt((x1-x2)^2+(y1-y2)^2)), z1+zWidth,
             tempQuad
         );
+        */
+       /*
         renderer.Quad3D2(
             x2, y2, z2,
             x0, y0, z0,
             x0+xWidth*(y2-y0)/(Math.sqrt((x2-x0)^2+(y2-y0)^2)), y0+yWidth*(x0-x2)/(Math.sqrt((x2-x0)^2+(y2-y0)^2)), z0+zWidth,
             x2+xWidth*(y2-y0)/(Math.sqrt((x2-x0)^2+(y2-y0)^2)), y2+yWidth*(x0-x2)/(Math.sqrt((x2-x0)^2+(y2-y0)^2)), z2+zWidth,
             tempQuad
-        );        
+        );
+        */        
     }
 
     // Updates animation at index to be at time.  Is used to play animation.  
