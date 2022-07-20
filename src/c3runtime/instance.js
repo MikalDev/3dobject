@@ -52,9 +52,9 @@
             this.xMaxBB = [0,0,0];
             this.bboxScale = 1;
             this.wireframe = false;
-            this.xWireframeWidth = 1;
-            this.yWireframeWidth = 1;
-            this.zWireframeWidth = 1;
+            this.xWireframeWidth = 2;
+            this.yWireframeWidth = 2;
+            this.zWireframeWidth = 2;
 
             if (properties)
             {
@@ -333,6 +333,23 @@
         SetPropertyValueByIndex(index, value)
         {
             //set property value here
+        }
+
+        _findNode(nodeName) {
+            for(let ii = 0; ii < this.gltf.gltfData.skinnedNodes.length; ii++) {
+                let node = this.gltf.gltfData.skinnedNodes[ii];
+                if (node.name == nodeName) {
+                    return node;
+                }
+            }
+
+            for(let ii = 0; ii < this.gltf.gltfData.nodes.length; ii++) {
+                let node = this.gltf.gltfData.nodes[ii];
+                if (node.name == nodeName) {
+                    return node;
+                }
+            }
+            return false
         }
 
         Release()

@@ -69,7 +69,24 @@
             },               
             ZWireframeWidth() {
                 return this.zWireframeWidth;
-            },               
+            },
+            UOffset(nodeName) {
+                if (!this.gltf) return 0;
+                if (!this.gltf.gltfData) return 0;
 
+                const node = this._findNode(nodeName);
+                if (!node) return 0;
+                if ('offsetUV' in node) return node?.offsetUV?.u;
+                return 0;
+            },
+            VOffset(nodeName) {
+                if (!this.gltf) return 0;
+                if (!this.gltf.gltfData) return 0;
+
+                const node = this._findNode(nodeName);
+                if (!node) return 0;
+                if ('offsetUV' in node) return node?.offsetUV?.v;
+                return 0;
+            }
         };
 }

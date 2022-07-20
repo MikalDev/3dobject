@@ -112,6 +112,7 @@ class GltfModel
             const drawIndices = this.drawMeshes[j].drawIndices;
             const material = this.drawMeshes[j].material;
             const hasTexture = (material && 'pbrMetallicRoughness' in material && 'baseColorTexture' in material.pbrMetallicRoughness);
+            const offsetUV = this.drawMeshes[j].offsetUV;
 
             let color;
             if (material && 'pbrMetallicRoughness' in material && 'baseColorFactor' in material.pbrMetallicRoughness) {
@@ -159,12 +160,23 @@ class GltfModel
                 {
                     if (hasTexture)
                     {
-                        tempQuad.set(
-                        uv[ind[i*3+0]*2+0], uv[ind[i*3+0]*2+1],
-                        uv[ind[i*3+1]*2+0], uv[ind[i*3+1]*2+1],
-                        uv[ind[i*3+2]*2+0], uv[ind[i*3+2]*2+1],
-                        uv[ind[i*3+2]*2+0], uv[ind[i*3+2]*2+1]
-                        );
+                        if (offsetUV) {
+                            const uOffset = offsetUV.u;
+                            const vOffset = offsetUV.v;
+                            tempQuad.set(
+                            uv[ind[i*3+0]*2+0]+uOffset, uv[ind[i*3+0]*2+1]+vOffset,
+                            uv[ind[i*3+1]*2+0]+uOffset, uv[ind[i*3+1]*2+1]+vOffset,
+                            uv[ind[i*3+2]*2+0]+uOffset, uv[ind[i*3+2]*2+1]+vOffset,
+                            uv[ind[i*3+2]*2+0]+uOffset, uv[ind[i*3+2]*2+1]+vOffset
+                            );
+                        } else {
+                            tempQuad.set(
+                                uv[ind[i*3+0]*2+0], uv[ind[i*3+0]*2+1],
+                                uv[ind[i*3+1]*2+0], uv[ind[i*3+1]*2+1],
+                                uv[ind[i*3+2]*2+0], uv[ind[i*3+2]*2+1],
+                                uv[ind[i*3+2]*2+0], uv[ind[i*3+2]*2+1]
+                                );
+                        }    
                     } else
                     {
                         // Set face to color if possible
@@ -263,6 +275,7 @@ class GltfModel
                 }
 
                 this.drawMeshes[this.drawMeshesIndex].disabled = node.disabled;
+                if (node.offsetUV) this.drawMeshes[this.drawMeshesIndex].offsetUV = node.offsetUV;
 
                 // Update material each time, in case an ACE changes it
                 if ('material' in node.mesh.primitives[i]) {
@@ -410,6 +423,7 @@ class GltfModel
                 }
 
                 this.drawMeshes[this.drawMeshesIndex].disabled = node.disabled;
+                if (node.offsetUV) this.drawMeshes[this.drawMeshesIndex].offsetUV = node.offsetUV;
 
                 // Update material each time, in case an ACE changes it
                 if ('material' in node.mesh.primitives[i]) {
@@ -521,7 +535,7 @@ class GltfModel
             x0, y0, z0,
             x0+xWidth, y0+yWidth, z0+zWidth,
             tempQuad
-        );        
+        );   
     }
 
     // Updates animation at index to be at time.  Is used to play animation.  

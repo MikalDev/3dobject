@@ -202,24 +202,22 @@
         EnableNode(nodeName, enable) {
             if (!this.gltf) return;
             if (!this.gltf.gltfData) return;
-            
-            for(let ii = 0; ii < this.gltf.gltfData.skinnedNodes.length; ii++) {
-                let node = this.gltf.gltfData.skinnedNodes[ii];
-                if (node.name == nodeName) {
-                    node.disabled = !enable;
-                    break;
-                }
-            }
 
-            for(let ii = 0; ii < this.gltf.gltfData.nodes.length; ii++) {
-                let node = this.gltf.gltfData.nodes[ii];
-                if (node.name == nodeName) {
-                    node.disabled = !enable;
-                    break;
-                }
-            }
+            const node = this._findNode(nodeName);
+            if (!node) return
+            node.disabled = !enable;
             this.renderOnce = true;
-        },        
+        },
+        
+        OffsetNodeUV(nodeName, u, v) {
+            if (!this.gltf) return;
+            if (!this.gltf.gltfData) return;
+
+            const node = this._findNode(nodeName);
+            if (!node) return
+            node.offsetUV = {u:u, v:v};
+            this.renderOnce = true;
+        },
 
         DeleteMaterial(materialName) {
             const renderer = this.renderer

@@ -393,6 +393,28 @@
                 "initialValue": "1"
               }
             ]
+          },
+          {
+            "id": "offset-node-uv",
+            "scriptName": "OffsetNodeUV",
+            "highlight": false,
+            "params": [
+              {
+                "id": "node-name",
+                "type": "string",
+                "initialValue": ""
+              },
+              {
+                "id": "u-offset",
+                "type": "number",
+                "initialValue": "0"
+              },
+              {
+                "id": "v-offset",
+                "type": "number",
+                "initialValue": "0"
+              }
+            ]
           }
       ],
       "expressions": [
@@ -584,8 +606,35 @@
           "highlight": false,
           "params": [
           ]  
+        },
+        {
+          "id": "u-offset",
+          "scriptName": "UOffset",
+          "expressionName": "UOffset",
+          "returnType": "number",
+          "highlight": false,
+          "params": [
+            {
+              "id": "node-name",
+              "type": "string",
+              "initialValue": ""
+            }            
+          ]  
+        },
+        {
+          "id": "v-offset",
+          "scriptName": "VOffset",
+          "expressionName": "VOffset",
+          "returnType": "number",
+          "highlight": false,
+          "params": [
+            {
+              "id": "node-name",
+              "type": "string",
+              "initialValue": ""
+            }            
+          ]  
         }
-
       ]
     }
   }

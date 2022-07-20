@@ -446,6 +446,25 @@
                 "desc": "Z wireframe width."
               }
             }
+          },
+          "offset-node-uv": {
+            "list-name": "Offset node UV",
+            "display-text": "Offset node {0} UV by {1}, {2}",
+            "description": "Offset node UV texture coordinates.",
+            "params": {
+              "node-name": {
+                  "name": "Node name",
+                  "desc": "Node name to offset UVs."
+              },
+              "u-offset": {
+                "name": "U Offset",
+                "desc": "U Offset (-1.0 to 1.0)."
+              },
+              "v-offset": {
+                "name": "V Offset",
+                "desc": "V Offset (-1.0 to 1.0)."
+              }
+            }
           }
         },
         "expressions": {
@@ -563,6 +582,26 @@
             "description": "Z wireframe line width.",
             "translated-name": "ZWireframeWidth",
             "params": {}
+          },
+          "u-offset": {
+            "description": "U offset on node.",
+            "translated-name": "UOffset",
+            "params": {
+              "node-name": {
+                  "name": "Node name",
+                  "desc": "Node name of offset U."
+              }
+            }
+          },
+          "v-offset": {
+            "description": "V offset on node.",
+            "translated-name": "VOffset",
+            "params": {
+              "node-name": {
+                  "name": "Node name",
+                  "desc": "Node name of offset V."
+              }
+            }
           }
         }
       }
