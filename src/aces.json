@@ -634,7 +634,16 @@
               "initialValue": ""
             }            
           ]  
-        }
+        },
+        {
+          "id": "materials",
+          "scriptName": "Materials",
+          "expressionName": "Materials",
+          "returnType": "string",
+          "highlight": false,
+          "params": [
+          ]  
+        }        
       ]
     }
   }

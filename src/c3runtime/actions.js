@@ -153,6 +153,7 @@
             
             textures[materialName] = renderer.CreateDynamicTexture(width, height, options);
             await renderer.UpdateTexture(imageBitmap, textures[materialName]);
+            textures[materialName].materialPath = materialPath;
             if (typeof imageBitmap.close === "function") imageBitmap.close();
         },
 

@@ -87,6 +87,14 @@
                 if (!node) return 0;
                 if ('offsetUV' in node) return node?.offsetUV?.v;
                 return 0;
+            },
+            Materials() {
+                let textures = this.instanceModel ? this.texture : this.sdkType.texture
+                let materials = [];
+                for (let textureName in textures) {
+                    materials.push({name: textureName, path: textures[textureName].materialPath || textureName});
+                }
+                return JSON.stringify(materials);
             }
         };
 }

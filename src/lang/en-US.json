@@ -602,6 +602,11 @@
                   "desc": "Node name of offset V."
               }
             }
+          },
+          "materials": {
+            "description": "Material list in JSON string format.",
+            "translated-name": "Materials",
+            "params": {}
           }
         }
       }
