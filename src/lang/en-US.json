@@ -607,6 +607,30 @@
             "description": "Material list in JSON string format.",
             "translated-name": "Materials",
             "params": {}
+          },
+          "node-point-position": {
+            "description": "Node point position, as JSON string, {x:<number>,y:<number>,z:<number>}.",
+            "translated-name": "NodePointPosition",
+            "params": {
+              "node-name": {
+                "name": "Node name",
+                "desc": "Node name."
+              },
+              "point-index": {
+                "name": "Point index",
+                "desc": "Point index."
+              }
+            }
+          },
+          "node-vertex-length": {
+            "description": "Length of node's mesh's vertex array.",
+            "translated-name": "NodeVertexLength",
+            "params": {
+              "node-name": {
+                "name": "Node name",
+                "desc": "Node name."
+              }
+            }
           }
         }
       }

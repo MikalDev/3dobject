@@ -643,7 +643,41 @@
           "highlight": false,
           "params": [
           ]  
-        }        
+        },
+        {
+          "id": "node-point-position",
+          "scriptName": "NodePointPosition",
+          "expressionName": "NodePointPosition",
+          "returnType": "string",
+          "highlight": false,
+          "params": [
+            {
+              "id": "node-name",
+              "type": "string",
+              "initialValue": ""
+            },
+            {
+              "id": "point-index",
+              "type": "number",
+              "initialValue": "0"
+            }
+
+          ]  
+        },
+        {
+          "id": "node-vertex-length",
+          "scriptName": "NodeVertexLength",
+          "expressionName": "NodeVertexLength",
+          "returnType": "number",
+          "highlight": false,
+          "params": [
+            {
+              "id": "node-name",
+              "type": "string",
+              "initialValue": ""
+            }
+          ]  
+        }                              
       ]
     }
   }

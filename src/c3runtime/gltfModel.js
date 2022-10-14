@@ -20,6 +20,7 @@ class GltfModel
         this.currentColor = [-1,-1,-1,-1];
         this.nodeMeshMap = {};
         this.modelRotate = mat4.create();
+        this.meshNames = new Map()
     }
 
     async init() {
@@ -272,6 +273,7 @@ class GltfModel
                             disabled: false,
                         }
                     )
+                    this.meshNames.set(node.name, this.drawMeshesIndex)
                 }
 
                 this.drawMeshes[this.drawMeshesIndex].disabled = node.disabled;
@@ -420,6 +422,7 @@ class GltfModel
                             disabled: true,
                         }
                     )
+                    this.meshNames.set(node.name, this.drawMeshesIndex)
                 }
 
                 this.drawMeshes[this.drawMeshesIndex].disabled = node.disabled;

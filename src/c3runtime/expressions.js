@@ -95,6 +95,27 @@
                     materials.push({name: textureName, path: textures[textureName].materialPath || textureName});
                 }
                 return JSON.stringify(materials);
+            },
+            NodePointPosition(nodeName, pointIndex) {
+                const vec3 = globalThis.glMatrix3D.vec3
+                let rotatedPoint = [0,0,0]
+                if (!this.gltf) return JSON.stringify(rotatedPoint);
+                if (!this.gltf.gltfData) return  JSON.stringify(rotatedPoint);
+                if (!this.gltf.meshNames.has(nodeName)) return  JSON.stringify(rotatedPoint);
+                if (!this.gltf.modelRotate) return JSON.stringify(rotatedPoint);
+                const drawVerts = this.gltf.drawMeshes[this.gltf.meshNames.get(nodeName)].drawVerts[0]
+                const point = vec3.fromValues(drawVerts[pointIndex*3], drawVerts[pointIndex*3+1], drawVerts[pointIndex*3+2])
+                vec3.transformMat4(rotatedPoint, point, this.gltf.modelRotate)
+                return `{"x": ${rotatedPoint[0]}, "y": ${rotatedPoint[1]}, "z": ${rotatedPoint[2]}}`
+            },
+            NodeVertexLength(nodeName) {
+                if (!this.gltf) return 0;
+                if (!this.gltf.gltfData) return 0;
+                if (!this.gltf.meshNames.has(nodeName)) return 0;
+                const drawVerts = this.gltf?.drawMeshes[this.gltf.meshNames.get(nodeName)]?.drawVerts[0]
+                if (!Array.isArray(drawVerts)) return 0
+                // x,y,z per vertex
+                return drawVerts.length/3;
             }
         };
 }
