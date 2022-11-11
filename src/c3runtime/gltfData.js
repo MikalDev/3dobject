@@ -48,13 +48,13 @@ class GltfData
 
         let resultgltf
 
-        // try {
+        try {
 		    resultgltf = await this.loadGLTF(gltfURI, isRuntime, debug, isBinary);
-        // } catch( err ) {
-        //     alert('Error loading GLTF:'+err)
-        //    console.error('Error loading GLTF:',err)
-        //    return false
-        //}
+        } catch( err ) {
+            alert('Error loading GLTF:'+err)
+            console.error('Error loading GLTF:',err)
+            return false
+        }
 
         if (resultgltf)
 		{
