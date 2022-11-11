@@ -48,13 +48,13 @@ class GltfData
 
         let resultgltf
 
-        try {
+        // try {
 		    resultgltf = await this.loadGLTF(gltfURI, isRuntime, debug, isBinary);
-        } catch( err ) {
-            alert('Error loading GLTF:'+err)
-            console.error('Error loading GLTF:',err)
-            return false
-        }
+        // } catch( err ) {
+        //     alert('Error loading GLTF:'+err)
+        //    console.error('Error loading GLTF:',err)
+        //    return false
+        //}
 
         if (resultgltf)
 		{
@@ -311,7 +311,11 @@ class GltfData
                     // Set material name to image name
                     // Might be redundant, but it's a good idea to have a name for the material
                     const hasTexture = ('baseColorTexture' in p.material.pbrMetallicRoughness)
-                    if (hasTexture) p.material.name = gltf.images[p.material.pbrMetallicRoughness.baseColorTexture.index].name;
+                    if (hasTexture) {
+                        const textureIndex = p.material.pbrMetallicRoughness.baseColorTexture.index
+                        const imageIndex = gltf.textures[textureIndex].source
+                        p.material.name = gltf.images[imageIndex].name;
+                    }
                 }
                 
                 Object.keys(p.attributes).forEach(function(key){
