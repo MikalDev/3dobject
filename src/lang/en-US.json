@@ -465,6 +465,17 @@
                 "desc": "V Offset (-1.0 to 1.0)."
               }
             }
+          },
+          "load-model-from-template": {
+            "list-name": "Load model from prefab instance",
+            "display-text": "Load model from prefab uid {0}",
+            "description": "Load model from prefab instance of object.",
+            "params": {
+                  "template-uid": {
+                      "name": "Prefab uid",
+                      "desc": "Prefab uid of instance to load model from, prefab must already be loaded."
+                  }
+              }
           }
         },
         "expressions": {

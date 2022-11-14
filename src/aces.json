@@ -415,6 +415,18 @@
                 "initialValue": "0"
               }
             ]
+          },
+          {
+            "id": "load-model-from-template",
+            "scriptName": "LoadModelFromTemplate",
+            "highlight": false,
+            "params": [
+              {
+                "id": "template-uid",
+                "type": "number",
+                "initialValue": 0
+              }
+            ]
           }
       ],
       "expressions": [

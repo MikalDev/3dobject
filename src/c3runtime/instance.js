@@ -224,7 +224,15 @@
             let textures = this.instanceModel ? this.texture : this.sdkType.texture
             let whiteTextureOwner = this.instanceModel ? this : this.sdkType
             let gltfData = this.instanceModel ? this.gltfData : this.sdkType.gltfData
-            this.sdkType.LoadDynamicTextures(renderer, gltfData, textures, whiteTextureOwner, this.instanceModel);
+
+            if (!gltfData) { // Source destoryed, destroy this instance
+                this.runtime.DestroyInstance(this.GetInstance());
+                return
+            }
+    
+            if (gltfData.dynamicTexturesLoaded !== true) {
+                this.sdkType.LoadDynamicTextures(renderer, gltfData, textures, whiteTextureOwner, this.instanceModel);
+            }
 
             if (textures.length === 0 || this.instanceTexture) {
                 renderer.SetTexture(texture);

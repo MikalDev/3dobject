@@ -253,6 +253,59 @@
             this.xWireframeWidth = x;
             this.yWireframeWidth = y;
             this.zWireframeWidth = z;
-        }
+        },
+
+        LoadModelFromTemplate(uid) {
+            console.log('LoadModelFromTemplate', uid);
+            if (!this.instanceModel) {
+                console.warn('LoadModelFromTemplate only works on instance models');
+                return;
+            }
+            const template = this.runtime.GetInstanceByUID(uid);
+            if (!template) {
+                console.warn('LoadModelFromTemplate template uid not found', uid);
+                return;
+            }
+            const objectName = this.GetObjectClass().GetName();
+            const templateObjectName = template.GetObjectClass().GetName();
+            if (objectName !== templateObjectName) {
+                console.warn('LoadModelFromTemplate: template object type does not match, instance uid, template uid', this.uid, uid);
+                return;
+            }
+            const templateInst = template.GetSdkInstance();
+            if (!templateInst.loaded) {
+                console.warn('LoadModelFromTemplate: template not loaded, instance uid, template uid', this.uid, uid);
+                return;
+            }
+            console.log('template', template, templateInst);
+            this.sdkType = templateInst;
+            this.sdkType.dataLoaded = true;
+            this.instanceModel = false;
+
+            // ObjectClass.GetName()
+            /*
+            if (this.instanceModel&&this.dataLoaded) return
+            if (!this.instanceModel&&this.sdkType.dataLoaded) return
+
+            if (this.instanceModel) {
+                //@ts-ignore
+                this.gltfData = new globalThis.GltfData(this.runtime, this);
+                this.gltfData.load(gltfPath, true, this.debug);
+                this.gltfData.dynamicTexturesLoaded = false;
+                this.doingInit = false;
+                this.loaded = false;    
+            } else {
+                let sdkType = this.sdkType;
+                sdkType.initOwner = this.uid;
+                sdkType.gltfData.load(gltfPath, true, this.debug);
+                sdkType.gltfData.dynamicTexturesLoaded = false;
+                this.doingInit = false;
+                this.loaded = false;        
+            }
+            this.runtime.UpdateRender();
+            this.updateBbox = true
+            */
+        },
+
     }
 }
