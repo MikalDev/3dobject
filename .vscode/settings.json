@@ -1,3 +1,6 @@
 {
-  "editor.formatOnSave": false
+  "editor.formatOnSave": false,
+  "printcode.fontSize": 10,
+  "printcode.paperSize": "letter",
+  "printcode.lineNumbers": "off"
 }

@@ -21,6 +21,7 @@ class GltfModel
         this.nodeMeshMap = {};
         this.modelRotate = mat4.create();
         this.meshNames = new Map()
+        this.msgPort = null;
     }
 
     async init() {
@@ -40,6 +41,37 @@ class GltfModel
             if (!node.mesh) continue;
             this.nodeMeshMap[node.name] = node.mesh.name;
         }
+        // Create dedicdated web worker for skinned mesh animation
+        // this.createWorker(this._runtime)
+    }
+
+    async createWorker(runtime)
+    {
+        // Create the worker with the runtime.createWorker() method.
+        // This must be awaited and resolves with a messagePort.
+        console.log('createWorker')
+        this.msgPort = await runtime._iRuntime.createWorker("gltfWorker.js");
+        console.log('workerCreated')  
+        // const buff = new SharedArrayBuffer(16000);
+        // const   arr = new Float32Array(buff);
+        /* setting data */
+        // arr[0] = 9.87654321;
+        /* sending the buffer (copy) to worker */
+        // Add an onmessage handler to receive message
+        this.msgPort.onmessage = ((e) =>
+        {
+            // console.log('runtime msg rx')
+            const buff = e.data
+            const arr = new Float32Array(buff);
+            console.log('runtime', arr.byteLength, arr[0])
+            // TODO: handle the message in e.data
+        });
+        // Send the gltfModel to the worker
+        this.msgPort.postMessage({type: 'gltf', gltf: this.gltfData});
+        // Now messages can be posted to the worker with:
+        // messagePort.postMessage(...);
+        // this.msgPort.postMessage({type: 'init'});
+        return { msgPort: this.msgPort }
     }
     
     structuralClone(obj) {
@@ -541,6 +573,16 @@ class GltfModel
         );   
     }
 
+    updateAnimationPolygons(index, time, onScreen, deltaTime) {
+        this.updateAnimation(index, time, onScreen, deltaTime);
+        if (onScreen)
+        {
+            this.getPolygons();
+            this.inst.runtime.UpdateRender();
+            this.inst.updateBbox = true
+        }        
+    }
+
     // Updates animation at index to be at time.  Is used to play animation.  
     updateAnimation(index, time, onScreen, deltaTime)
     {
@@ -590,7 +632,6 @@ class GltfModel
         }
 
         this._lastTarget = [];
-        
         for(let i = 0; i < anim.channels.length; i++)
         {
             let c = anim.channels[i];

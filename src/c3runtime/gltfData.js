@@ -192,6 +192,7 @@ class GltfData
                 const stride = bufview.byteStride;
                 const offset = a.byteOffset;
                 const view = new DataView(gltf.buffers[bufview.buffer]);
+                // @ts-ignore
                 a.data = new buftype(compcount*a.count);                
                 for(let j = 0; j < a.count; j++) {
                     for(let k = 0; k < compcount; k++) {
@@ -199,6 +200,7 @@ class GltfData
                     }
                 }
             } else {
+                // @ts-ignore
                 a.data = new buftype(gltf.buffers[bufview.buffer], bufview.byteOffset, compcount*a.count);                    
             }
         }
@@ -287,6 +289,7 @@ class GltfData
                     blob = await (await fetch(image.uri)).blob(); 
                 }
                 let imageBitmap;
+                // @ts-ignore
                 if (globalThis.createImageBitmap) {
                     imageBitmap = await createImageBitmap(blob);
                 } else {
@@ -343,6 +346,7 @@ class GltfData
         // Create white texture
         const whitePNGURI ="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAQAAAC1+jfqAAAAFElEQVR42mP8/58BL2AcVTCSFAAA0rYf8R32RV0AAAAASUVORK5CYII=";
         const blob = await (await fetch(whitePNGURI)).blob();
+        // @ts-ignore
         if (globalThis.createImageBitmap) {
             this.whiteImageBitmap = await createImageBitmap(blob);
         } else {

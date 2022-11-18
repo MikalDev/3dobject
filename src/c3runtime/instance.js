@@ -105,15 +105,21 @@
         async doInit() {
             if (this.instanceModel) {
                 this.gltf = new globalThis.GltfModel(this._runtime, this, this);
+                this.gltfW = new globalThis.GltfModelW(this._runtime, this.sdkType, this);
             } else {
                 this.gltf = new globalThis.GltfModel(this._runtime, this.sdkType, this);
+                this.gltfW = new globalThis.GltfModelW(this._runtime, this.sdkType, this);
             }
             await this.gltf.init();
+            await this.gltfW.init();
+            this.gltfW.initDrawMeshes();
+            console.log('drawMeshes', this.gltfW.drawMeshes);
             this.loaded = true;
             this.drawVerts = [];
             this.drawUVs = [];
             this.drawIndices = [];
             this.gltf.getPolygons();
+            this.gltfW.getPolygons();
             this.runtime.UpdateRender();
             if (this.gltf.getAnimationNames().length > 0)
             {
@@ -159,13 +165,8 @@
                         this.drawVerts = [];
                         this.drawUVs = [];
                         this.drawIndices = [];
-                        this.gltf.updateAnimation(this.animationIndex, this.animationTime, onScreen, deltaTime);
-                        if (onScreen)
-                        {
-                            this.gltf.getPolygons();    
-                            this.runtime.UpdateRender();
-                            this.updateBbox = true
-                        }
+                        this.gltfW.updateAnimationPolygons(this.animationIndex, this.animationTime, onScreen, deltaTime);
+                        // this.gltf.updateAnimationPolygons(this.animationIndex, this.animationTime, onScreen, deltaTime);
                     }
                 } else if (this.renderOnce)
                 {
@@ -173,7 +174,8 @@
                     this.drawVerts = [];
                     this.drawUVs = [];
                     this.drawIndices = [];
-                    this.gltf.getPolygons();    
+                    // 
+                    this.gltfW.getPolygons();    
                     this.runtime.UpdateRender();
                     this.updateBbox = true
                 }    
@@ -242,7 +244,7 @@
 
             if (this.loaded && this.gltfPath != 'path')
             {
-                this.gltf.render(renderer, x, y, z, tempQuad, whiteTextureOwner.whiteTexture, wi.GetPremultipliedColor(), textures, this.instanceTexture);
+                this.gltfW.render(renderer, x, y, z, tempQuad, whiteTextureOwner.whiteTexture, wi.GetPremultipliedColor(), textures, this.instanceTexture);
 
                 const xScale = this.scale/(this.xScale == 0 ? 1 : this.xScale);
                 const yScale = this.scale/(this.yScale == 0 ? 1 : this.yScale);        
