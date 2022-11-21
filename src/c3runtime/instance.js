@@ -109,6 +109,16 @@
                 this.gltf = new globalThis.GltfModel(this._runtime, this.sdkType, this);
             }
             await this.gltf.init();
+
+            // If needed load textures
+            let textures = this.instanceModel ? this.texture : this.sdkType.texture
+            let whiteTextureOwner = this.instanceModel ? this : this.sdkType
+            let gltfData = this.instanceModel ? this.gltfData : this.sdkType.gltfData
+            let renderer = this.renderer  
+            if (gltfData.dynamicTexturesLoaded !== true) {
+                this.sdkType.LoadDynamicTextures(renderer, gltfData, textures, whiteTextureOwner, this.instanceModel);
+            }
+            
             this.loaded = true;
             this.drawVerts = [];
             this.drawUVs = [];
