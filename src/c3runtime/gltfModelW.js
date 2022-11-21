@@ -25,6 +25,7 @@ class GltfModelW
         this.arrayBufferIndex = 0;
         this.buff = null;
         this.verts = new Float32Array(0);
+        this.updateDrawVerts = false;
     }
 
     async init() {
@@ -45,7 +46,8 @@ class GltfModelW
             this.nodeMeshMap[node.name] = node.mesh.name;
         }
         // Create dedicdated web worker for skinned mesh animation
-        this.createWorker(this._runtime)
+        this.initDrawMeshes();
+        await this.createWorker(this._runtime)
     }
 
     initDrawMeshes() {
@@ -115,17 +117,21 @@ class GltfModelW
         // Create the worker with the runtime.createWorker() method.
         // This must be awaited and resolves with a messagePort.
         this.msgPort = await runtime._iRuntime.createWorker("gltfWorker.js");
-        console.log('workerCreated')  
-        // const buff = new SharedArrayBuffer(16000);
-        // const   arr = new Float32Array(buff);
-        /* setting data */
-        // arr[0] = 9.87654321;
-        /* sending the buffer (copy) to worker */
         // Add an onmessage handler to receive message
         this.msgPort.onmessage = ((e) =>
         {
-            this.buff = e.data
-            this.verts = new Float32Array(this.buff);
+            if (!e.data.type) {
+                this.buff = e.data
+                this.verts = new Float32Array(this.buff);
+                this.setBBFromVerts(this.verts, this.inst.minBB, this.inst.maxBB);
+                this.inst.updateBbox = true;
+                this.updateDrawVerts = true;
+                
+                if (this.inst.debug) console.log('onMsg t:',runtime.GetTickCount(), this.verts[this.verts.length-1], typeof e.data)
+            } else
+            {
+                if (this.inst.debug) console.log('onMsg t:',runtime.GetTickCount(), e.data.type)
+            }
         });
         // Send the gltfModel to the worker
         const bufferViews = this.drawMeshes[this.drawMeshes.length-1].bufferViews;
@@ -136,6 +142,17 @@ class GltfModelW
         // this.msgPort.postMessage({type: 'init'});
         return { msgPort: this.msgPort }
     }
+
+    setBBFromVerts(verts, minBBox, maxBBox) {
+        let l = verts.length-2
+        maxBBox[2] =  verts[l--]
+        maxBBox[1] =  verts[l--]
+        maxBBox[0] =  verts[l--]
+        minBBox[2] =  verts[l--]
+        minBBox[1] =  verts[l--]
+        minBBox[0] =  verts[l--]
+    }
+    
     
     structuralClone(obj) {
         return new Promise(resolve => {
@@ -198,6 +215,13 @@ class GltfModelW
         // Default color
         renderer.SetColor(instanceC3Color);
 
+        if (this.inst.debug) console.log('draw t:',this._runtime.GetTickCount(), this.verts[this.verts.length-1])
+
+        if (this.updateDrawVerts) {
+            this.updateDrawVerts = false;
+            this.typedVertsToDrawVerts()
+        }
+
         for (let j=0; j<= this.drawMeshesIndex; j++)
         {
             // Skip render if disabled
@@ -243,11 +267,15 @@ class GltfModelW
                 }
             }
 
-            for (let ii=0; ii<bufferViews.length; ii++)
+            for (let ii=0; ii<drawVerts.length; ii++)
             {
-                const bufferView = bufferViews[ii];
-                const buffStart = bufferView.start;
-                let v = this.verts;
+                // Convert typed array to regular array
+                // to speed access to data, net win is 10-20%
+                // const v = new Array(bufferView.length);
+                // for (let a=0; a<bufferView.length; a++) {
+                //    v[a] = this.verts[buffStart+a];
+                // }
+                let v = drawVerts[ii];
                 let uv = drawUVs[ii];
                 let ind = drawIndices[ii];
 
@@ -284,15 +312,15 @@ class GltfModelW
                     let i3 = i*3;
                     let x0, y0, z0, x1, y1, z1, x2, y2, z2;
 
-                    x0 = (v[ind[i3+0]*3+0+buffStart]);
-                    y0 = (v[ind[i3+0]*3+1+buffStart]);
-                    z0 = (v[ind[i3+0]*3+2+buffStart])-z;
-                    x1 = (v[ind[i3+1]*3+0+buffStart]);
-                    y1 = (v[ind[i3+1]*3+1+buffStart]);
-                    z1 = (v[ind[i3+1]*3+2+buffStart])-z;
-                    x2 = (v[ind[i3+2]*3+0+buffStart]);
-                    y2 = (v[ind[i3+2]*3+1+buffStart]);
-                    z2 = (v[ind[i3+2]*3+2+buffStart])-z;
+                    x0 = (v[ind[i3+0]*3+0]);
+                    y0 = (v[ind[i3+0]*3+1]);
+                    z0 = (v[ind[i3+0]*3+2])-z;
+                    x1 = (v[ind[i3+1]*3+0]);
+                    y1 = (v[ind[i3+1]*3+1]);
+                    z1 = (v[ind[i3+1]*3+2])-z;
+                    x2 = (v[ind[i3+2]*3+0]);
+                    y2 = (v[ind[i3+2]*3+1]);
+                    z2 = (v[ind[i3+2]*3+2])-z;
 
                     if (this.inst.wireframe) {
                         this.drawWireFrame(renderer, whiteTexture, tempQuad, x0, y0, z0, x1, y1, z1, x2, y2, z2, xWireframeWidth, yWireframeWidth, zWireframeWidth);
@@ -311,6 +339,27 @@ class GltfModelW
         // Restore modelview matrix
         if (!this.inst.isEditor) {
             renderer.SetModelViewMatrix(tmpModelView);
+        }
+    }
+
+    typedVertsToDrawVerts() {
+        for (let j=0; j<= this.drawMeshesIndex; j++) {
+            const drawVerts = this.drawMeshes[j].drawVerts;
+            const bufferViews = this.drawMeshes[j].bufferViews;
+            drawVerts.length = 0
+            for (let ii=0; ii<bufferViews.length; ii++)
+            {
+                const bufferView = bufferViews[ii];
+                let buffStart = bufferView.start;
+                
+                // Convert typed array to regular array
+                // to speed access to data, net win is 10-20%
+                const v = new Array(bufferView.length);
+                for (let a=0; a<bufferView.length; a++) {
+                    v[a] = this.verts[buffStart+a];
+                }
+                drawVerts.push(v);
+            }
         }
     }
 
@@ -466,6 +515,7 @@ class GltfModelW
         }
         const data = {animationData, editorData};
         this.msgPort.postMessage({type: "updateAnimationPolygons", data: data});
+        if (this.inst.debug) console.log('postMsg t:',this.inst.runtime.GetTickCount())
     }
 
     // Updates animation at index to be at time.  Is used to play animation.  

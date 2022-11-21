@@ -75,6 +75,7 @@
                 this.yScale = properties[12];
                 this.zScale = properties[13];
                 this.wireframe = properties[14];
+                this.workerAnimation = properties[15];
             }
 
             this.localCenter = [0,0,0]
@@ -104,22 +105,34 @@
 
         async doInit() {
             if (this.instanceModel) {
-                this.gltf = new globalThis.GltfModel(this._runtime, this, this);
-                this.gltfW = new globalThis.GltfModelW(this._runtime, this.sdkType, this);
+                if (this.workerAnimation) {
+                    this.gltf = new globalThis.GltfModelW(this._runtime, this, this);
+                } else {
+                    this.gltf = new globalThis.GltfModel(this._runtime, this, this);
+                }
             } else {
-                this.gltf = new globalThis.GltfModel(this._runtime, this.sdkType, this);
-                this.gltfW = new globalThis.GltfModelW(this._runtime, this.sdkType, this);
+                if (this.workerAnimation) {
+                    this.gltf = new globalThis.GltfModelW(this._runtime, this.sdkType, this);
+                } else {
+                    this.gltf = new globalThis.GltfModel(this._runtime, this.sdkType, this);
+                }
             }
             await this.gltf.init();
-            await this.gltfW.init();
-            this.gltfW.initDrawMeshes();
-            console.log('drawMeshes', this.gltfW.drawMeshes);
+
+            // If needed load textures
+            let textures = this.instanceModel ? this.texture : this.sdkType.texture
+            let whiteTextureOwner = this.instanceModel ? this : this.sdkType
+            let gltfData = this.instanceModel ? this.gltfData : this.sdkType.gltfData
+            let renderer = this.renderer  
+            if (gltfData.dynamicTexturesLoaded !== true) {
+                this.sdkType.LoadDynamicTextures(renderer, gltfData, textures, whiteTextureOwner, this.instanceModel);
+            }
+
             this.loaded = true;
             this.drawVerts = [];
             this.drawUVs = [];
             this.drawIndices = [];
-            this.gltf.getPolygons();
-            this.gltfW.getPolygons();
+            this.renderOnce = true;
             this.runtime.UpdateRender();
             if (this.gltf.getAnimationNames().length > 0)
             {
@@ -165,8 +178,7 @@
                         this.drawVerts = [];
                         this.drawUVs = [];
                         this.drawIndices = [];
-                        this.gltfW.updateAnimationPolygons(this.animationIndex, this.animationTime, onScreen, deltaTime);
-                        // this.gltf.updateAnimationPolygons(this.animationIndex, this.animationTime, onScreen, deltaTime);
+                        this.gltf.updateAnimationPolygons(this.animationIndex, this.animationTime, onScreen, deltaTime);
                     }
                 } else if (this.renderOnce)
                 {
@@ -174,8 +186,7 @@
                     this.drawVerts = [];
                     this.drawUVs = [];
                     this.drawIndices = [];
-                    // 
-                    this.gltfW.getPolygons();    
+                    this.gltf.getPolygons();    
                     this.runtime.UpdateRender();
                     this.updateBbox = true
                 }    
@@ -244,7 +255,7 @@
 
             if (this.loaded && this.gltfPath != 'path')
             {
-                this.gltfW.render(renderer, x, y, z, tempQuad, whiteTextureOwner.whiteTexture, wi.GetPremultipliedColor(), textures, this.instanceTexture);
+                this.gltf.render(renderer, x, y, z, tempQuad, whiteTextureOwner.whiteTexture, wi.GetPremultipliedColor(), textures, this.instanceTexture);
 
                 const xScale = this.scale/(this.xScale == 0 ? 1 : this.xScale);
                 const yScale = this.scale/(this.yScale == 0 ? 1 : this.yScale);        
@@ -398,8 +409,8 @@
             this.currentAnimationFrame = null;
             this.drawVertsCache = null;
             this.drawUVsCache = null;
-            this.minBB = [0,0,0];
-            this.maxBB = [0,0,0];
+            this.minBB = null;
+            this.maxBB = null;
             this.updateBbox = null;
             this.gltfData = null;
             this.instanceModel = null;
@@ -413,6 +424,7 @@
             this.maxBB = null;
             this.minBB = null;
             this.wireframe = null;
+            this.workerAnimation = null;
             this.xWireframeWidth = null;
             this.yWireframeWidth = null;
             this.zWireframeWidth = null;

@@ -110,6 +110,10 @@
             {
                 "interpolatable": false
             }),
+            new SDK.PluginProperty("check", "worker-animation", false,
+            {
+                "interpolatable": false
+            }),
             ]);
 
             this._info.AddFileDependency(

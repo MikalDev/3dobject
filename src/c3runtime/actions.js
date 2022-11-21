@@ -278,7 +278,8 @@
                 console.warn('LoadModelFromTemplate: template not loaded, instance uid, template uid', this.uid, uid);
                 return;
             }
-            console.log('template', template, templateInst);
+            debugger
+            // console.log('template', template, templateInst);
             this.sdkType = templateInst;
             this.sdkType.dataLoaded = true;
             this.instanceModel = false;

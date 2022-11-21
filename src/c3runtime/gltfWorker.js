@@ -5,7 +5,6 @@ let buff = null;
 let drawVerts = null;
 let index = 0;
 let gltf = null
-let drawMeshesIndex = 0
 let minBB = [Number.POSITIVE_INFINITY,Number.POSITIVE_INFINITY,Number.POSITIVE_INFINITY];
 let maxBB = [Number.NEGATIVE_INFINITY,Number.NEGATIVE_INFINITY,Number.NEGATIVE_INFINITY];
 let buffLength = 0
@@ -32,6 +31,7 @@ function OnMessage(e)
             buffLength = e.data.buffLength
             break
         case 'updateAnimationPolygons':
+            // msgPort.postMessage({type:'got:'+e.data.data.editorData.tick})
             updateAnimationPolygons(e.data.data)
             break
         case 'getPolygons':
@@ -44,12 +44,7 @@ function OnMessage(e)
 
 function OnReady()
 {
-	console.log('wuff ready', id)
-    // messagePort.postMessage(buff, [buff])
-    // console.log('buff sent', id)
-    // Put any startup code in here.
-	// Now messages can be posted to the worker with:
-	// messagePort.postMessage(...);
+	console.log('w ready', id)
 }
 
     // Updates animation at index to be at time.  Is used to play animation.
@@ -73,6 +68,7 @@ function updateAnimationPolygons(data) {
     // Post buffer to messagePort
     // Last float in array will be tick that requested the update
     drawVerts[drawVerts.length-1] = editorData.tick;
+    setBBInVerts(drawVerts, minBB, maxBB)
     msgPort.postMessage(buff, [buff])
 }
 
@@ -83,6 +79,16 @@ function getPolygons(data) {
     // Last float in array will be tick that requested the update
     drawVerts[drawVerts.length-1] = editorData.tick;
     msgPort.postMessage(buff, [buff])
+}
+
+function setBBInVerts(verts, minBBox, maxBBox) {
+    let l = verts.length-2
+    verts[l--] = maxBBox[2]
+    verts[l--] = maxBBox[1]
+    verts[l--] = maxBBox[0]
+    verts[l--] = minBBox[2]
+    verts[l--] = minBBox[1]
+    verts[l--] = minBBox[0]
 }
 
 function updateAnimation(animationData)
@@ -287,7 +293,6 @@ function getPolygonsPrep(editorData)
         
         for(let i = 0; i < node.mesh.primitives.length; i++)
         {
-            let transformedVerts = [];
             
             let posData = node.mesh.primitives[i].attributes.POSITION.data;
             let weights = node.mesh.primitives[i].attributes.WEIGHTS_0.data;
@@ -11064,8 +11069,6 @@ THE SOFTWARE.
   
   
 })));
-debugger
-
 glMatrix.glMatrix.setMatrixArrayType(Array)
   
   
