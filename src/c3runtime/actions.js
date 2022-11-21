@@ -256,7 +256,6 @@
         },
 
         LoadModelFromTemplate(uid) {
-            console.log('LoadModelFromTemplate', uid);
             if (!this.instanceModel) {
                 console.warn('LoadModelFromTemplate only works on instance models');
                 return;
