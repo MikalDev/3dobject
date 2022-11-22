@@ -116,7 +116,8 @@ class GltfModelW
     {
         // Create the worker with the runtime.createWorker() method.
         // This must be awaited and resolves with a messagePort.
-        this.msgPort = await runtime._iRuntime.createWorker("gltfWorker.js");
+        let path = await runtime.GetAssetManager().GetProjectFileUrl("gltfWorker.js")
+        this.msgPort = await runtime._iRuntime.createWorker(path);
         // Add an onmessage handler to receive message
         this.msgPort.onmessage = ((e) =>
         {
