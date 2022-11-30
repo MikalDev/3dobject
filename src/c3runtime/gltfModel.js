@@ -21,6 +21,7 @@ class GltfModel
         this.nodeMeshMap = {};
         this.modelRotate = mat4.create();
         this.meshNames = new Map()
+        this.msgPort = null;
     }
 
     async init() {
@@ -40,6 +41,7 @@ class GltfModel
             if (!node.mesh) continue;
             this.nodeMeshMap[node.name] = node.mesh.name;
         }
+        this.getPolygons();
     }
     
     structuralClone(obj) {
@@ -614,7 +616,6 @@ class GltfModel
         }
 
         this._lastTarget = [];
-        
         for(let i = 0; i < anim.channels.length; i++)
         {
             let c = anim.channels[i];

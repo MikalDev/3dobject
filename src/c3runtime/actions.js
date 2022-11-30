@@ -70,6 +70,7 @@
         },
         SetAnimationRate(rate) {
             this.animationRate = rate;
+            console.log("this.animationRate", this.animationRate);
         },
         SetZHeight(h) {
             this._setZHeight(h);

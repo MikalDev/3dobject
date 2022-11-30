@@ -75,6 +75,7 @@
                 this.yScale = properties[12];
                 this.zScale = properties[13];
                 this.wireframe = properties[14];
+                this.workerAnimation = properties[15];
             }
 
             this.localCenter = [0,0,0]
@@ -105,9 +106,17 @@
         async doInit() {
             const wi = this.GetWorldInfo();
             if (this.instanceModel) {
-                this.gltf = new globalThis.GltfModel(this._runtime, this, this);
+                if (this.workerAnimation) {
+                    this.gltf = new globalThis.GltfModelW(this._runtime, this, this);
+                } else {
+                    this.gltf = new globalThis.GltfModel(this._runtime, this, this);
+                }
             } else {
-                this.gltf = new globalThis.GltfModel(this._runtime, this.sdkType, this);
+                if (this.workerAnimation) {
+                    this.gltf = new globalThis.GltfModelW(this._runtime, this.sdkType, this);
+                } else {
+                    this.gltf = new globalThis.GltfModel(this._runtime, this.sdkType, this);
+                }
             }
             await this.gltf.init();
 
@@ -119,12 +128,12 @@
             if (gltfData.dynamicTexturesLoaded !== true) {
                 this.sdkType.LoadDynamicTextures(renderer, gltfData, textures, whiteTextureOwner, this.instanceModel);
             }
-            
+
             this.loaded = true;
             this.drawVerts = [];
             this.drawUVs = [];
             this.drawIndices = [];
-            this.gltf.getPolygons();
+            this.renderOnce = true;
             this.runtime.UpdateRender();
             if (this.gltf.getAnimationNames().length > 0)
             {
@@ -172,13 +181,7 @@
                         this.drawVerts = [];
                         this.drawUVs = [];
                         this.drawIndices = [];
-                        this.gltf.updateAnimation(this.animationIndex, this.animationTime, onScreen, deltaTime);
-                        if (onScreen)
-                        {
-                            this.gltf.getPolygons();    
-                            this.runtime.UpdateRender();
-                            this.updateBbox = true
-                        }
+                        this.gltf.updateAnimationPolygons(this.animationIndex, this.animationTime, onScreen, deltaTime);
                     }
                 } else if (this.renderOnce)
                 {
@@ -409,8 +412,8 @@
             this.currentAnimationFrame = null;
             this.drawVertsCache = null;
             this.drawUVsCache = null;
-            this.minBB = [0,0,0];
-            this.maxBB = [0,0,0];
+            this.minBB = null;
+            this.maxBB = null;
             this.updateBbox = null;
             this.gltfData = null;
             this.instanceModel = null;
@@ -424,6 +427,7 @@
             this.maxBB = null;
             this.minBB = null;
             this.wireframe = null;
+            this.workerAnimation = null;
             this.xWireframeWidth = null;
             this.yWireframeWidth = null;
             this.zWireframeWidth = null;

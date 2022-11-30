@@ -110,6 +110,10 @@
             {
                 "interpolatable": false
             }),
+            new SDK.PluginProperty("check", "worker-animation", false,
+            {
+                "interpolatable": false
+            }),
             ]);
 
             this._info.AddFileDependency(
@@ -127,6 +131,17 @@
                     filename: "c3runtime/gltfModel.js",
                     type: "external-runtime-script"
                 });
+            this._info.AddFileDependency(
+                {
+                    filename: "c3runtime/gltfModelW.js",
+                    type: "external-runtime-script"
+                });
+            this._info.AddFileDependency(
+            {
+                filename: "c3runtime/gltfWorker.js",
+                type: "copy-to-output",
+                fileType: "text"
+            });
 
             SDK.Lang.PopContext(); //.properties
             SDK.Lang.PopContext();

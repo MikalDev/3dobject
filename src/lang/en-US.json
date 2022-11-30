@@ -88,6 +88,10 @@
           "wireframe": {
             "name": "Wireframe",
             "desc": "Render as wireframe"
+          },
+          "worker-animation": {
+            "name": "Worker animation",
+            "desc": "Offload animation to worker useful for larger animated models."
           }
         },
         "aceCategories": {

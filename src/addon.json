@@ -32,6 +32,8 @@
     "type.js",
     "gl-matrix.js",
     "c3runtime/gltfData.js",
-    "c3runtime/gltfModel.js"
+    "c3runtime/gltfModel.js",
+    "c3runtime/gltfModelW.js",
+    "c3runtime/gltfWorker.js"
   ]
 }
