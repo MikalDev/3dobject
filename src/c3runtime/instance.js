@@ -103,6 +103,7 @@
         }
 
         async doInit() {
+            const wi = this.GetWorldInfo();
             if (this.instanceModel) {
                 this.gltf = new globalThis.GltfModel(this._runtime, this, this);
             } else {
@@ -129,6 +130,8 @@
             {
                 this.animationName = this.gltf.getAnimationNames()[0]
             }
+            this.gltf.updateModelRotate(wi.GetX(), wi.GetY(), wi.GetZElevation());
+            this._updateBoundingBox(wi.GetX(), wi.GetY(), 0);
             this.Trigger(C3.Plugins.Mikal_3DObject.Cnds.OnLoaded);
         }
 

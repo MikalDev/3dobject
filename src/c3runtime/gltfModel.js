@@ -541,6 +541,30 @@ class GltfModel
         );   
     }
 
+    updateModelRotate(x,y,z)
+    {
+        // @ts-ignore
+        const vec3 = globalThis.glMatrix3D.vec3;
+        // @ts-ignore
+        const mat4 = globalThis.glMatrix3D.mat4;
+        // @ts-ignore
+        const quat = globalThis.glMatrix3D.quat;
+        
+        const xAngle = this.inst.xAngle;
+        const yAngle = this.inst.yAngle;
+        const zAngle = this.inst.zAngle;
+        const xScale = this.inst.scale/(this.inst.xScale == 0 ? 1 : this.inst.xScale);
+        const yScale = this.inst.scale/(this.inst.yScale == 0 ? 1 : this.inst.yScale);        
+        const zScale = this.inst.scale/(this.inst.zScale == 0 ? 1 : this.inst.zScale);
+        const rotate = quat.create();
+        if (this.inst.cannonBody && this.inst.cannonSetRotation) {
+            quat.set(rotate, this.inst.cannonBody.quaternion.x, this.inst.cannonBody.quaternion.y, this.inst.cannonBody.quaternion.z, this.inst.cannonBody.quaternion.w);
+        } else {
+            quat.fromEuler(rotate, xAngle, yAngle, zAngle);
+        }
+        mat4.fromRotationTranslationScale(this.modelRotate, rotate, [x,y,z], [xScale,-yScale,zScale]);
+    }
+
     // Updates animation at index to be at time.  Is used to play animation.  
     updateAnimation(index, time, onScreen, deltaTime)
     {
