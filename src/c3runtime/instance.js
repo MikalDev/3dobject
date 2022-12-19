@@ -175,6 +175,8 @@
                 {
                     this.animationTime += this._runtime.GetDt()*this.animationSpeed;
                     const deltaTime = this.animationTime - this.animationLastTime;
+                    console.log(this.animationRate)
+                    debugger
                     if ((deltaTime) >= (1/this.animationRate))
                     {
                         this.animationLastTime = this.animationTime;
@@ -203,11 +205,6 @@
                 this.runtime.UpdateRender();
                 this.updateBbox = true
             }
-        }
-
-        Release()
-        {
-            super.Release();
         }
 
         RendersToOwnZPlane() {
@@ -386,6 +383,9 @@
             if (this.whiteTexture) {
                 this.renderer.DeleteTexture(this.whiteTexture);
             }
+            if (this.gltf) {
+                this.gltf.release();
+            }
             this.sdkType = null;
             this.runtime = null;
             this.renderer = null;
@@ -431,6 +431,7 @@
             this.xWireframeWidth = null;
             this.yWireframeWidth = null;
             this.zWireframeWidth = null;
+            this.gltf = null;
             super.Release();
         }
 

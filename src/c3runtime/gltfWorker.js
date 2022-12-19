@@ -9,42 +9,61 @@ let minBB = [Number.POSITIVE_INFINITY,Number.POSITIVE_INFINITY,Number.POSITIVE_I
 let maxBB = [Number.NEGATIVE_INFINITY,Number.NEGATIVE_INFINITY,Number.NEGATIVE_INFINITY];
 let buffLength = 0
 
-
-// Receive the MessagePort from Construct
-self.addEventListener("message", e =>
-{
+function initEventListeners(e) {
 	if (e.data && e.data["type"] === "construct-worker-init")
 	{
 		msgPort = e.data["port2"];
 		msgPort.onmessage = OnMessage;
 		OnReady();
 	}
-});
+}
+
+
+// Receive the MessagePort from Construct
+self.addEventListener("message", initEventListeners);
 
 function OnMessage(e)
 {
-    switch(e.data.type) {
-        case 'init':            
-            break;
-        case 'gltf':
-            gltf = e.data.gltf
-            buffLength = e.data.buffLength
-            break
-        case 'updateAnimationPolygons':
-            // msgPort.postMessage({type:'got:'+e.data.data.editorData.tick})
-            updateAnimationPolygons(e.data.data)
-            break
-        case 'getPolygons':
-            getPolygons(e.data.data)
-            break
-        default:
-            console.log('unknown message type:', e.data.type)
-    }
+  switch(e.data.type) {
+      case 'init':            
+          break;
+      case 'gltf':
+          gltf = e.data.gltf
+          buffLength = e.data.buffLength
+          break
+      case 'updateAnimationPolygons':
+          updateAnimationPolygons(e.data.data)
+          break
+      case 'getPolygons':
+          getPolygons(e.data.data)
+          break
+      case 'release':
+          release();
+          console.info('w release', id)
+          self.close();
+          break;
+      default:
+          console.warn('unknown message type:', e.data.type)
+  }
+}
+
+function release() {
+  self.removeEventListener("message", initEventListeners);
+  if (msgPort) {
+      msgPort.close();
+      msgPort = null;
+  }
+  buff = null
+  drawVerts = null
+  index = null
+  gltf = null
+  minBB = null
+  maxBB = null
+  buffLength = null
 }
 
 function OnReady()
 {
-	console.log('w ready', id)
 }
 
     // Updates animation at index to be at time.  Is used to play animation.
@@ -67,9 +86,12 @@ function updateAnimationPolygons(data) {
     }
     // Post buffer to messagePort
     // Last float in array will be tick that requested the update
-    drawVerts[drawVerts.length-1] = editorData.tick;
-    setBBInVerts(drawVerts, minBB, maxBB)
-    msgPort.postMessage(buff, [buff])
+    if (animationData.onScreen)
+    {
+      drawVerts[drawVerts.length-1] = editorData.tick;
+      setBBInVerts(drawVerts, minBB, maxBB)
+      msgPort.postMessage(buff, [buff])
+    }
 }
 
 function getPolygons(data) {

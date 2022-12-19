@@ -21,7 +21,6 @@ class GltfModel
         this.nodeMeshMap = {};
         this.modelRotate = mat4.create();
         this.meshNames = new Map()
-        this.msgPort = null;
     }
 
     async init() {
@@ -42,6 +41,39 @@ class GltfModel
             this.nodeMeshMap[node.name] = node.mesh.name;
         }
         this.getPolygons();
+    }
+
+    release() {
+        this._runtime = null;
+        this._sdkType = null;
+		this.inst = null;
+        // @ts-ignore
+        this.gltfData = null;
+        // @ts-ignore
+        this._blendState = null;
+        // @ts-ignore
+        this._lastTarget = null;
+        // @ts-ignore
+        this._blendTarget = null;
+        // @ts-ignore
+        this._blendTime = null;
+        // @ts-ignore
+        this._lastIndex = null;
+        // @ts-ignore
+        this.drawMeshes = null;
+        // @ts-ignore
+        this.drawMeshesIndex = null;
+        // @ts-ignore
+        this.currentColor = null;
+        // @ts-ignore
+        this.nodeMeshMap = null;
+        this.modelRotate = null;
+        // @ts-ignore
+        this.meshNames = null
+        // @ts-ignore
+        this.verts = null;
+        // @ts-ignore
+        this.updateDrawVerts = null;
     }
     
     structuralClone(obj) {
@@ -541,6 +573,16 @@ class GltfModel
             x0+xWidth, y0+yWidth, z0+zWidth,
             tempQuad
         );   
+    }
+
+    updateAnimationPolygons(index, time, onScreen, deltaTime) {
+        this.updateAnimation(index, time, onScreen, deltaTime);
+        if (onScreen)
+        {
+            this.getPolygons();
+            this.inst.runtime.UpdateRender();
+            this.inst.updateBbox = true
+        }    
     }
 
     updateModelRotate(x,y,z)

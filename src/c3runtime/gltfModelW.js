@@ -28,6 +28,49 @@ class GltfModelW
         this.updateDrawVerts = false;
     }
 
+    release() {
+        if (this.msgPort) {
+            this.msgPort.postMessage({type: 'release'});
+            this.msgPort.onmessage = null;
+            this.msgPort.close();
+        }
+        this._runtime = null;
+        this._sdkType = null;
+		this.inst = null;
+        // @ts-ignore
+        this.gltfData = null;
+        // @ts-ignore
+        this._blendState = null;
+        // @ts-ignore
+        this._lastTarget = null;
+        // @ts-ignore
+        this._blendTarget = null;
+        // @ts-ignore
+        this._blendTime = null;
+        // @ts-ignore
+        this._lastIndex = null;
+        // @ts-ignore
+        this.drawMeshes = null;
+        // @ts-ignore
+        this.drawMeshesIndex = null;
+        // @ts-ignore
+        this.currentColor = null;
+        // @ts-ignore
+        this.nodeMeshMap = null;
+        this.modelRotate = null;
+        // @ts-ignore
+        this.meshNames = null
+        this.msgPort = null;
+        // @ts-ignore
+        this.arrayBufferIndex = null;
+        this.buff = null;
+        // @ts-ignore
+        this.verts = null;
+        // @ts-ignore
+        this.updateDrawVerts = null;
+    }
+
+
     async init() {
 		// Deep copy
 		// For instance version, may only need points, others remain stable, full copy for now
@@ -128,7 +171,7 @@ class GltfModelW
                 this.inst.updateBbox = true;
                 this.updateDrawVerts = true;
                 
-                if (this.inst.debug) console.log('onMsg t:',runtime.GetTickCount(), this.verts[this.verts.length-1], typeof e.data)
+                // if (this.inst.debug) console.log('onMsg t:',runtime.GetTickCount(), this.verts[this.verts.length-1], typeof e.data)
             } else
             {
                 if (this.inst.debug) console.log('onMsg t:',runtime.GetTickCount(), e.data.type)
@@ -216,7 +259,7 @@ class GltfModelW
         // Default color
         renderer.SetColor(instanceC3Color);
 
-        if (this.inst.debug) console.log('draw t:',this._runtime.GetTickCount(), this.verts[this.verts.length-1])
+        // if (this.inst.debug) console.log('draw t:',this._runtime.GetTickCount(), this.verts[this.verts.length-1])
 
         if (this.updateDrawVerts) {
             this.updateDrawVerts = false;
@@ -516,7 +559,31 @@ class GltfModelW
         }
         const data = {animationData, editorData};
         this.msgPort.postMessage({type: "updateAnimationPolygons", data: data});
-        if (this.inst.debug) console.log('postMsg t:',this.inst.runtime.GetTickCount())
+        // if (this.inst.debug) console.log('postMsg t:',this.inst.runtime.GetTickCount())
+    }
+
+    updateModelRotate(x,y,z)
+    {
+        // @ts-ignore
+        const vec3 = globalThis.glMatrix3D.vec3;
+        // @ts-ignore
+        const mat4 = globalThis.glMatrix3D.mat4;
+        // @ts-ignore
+        const quat = globalThis.glMatrix3D.quat;
+        
+        const xAngle = this.inst.xAngle;
+        const yAngle = this.inst.yAngle;
+        const zAngle = this.inst.zAngle;
+        const xScale = this.inst.scale/(this.inst.xScale == 0 ? 1 : this.inst.xScale);
+        const yScale = this.inst.scale/(this.inst.yScale == 0 ? 1 : this.inst.yScale);        
+        const zScale = this.inst.scale/(this.inst.zScale == 0 ? 1 : this.inst.zScale);
+        const rotate = quat.create();
+        if (this.inst.cannonBody && this.inst.cannonSetRotation) {
+            quat.set(rotate, this.inst.cannonBody.quaternion.x, this.inst.cannonBody.quaternion.y, this.inst.cannonBody.quaternion.z, this.inst.cannonBody.quaternion.w);
+        } else {
+            quat.fromEuler(rotate, xAngle, yAngle, zAngle);
+        }
+        mat4.fromRotationTranslationScale(this.modelRotate, rotate, [x,y,z], [xScale,-yScale,zScale]);
     }
 
     // Updates animation at index to be at time.  Is used to play animation.  
