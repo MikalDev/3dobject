@@ -175,8 +175,6 @@
                 {
                     this.animationTime += this._runtime.GetDt()*this.animationSpeed;
                     const deltaTime = this.animationTime - this.animationLastTime;
-                    console.log(this.animationRate)
-                    debugger
                     if ((deltaTime) >= (1/this.animationRate))
                     {
                         this.animationLastTime = this.animationTime;
