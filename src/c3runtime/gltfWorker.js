@@ -239,8 +239,8 @@ function updateAnimation(animationData)
             }
         }
         // lastTarget.push(JSON.parse(JSON.stringify(target)));
-    }
-    if (animationBlend != 0) lastTarget.push(target);
+        if (animationBlend != 0) lastTarget.push(target);
+      }
 }
 
     //	Updates scene graph, and as a second step sends transformed skinned mesh points to c2.
