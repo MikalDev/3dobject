@@ -26,6 +26,7 @@ class GltfModelW
         this.buff = null;
         this.verts = new Float32Array(0);
         this.updateDrawVerts = false;
+        this.activeNodes = [];
     }
 
     release() {
@@ -68,6 +69,8 @@ class GltfModelW
         this.verts = null;
         // @ts-ignore
         this.updateDrawVerts = null;
+        // @ts-ignore
+        this.activeNodes = null;
     }
 
 
@@ -165,7 +168,8 @@ class GltfModelW
         this.msgPort.onmessage = ((e) =>
         {
             if (!e.data.type) {
-                this.buff = e.data
+                this.buff = e.data.buff;
+                this.activeNodes = e.data.activeNodes;
                 this.verts = new Float32Array(this.buff);
                 this.setBBFromVerts(this.verts, this.inst.minBB, this.inst.maxBB);
                 this.inst.updateBbox = true;
@@ -185,6 +189,10 @@ class GltfModelW
         // messagePort.postMessage(...);
         // this.msgPort.postMessage({type: 'init'});
         return { msgPort: this.msgPort }
+    }
+
+    enableNode(nodeName, enable) {
+        this.msgPort.postMessage({type: 'enableNode', nodeName: nodeName, enable: enable});
     }
 
     setBBFromVerts(verts, minBBox, maxBBox) {
@@ -391,6 +399,10 @@ class GltfModelW
             const drawVerts = this.drawMeshes[j].drawVerts;
             const bufferViews = this.drawMeshes[j].bufferViews;
             drawVerts.length = 0
+            if (!this.activeNodes.includes(j)) {
+                drawVerts.push([]);
+                continue;
+            }
             for (let ii=0; ii<bufferViews.length; ii++)
             {
                 const bufferView = bufferViews[ii];

@@ -8,6 +8,9 @@ let gltf = null
 let minBB = [Number.POSITIVE_INFINITY,Number.POSITIVE_INFINITY,Number.POSITIVE_INFINITY];
 let maxBB = [Number.NEGATIVE_INFINITY,Number.NEGATIVE_INFINITY,Number.NEGATIVE_INFINITY];
 let buffLength = 0
+const disabledNodes = new Map();
+let activeNodes = [];
+let nodeIndex = 0;
 
 function initEventListeners(e) {
 	if (e.data && e.data["type"] === "construct-worker-init")
@@ -41,6 +44,13 @@ function OnMessage(e)
           release();
           console.info('w release', id)
           self.close();
+          break;
+      case 'enableNode':
+          if (e.data.enable) {
+              disabledNodes.delete(e.data.nodeName)
+          } else {
+            disabledNodes.set(e.data.nodeName, true)
+          }
           break;
       default:
           console.warn('unknown message type:', e.data.type)
@@ -90,7 +100,8 @@ function updateAnimationPolygons(data) {
     {
       drawVerts[drawVerts.length-1] = editorData.tick;
       setBBInVerts(drawVerts, minBB, maxBB)
-      msgPort.postMessage(buff, [buff])
+      const data = {buff: buff, activeNodes: activeNodes }
+      msgPort.postMessage(data, [data.buff])
     }
 }
 
@@ -260,6 +271,8 @@ function getPolygonsPrep(editorData)
     // drawVerts index
     index = 0;
     const isEditor = editorData.isEditor
+    activeNodes = [];
+    nodeIndex = 0;
 
     const modelScaleRotate = mat4.create();
 
@@ -319,7 +332,18 @@ function getPolygonsPrep(editorData)
             let posData = node.mesh.primitives[i].attributes.POSITION.data;
             let weights = node.mesh.primitives[i].attributes.WEIGHTS_0.data;
             let joints = node.mesh.primitives[i].attributes.JOINTS_0.data;
-                            
+
+            // Don't animate disabled nodes
+            if (disabledNodes.get(node.name)) {
+              index+=posData.length;
+              // console.log("disabled skinned node: " + node.name)
+              nodeIndex++;
+              continue;
+            }
+
+            activeNodes.push(nodeIndex);
+            nodeIndex++;
+            
             for(let j=0; j<posData.length/3; j++)
             {
                 let w = weights.subarray(j*4, j*4+4);
@@ -389,6 +413,15 @@ function transformNode(node, parentMat, modelScaleRotate, isEditor)
             let posData = node.mesh.primitives[i].attributes.POSITION.data;
             
             let v = [0,0,0];
+            if (disabledNodes.get(node.name)) {
+              index+=posData.length;
+              // console.log("disabled node: " + node.name)
+              nodeIndex++;
+              continue;
+            }
+
+            activeNodes.push(nodeIndex);
+            nodeIndex++;
 
             for(let j=0; j<posData.length/3; j++)
             {

@@ -208,6 +208,9 @@
             if (!node) return
             node.disabled = !enable;
             this.renderOnce = true;
+            if (this.workerAnimation) {
+                this.gltf.enableNode(nodeName, enable);
+            }
         },
         
         OffsetNodeUV(nodeName, u, v) {
