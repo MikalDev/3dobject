@@ -104,6 +104,7 @@
                 if (!this.gltf.meshNames.has(nodeName)) return  JSON.stringify(rotatedPoint);
                 if (!this.gltf.modelRotate) return JSON.stringify(rotatedPoint);
                 const drawVerts = this.gltf.drawMeshes[this.gltf.meshNames.get(nodeName)].drawVerts[0]
+                if (!drawVerts) return JSON.stringify(rotatedPoint);
                 const point = vec3.fromValues(drawVerts[pointIndex*3], drawVerts[pointIndex*3+1], drawVerts[pointIndex*3+2])
                 vec3.transformMat4(rotatedPoint, point, this.gltf.modelRotate)
                 return `{"x": ${rotatedPoint[0]}, "y": ${rotatedPoint[1]}, "z": ${rotatedPoint[2]}}`

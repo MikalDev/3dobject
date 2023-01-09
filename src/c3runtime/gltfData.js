@@ -271,6 +271,28 @@ class GltfData
         // images
         if (('images' in gltf) && (gltf.images.length > 0)) 
         {
+            for(let ii=0;ii<gltf.textures.length;ii++) {
+                let t = gltf.textures[ii];
+                if (t.source != undefined) {
+                    const sampler = gltf.samplers[t.sampler];
+                    const wrapS = sampler.wrapS;
+                    const wrapT = sampler.wrapT;
+                    switch (wrapS)
+                    {
+                        case 33071: t.wrapS = 'clamp-to-edge'; break;
+                        case 33648: t.wrapS = 'mirror-repeat'; break;
+                        case 10497: t.wrapS = 'repeat'; break;
+                        default: t.wrapS = 'repeat';
+                    }
+                    switch (wrapT)
+                    {
+                        case 33071: t.wrapT = 'clamp-to-edge'; break;
+                        case 33648: t.wrapT = 'mirror-repeat'; break;
+                        case 10497: t.wrapT = 'repeat'; break;
+                        default: t.wrapT = 'repeat';
+                    }
+                }
+            }
             for(let i = 0; i < gltf.images.length; i++) {
                 // If image has no name, set it to the index.
                 if (!('name' in gltf.images[i])) gltf.images[i].name = 'image-index-' + i;
@@ -297,6 +319,9 @@ class GltfData
                 }
                 // this.imageBitmap.push(imageBitmap)
                 this.imageBitmap[image.name] = imageBitmap;
+                const texture = gltf.textures.find(t => t.source == i);
+                this.imageBitmap[image.name].wrapS = texture.wrapS;
+                this.imageBitmap[image.name].wrapT = texture.wrapT;
             }
         }   
 
