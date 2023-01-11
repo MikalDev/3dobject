@@ -11,7 +11,10 @@ class GltfModel
 		this.inst = inst;
         this.gltfData = {};
         this._blendState = 'init';
-        this._lastTarget = [];
+        this._lastTarget = new Array(2);
+        this._lastTarget[0] = [];
+        this._lastTarget[1] = [];
+        this._lastTargetIndex = 0;
         this._blendTarget = [];
         this._blendTime = 0;
         this._lastIndex = 0;
@@ -627,15 +630,25 @@ class GltfModel
                 if (animationBlend != 0 && this._lastIndex != index) {
                     this._blendState = 'blend'
                     this._blendTime = 0;
-                    this._blendTarget = JSON.parse(JSON.stringify(this._lastTarget));
-                    this._lastIndex = index;
+                    this._blendTarget = this._lastTarget[this._lastTargetIndex];
+                    if (this._lastTargetIndex == 0) {
+                        this._lastTargetIndex = 1;
+                    } else {
+                        this._lastTargetIndex = 0;
                     }
+                    this._lastIndex = index;
+                }
                 break;
             case 'blend':
                 if (this._lastIndex != index) {
                     this._blendState = 'blend'
                     this._blendTime = 0;
-                    this._blendTarget = JSON.parse(JSON.stringify(this._lastTarget));
+                    this._blendTarget = this._lastTarget[this._lastTargetIndex];
+                    if (this._lastTargetIndex == 0) {
+                        this._lastTargetIndex = 1;
+                    } else {
+                        this._lastTargetIndex = 0;
+                    }
                     this._lastIndex = index;
                     break;
                 }            
@@ -649,7 +662,12 @@ class GltfModel
                 if (this._lastIndex != index) {
                     this._blendState = 'blend'
                     this._blendTime = 0;
-                    this._blendTarget = JSON.parse(JSON.stringify(this._lastTarget));
+                    this._blendTarget = this._lastTarget[this._lastTargetIndex];
+                    if (this._lastTargetIndex == 0) {
+                        this._lastTargetIndex = 1;
+                    } else {
+                        this._lastTargetIndex = 0;
+                    }                    
                     this._lastIndex = index;
                 }
                 break;
@@ -657,7 +675,7 @@ class GltfModel
                 console.warn('[3DObject] bad blend state:', this._blendState)       
         }
 
-        this._lastTarget = [];
+        this._lastTarget[this._lastTargetIndex] = [];
         for(let i = 0; i < anim.channels.length; i++)
         {
             let c = anim.channels[i];
@@ -730,8 +748,22 @@ class GltfModel
                 }
             }
 
-            // this._lastTarget.push(JSON.parse(JSON.stringify(target)));
-            if (animationBlend != 0) this._lastTarget.push(target);
+
+            if (animationBlend != 0) {
+                const lastTarget = {};
+                lastTarget.node = {}
+                if (target.path == "translation") {
+                    lastTarget.path = target.path;
+                    lastTarget.node.translation = vec3.clone(target.node.translation);
+                } else if (target.path == "rotation") {
+                    lastTarget.path = target.path;
+                    lastTarget.node.rotation = quat.clone(target.node.rotation);
+                } else if (target.path == "scale") {
+                    lastTarget.path = target.path;
+                    lastTarget.node.scale = vec3.clone(target.node.scale);
+                }
+                this._lastTarget[this._lastTargetIndex].push(lastTarget);
+            }
         }
     }
 }

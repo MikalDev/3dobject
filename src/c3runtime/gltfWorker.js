@@ -79,7 +79,10 @@ function OnReady()
     // Updates animation at index to be at time.  Is used to play animation.
 
 let blendState = 'init';
-let lastTarget = [];
+lastTarget = new Array(2);
+lastTarget[0] = [];
+lastTarget[1] = [];
+lastTargetIndex = 0;
 let blendTarget = [];
 let blendTime = 0;
 let lastIndex = 0;
@@ -147,15 +150,25 @@ function updateAnimation(animationData)
             if (animationBlend != 0 && lastIndex != index) {
                 blendState = 'blend'
                 blendTime = 0;
-                blendTarget = JSON.parse(JSON.stringify(lastTarget));
-                lastIndex = index;
+                blendTarget = lastTarget[lastTargetIndex];
+                if (lastTargetIndex == 0) {
+                    lastTargetIndex = 1;
+                } else {
+                    lastTargetIndex = 0;
                 }
-            break;
+                lastIndex = index;
+            }
+        break;
         case 'blend':
             if (lastIndex != index) {
                 blendState = 'blend'
                 blendTime = 0;
-                blendTarget = JSON.parse(JSON.stringify(lastTarget));
+                blendTarget = lastTarget[lastTargetIndex];
+                if (lastTargetIndex == 0) {
+                    lastTargetIndex = 1;
+                } else {
+                    lastTargetIndex = 0;
+                }
                 lastIndex = index;
                 break;
             }            
@@ -169,15 +182,20 @@ function updateAnimation(animationData)
             if (lastIndex != index) {
                 blendState = 'blend'
                 blendTime = 0;
-                blendTarget = JSON.parse(JSON.stringify(lastTarget));
-                lastIndex = index;
+                blendTarget = lastTarget[lastTargetIndex];
+                if (lastTargetIndex == 0) {
+                    lastTargetIndex = 1;
+                } else {
+                    lastTargetIndex = 0;
+                }                    
+            lastIndex = index;
             }
             break;
         default:
             console.warn('[3DObject] bad blend state:', blendState)       
     }
 
-    lastTarget = [];
+    lastTarget[lastTargetIndex] = [];
     for(let i = 0; i < anim.channels.length; i++)
     {
         let c = anim.channels[i];
@@ -249,9 +267,23 @@ function updateAnimation(animationData)
                     vec3.lerp(target.node.scale, blendTargetI.node.scale, target.node.scale, blend);
             }
         }
-        // lastTarget.push(JSON.parse(JSON.stringify(target)));
-        if (animationBlend != 0) lastTarget.push(target);
+
+        if (animationBlend != 0) {
+          const currentTarget = {};
+          currentTarget.node = {}
+          if (currentTarget.path == "translation") {
+              currentTarget.path = target.path;
+              currentTarget.node.translation = vec3.clone(target.node.translation);
+          } else if (target.path == "rotation") {
+              currentTarget.path = target.path;
+              currentTarget.node.rotation = quat.clone(target.node.rotation);
+          } else if (target.path == "scale") {
+              currentTarget.path = target.path;
+              currentTarget.node.scale = vec3.clone(target.node.scale);
+          }
+          lastTarget[lastTargetIndex].push(currentTarget);
       }
+  }
 }
 
     //	Updates scene graph, and as a second step sends transformed skinned mesh points to c2.
