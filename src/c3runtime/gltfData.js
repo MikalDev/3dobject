@@ -355,6 +355,17 @@ class GltfData
                 Object.keys(p.attributes).forEach(function(key){
                     p.attributes[key] = gltf.accessors[p.attributes[key]];
                 });
+
+                // For ease of use point directly to the accessor data
+                if ('targets' in p)
+                {
+                    for(let k = 0; k < p.targets.length; k++)
+                    {
+                        Object.keys(p.targets[k]).forEach(function(key){
+                            p.targets[k][key] = gltf.accessors[p.targets[k][key]];
+                        });
+                    }
+                }
             }
         }
         

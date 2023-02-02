@@ -293,12 +293,22 @@ class GltfModel
         // unskinned meshes
         if(node.mesh != undefined && node.skin == undefined)  
         {
-            
+
             for(let i = 0; i < node.mesh.primitives.length; i++)
             {
                 let transformedVerts = [];
                 transformedVerts.length = 0;
                 let posData = node.mesh.primitives[i].attributes.POSITION.data;
+
+                let morphActive = false;
+                let morphTargets = null;
+                let morphWeights = null;
+    
+                if (node.weights) {
+                    morphActive = true;
+                    morphTargets = node.mesh.primitives[i].targets;
+                    morphWeights = node.weights;
+                }
                 
                 this.drawMeshesIndex++;
                 if (!this.drawMeshes[this.drawMeshesIndex]) {
@@ -334,7 +344,12 @@ class GltfModel
 
                 for(let j=0; j<posData.length/3; j++)
                 {
-                    vec3.transformMat4(v, posData.subarray(j*3, j*3+3), node.matrix);
+                    let vin = posData.subarray(j*3, j*3+3);
+                    if (morphActive) {
+                        vin = this.morphTargets(vin, j, morphWeights, morphTargets);
+                    }
+    
+                    vec3.transformMat4(v, vin, node.matrix);
 
                     // vec3.transformMat4(v, vv, node.matrix);
                     // mat4.multiplyVec3(node.matrix, posData.subarray(j*3, j*3+3), v);
@@ -378,6 +393,19 @@ class GltfModel
         if(node.children != undefined)
             for(let i = 0; i < node.children.length; i++)
                 this.transformNode(node.children[i], node.matrix, modelScaleRotate);
+    }
+
+    morphTargets(vin, index, weights, targets) {
+        const vec3 = globalThis.glMatrix3D.vec3;
+        const vout = vec3.create();
+        vec3.copy(vout, vin);
+        for (let i = 0; i < targets.length; i++) {
+            const w = weights[i];
+            if (w == 0) continue;
+            const v = targets[i].POSITION.data.subarray(index * 3, index * 3 + 3);
+            vec3.scaleAndAdd(vout, vout, v, w);
+        }
+        return vout;
     }
 
     //	Updates scene graph, and as a second step sends transformed skinned mesh points to c2.
@@ -462,6 +490,15 @@ class GltfModel
                     this.meshNames.set(node.name, this.drawMeshesIndex)
                 }
 
+                let morphActive = false;
+                let morphTargets = null;
+                let morphWeights = null;
+
+                if (node.weights) {
+                    morphActive = true;
+                    morphTargets = node.mesh.primitives[i].targets;
+                    morphWeights = node.weights;
+
                 this.drawMeshes[this.drawMeshesIndex].disabled = node.disabled;
                 if (node.offsetUV) this.drawMeshes[this.drawMeshesIndex].offsetUV = node.offsetUV;
 
@@ -492,6 +529,10 @@ class GltfModel
                     let vin = posData.subarray(j*3, j*3+3)
                     let v = [0,0,0], vsum = [0,0,0];
                     
+                    if (morphActive) {
+                        vin = this.morphTargets(vin, j, morphWeights, morphTargets);
+                    }
+
                     for(let i=0; i<4; i++)
                     {
                         vec3.transformMat4(v, vin, node.skin.joints[b[i]].boneMatrix);
@@ -586,6 +627,11 @@ class GltfModel
             this.inst.runtime.UpdateRender();
             this.inst.updateBbox = true
         }    
+    }
+
+    lerp( a, b, alpha ) {
+        const value = a + alpha * (b-a);
+        return value
     }
 
     updateModelRotate(x,y,z)
@@ -726,13 +772,20 @@ class GltfModel
             
             if(target.path == "translation")
                 vec3.lerp(target.node.translation, otherValues.subarray(t0*3,t0*3+3), otherValues.subarray(t1*3,t1*3+3), t);
-                // vec3.lerp(otherValues.subarray(t0*3,t0*3+3), otherValues.subarray(t1*3,t1*3+3), t, target.node.translation);
             else if(target.path == "rotation")
                 quat.slerp(target.node.rotation, otherValues.subarray(t0*4,t0*4+4), otherValues.subarray(t1*4,t1*4+4), t);
-                // quat4.slerp(otherValues.subarray(t0*4,t0*4+4), otherValues.subarray(t1*4,t1*4+4), t, target.node.rotation);
             else if(target.path == "scale")
                 vec3.lerp(target.node.scale, otherValues.subarray(t0*3,t0*3+3), otherValues.subarray(t1*3,t1*3+3), t);
-                // vec3.lerp(otherValues.subarray(t0*3,t0*3+3), otherValues.subarray(t1*3,t1*3+3), t, target.node.scale);
+            else if(target.path == "weights") {
+                // Apply gltf morph target weights to node weights using lerp between two targets
+                const node = target.node;
+                node.weights = new Float32Array(node.mesh.primitives[0].targets.length);
+                const weights = node.weights;
+                const stride = weights.length
+                for (let j = 0; j < stride; j++) {
+                    weights[j] = this.lerp(otherValues[t0*stride+j], otherValues[t1*stride+j], t);
+                }
+            }
 
             // Blend to last animation if during blend
             if (this._blendState == 'blend') {
