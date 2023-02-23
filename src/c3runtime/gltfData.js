@@ -34,13 +34,9 @@ class GltfData
                 return false
             } else {
 			// Get iProjectFiles
-            // Check if gltfPath contains contains subfolders, if so, change gltfPath to the last part of the path
-            if (gltfPath.includes('/')) {
-                gltfPath = gltfPath.split('/').pop();
-            }
-            gltfURI = await runtime.GetProjectFileByName(gltfPath);
+            gltfURI = await runtime.GetProjectFileByExportPath(gltfPath);
             console.log ('gltfURI:', gltfURI)
-            console.log ('gltfPath:', gltfURI.GetName())
+            console.log ('gltfPath:', gltfURI?.GetName())
             }
 		}
 

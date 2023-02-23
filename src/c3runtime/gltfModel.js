@@ -498,7 +498,7 @@ class GltfModel
                     morphActive = true;
                     morphTargets = node.mesh.primitives[i].targets;
                     morphWeights = node.weights;
-
+                }
                 this.drawMeshes[this.drawMeshesIndex].disabled = node.disabled;
                 if (node.offsetUV) this.drawMeshes[this.drawMeshesIndex].offsetUV = node.offsetUV;
 
