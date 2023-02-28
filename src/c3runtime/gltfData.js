@@ -275,7 +275,9 @@ class GltfData
         {
             for(let ii=0;ii<gltf.textures.length;ii++) {
                 let t = gltf.textures[ii];
-                if (t.source != undefined) {
+                t.wrapS = 'repeat';
+                t.wrapT = 'repeat';
+                if (t.source != undefined && gltf.samplers != undefined && t.sampler != undefined) {
                     const sampler = gltf.samplers[t.sampler];
                     const wrapS = sampler.wrapS;
                     const wrapT = sampler.wrapT;
