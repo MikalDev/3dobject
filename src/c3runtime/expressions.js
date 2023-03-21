@@ -117,6 +117,9 @@
                 if (!Array.isArray(drawVerts)) return 0
                 // x,y,z per vertex
                 return drawVerts.length/3;
-            }
+            },
+            AnimationBlendTime() {
+                return this.animationBlend;
+            },
         };
 }

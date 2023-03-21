@@ -427,6 +427,18 @@
                 "initialValue": 0
               }
             ]
+          },
+          {
+            "id": "set-animation-blend",
+            "scriptName": "SetAnimationBlend",
+            "highlight": false,
+            "params": [
+                {
+                "id": "blend-time",
+                "type": "number",
+                "initialValue": "0"
+                }
+            ]
           }
       ],
       "expressions": [
@@ -688,6 +700,15 @@
               "type": "string",
               "initialValue": ""
             }
+          ]  
+        },
+        {
+          "id": "animation-blend-time",
+          "scriptName": "AnimationBlendTime",
+          "expressionName": "AnimationBlendTime",
+          "returnType": "number",
+          "highlight": false,
+          "params": [
           ]  
         }                              
       ]

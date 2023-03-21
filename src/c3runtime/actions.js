@@ -283,6 +283,8 @@
             this.sdkType.dataLoaded = true;
             this.instanceModel = false;
         },
-
+        SetAnimationBlend(blendTime) {
+            this.animationBlend = blendTime;
+        },
     }
 }

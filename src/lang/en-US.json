@@ -480,6 +480,17 @@
                       "desc": "Prefab uid of instance to load model from, prefab must already be loaded."
                   }
               }
+          },
+          "set-animation-blend": {
+            "list-name": "Set animation blend time",
+            "display-text": "Set animation blend time to {0}s",
+            "description": "Set animation blend time.",
+            "params": {
+                  "blend-time": {
+                      "name": "Blend time",
+                      "desc": "Blend time in seconds."
+                  }
+              }
           }
         },
         "expressions": {
@@ -646,6 +657,11 @@
                 "desc": "Node name."
               }
             }
+          },
+          "animation-blend-time": {
+            "description": "Animation blend time.",
+            "translated-name": "AnimationBlendTime",
+            "params": {}
           }
         }
       }
