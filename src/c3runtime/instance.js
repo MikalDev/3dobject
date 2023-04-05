@@ -447,6 +447,10 @@
             this.bboxScale = scale;
         }
 
+        _getModel() {
+            return this.gltf.gltfData;
+        }
+
         GetScriptInterfaceClass()
 		{
             // @ts-ignore
@@ -478,9 +482,9 @@
             map.get(this)._removeCannonBody();
         }
 
-        setBBoxScale(scale)
-        {
-            map.get(this)._setBBoxScale(scale);
-        }
+        get model()
+		{
+            return map.get(this)._getModel();
+		}
     };
 }
