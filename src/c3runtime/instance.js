@@ -451,6 +451,44 @@
             return this.gltf.gltfData;
         }
 
+        _setXAngle(angle) {
+            this.xAngle = angle
+            this.runtime.UpdateRender();
+            this.updateBbox = true
+        }
+
+        _setYAngle(angle) {
+            this.yAngle = angle
+            this.runtime.UpdateRender();
+            this.updateBbox = true
+        }
+
+        _setZAngle(angle) {
+            this.zAngle = angle
+            this.runtime.UpdateRender();
+            this.updateBbox = true
+        }
+
+        _setXScale(scale) {
+            this.xScale = scale
+            this.runtime.UpdateRender();
+            this.updateBbox = true
+        }
+        _setYScale(scale) {
+            this.yScale = scale
+            this.runtime.UpdateRender();
+            this.updateBbox = true
+        }
+        _setZScale(scale) {
+            this.zScale = scale
+            this.runtime.UpdateRender();
+            this.updateBbox = true
+        }
+
+        _setAnimationBlend(time) {
+            this.animationBlend = time
+        }
+
         GetScriptInterfaceClass()
 		{
             // @ts-ignore
@@ -486,5 +524,68 @@
 		{
             return map.get(this)._getModel();
 		}
+
+        set xAngle(angle)
+        {
+            map.get(this)._setXAngle(angle)
+        }
+        set yAngle(angle)
+        {
+            map.get(this)._setYAngle(angle)
+        }
+        set zAngle(angle)
+        {
+            map.get(this)._setZAngle(angle)
+        }
+
+        get xAngle()
+		{
+            return map.get(this).xAngle;
+		}
+        get yAngle()
+		{
+            return map.get(this).yAngle;
+		}
+        get zAngle()
+		{
+            return map.get(this).zAngle;
+		}
+
+        set xScale(scale)
+        {
+            map.get(this)._setXScale(scale)
+        }
+        set yScale(scale)
+        {
+            map.get(this)._setYScale(scale)
+        }
+        set zScale(scale)
+        {
+            map.get(this)._setZScale(scale)
+        }
+
+        get xScale()
+		{
+            return map.get(this).xScale;
+		}
+        get yScale()
+		{
+            return map.get(this).yScale;
+		}
+        get zScale()
+		{
+            return map.get(this).zScale;
+		}
+
+        set animationBlend(time)
+        {
+            map.get(this)._setAnimationBlend(time)
+        }
+        get animationBlend()
+		{
+            return map.get(this).animationBlend;
+		}
+
+
     };
 }
