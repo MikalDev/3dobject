@@ -15,6 +15,10 @@
         },
         IsWireframeEnabled() {
             return this.wireframe;
+        },
+        IsPlaying(animation) {
+            return (this.animationName == animation);
         }
+
     };
 }

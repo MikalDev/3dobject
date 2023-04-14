@@ -12,11 +12,13 @@
         {
             "id": "is-loaded",
             "scriptName": "IsLoaded",
+            "isInvertible": true,
             "highlight": false
         },
         {
           "id": "is-animation-finished",
           "scriptName": "IsAnimationFinished",
+          "isInvertible": true,
           "highlight": false
         },
         {
@@ -32,8 +34,23 @@
           "scriptName": "IsWireframeEnabled",
           "highlight": false,
           "isTrigger": false,
-          "isInvertible": false,
+          "isInvertible": true,
           "isCompatibleWithTriggers": false
+        },
+        {
+          "id": "is-playing",
+          "scriptName": "IsPlaying",
+          "highlight": false,
+          "isTrigger": false,
+          "isInvertible": true,
+          "isCompatibleWithTriggers": false,
+          "params": [
+            {
+                "id": "animation-name",
+                "type": "string",
+                "initialValue": ""
+            }
+          ]
         }     
       ],
       "actions": [

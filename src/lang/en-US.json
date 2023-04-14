@@ -122,6 +122,17 @@
             "list-name": "Is wireframe enabled",
             "display-text": "Is wireframe enabled",
             "description": "True if wireframe is enabled."
+          },
+          "is-playing": {
+            "list-name": "Is playing",
+            "display-text": "Is animation {0} playing",
+            "description": "Is the named animation playing.",
+            "params": {
+              "animation-name": {
+                "name": "Animation",
+                "desc": "Enter the name of animation to check if playing."
+              }
+            }
           }
         },
         "actions": {
