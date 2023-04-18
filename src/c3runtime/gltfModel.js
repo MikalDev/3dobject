@@ -14,7 +14,7 @@ class GltfModel
         this._lastTarget = new Array(2);
         this._lastTarget[0] = [];
         this._lastTarget[1] = [];
-        this._lastTargetIndex = 0;
+        this._lastTargetIndex = 0; 
         this._blendTarget = [];
         this._blendTime = 0;
         this._lastIndex = 0;
@@ -151,6 +151,14 @@ class GltfModel
             const material = this.drawMeshes[j].material;
             const hasTexture = (material && 'pbrMetallicRoughness' in material && 'baseColorTexture' in material.pbrMetallicRoughness);
             const offsetUV = this.drawMeshes[j].offsetUV;
+            const materialsModify = this.inst.materialsModify;
+            const offsetMaterial = materialsModify.has(material.name) && materialsModify.get(material.name)?.offsetUV;
+            const rotateMaterial = materialsModify.has(material.name) && materialsModify.get(material.name)?.rotateUV;
+
+
+            // Check if the map this.inst.materialsModify contains the key material.name
+            // If it does, then we need to offset the UVs
+
 
             let color;
             if (material && 'pbrMetallicRoughness' in material && 'baseColorFactor' in material.pbrMetallicRoughness) {
@@ -184,6 +192,17 @@ class GltfModel
                 }
             }
 
+            // Create const for mat2
+            const mat2 = globalThis.glMatrix3D.mat2;
+            const vec2 = globalThis.glMatrix3D.vec2;
+            let rotateMatrix;
+
+            if (rotateMaterial) {
+                const rotateUV = materialsModify.get(material.name)?.rotateUV;
+                // Create rotate matrix
+                rotateMatrix = mat2.create();
+                mat2.fromRotation(rotateMatrix, rotateUV.angle);
+            }
 
             for (let ii=0; ii<drawVerts.length; ii++)
             {
@@ -198,7 +217,46 @@ class GltfModel
                 {
                     if (hasTexture)
                     {
-                        if (offsetUV) {
+                        if (offsetMaterial || rotateMaterial) {
+                            // create new arrays for the UVs
+                            const uvQuad = [
+                                [uv[ind[i*3+0]*2+0], uv[ind[i*3+0]*2+1]],
+                                [uv[ind[i*3+1]*2+0], uv[ind[i*3+1]*2+1]],
+                                [uv[ind[i*3+2]*2+0], uv[ind[i*3+2]*2+1]]
+                            ];
+                            if (rotateMaterial) {
+                                // Rotate UVs
+                                vec2.sub(uvQuad[0], uvQuad[0], [rotateMaterial.x, rotateMaterial.y]);
+                                vec2.sub(uvQuad[1], uvQuad[1], [rotateMaterial.x, rotateMaterial.y]);
+                                vec2.sub(uvQuad[2], uvQuad[2], [rotateMaterial.x, rotateMaterial.y]);
+                                mat2.multiply(uvQuad[0], rotateMatrix, uvQuad[0]);
+                                mat2.multiply(uvQuad[1], rotateMatrix, uvQuad[1]);
+                                mat2.multiply(uvQuad[2], rotateMatrix, uvQuad[2]);
+                                vec2.add(uvQuad[0], uvQuad[0], [rotateMaterial.x, rotateMaterial.y]);
+                                vec2.add(uvQuad[1], uvQuad[1], [rotateMaterial.x, rotateMaterial.y]);
+                                vec2.add(uvQuad[2], uvQuad[2], [rotateMaterial.x, rotateMaterial.y]);
+                            }
+
+                            if (offsetMaterial) {
+                                const uOffset = offsetMaterial.u;
+                                const vOffset = offsetMaterial.v;
+                                // Offset UVs in uvQuad
+                                uvQuad[0][0] += uOffset;
+                                uvQuad[0][1] += vOffset;
+                                uvQuad[1][0] += uOffset;
+                                uvQuad[1][1] += vOffset;
+                                uvQuad[2][0] += uOffset;
+                                uvQuad[2][1] += vOffset;
+                            }
+                            // Set tempquad
+                            tempQuad.set(
+                                uvQuad[0][0], uvQuad[0][1],
+                                uvQuad[1][0], uvQuad[1][1],
+                                uvQuad[2][0], uvQuad[2][1],
+                                uvQuad[2][0], uvQuad[2][1]
+                                );                  
+                        }   
+                        else if (offsetUV) {
                             const uOffset = offsetUV.u;
                             const vOffset = offsetUV.v;
                             tempQuad.set(

@@ -23,6 +23,7 @@
             this.dataLoaded = false;
             this.texture = [];
             this.loadFailed = false;
+            this.materialsModify = new Map();
         }
 
         Release()

@@ -434,6 +434,55 @@
             ]
           },
           {
+            "id": "offset-material-uv",
+            "scriptName": "OffsetMaterialUV",
+            "highlight": false,
+            "params": [
+              {
+                "id": "material-name",
+                "type": "string",
+                "initialValue": ""
+              },
+              {
+                "id": "u-offset",
+                "type": "number",
+                "initialValue": "0"
+              },
+              {
+                "id": "v-offset",
+                "type": "number",
+                "initialValue": "0"
+              }
+            ]
+          },
+          {
+            "id": "rotate-material-uv",
+            "scriptName": "RotateMaterialUV",
+            "highlight": false,
+            "params": [
+              {
+                "id": "material-name",
+                "type": "string",
+                "initialValue": ""
+              },
+              {
+                "id": "angle",
+                "type": "number",
+                "initialValue": "0"
+              },
+              {
+                "id": "x",
+                "type": "number",
+                "initialValue": "0"
+              },
+              {
+                "id": "y",
+                "type": "number",
+                "initialValue": "0"
+              }
+            ]
+          },
+          {
             "id": "load-model-from-template",
             "scriptName": "LoadModelFromTemplate",
             "highlight": false,

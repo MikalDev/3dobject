@@ -481,6 +481,48 @@
               }
             }
           },
+          "offset-material-uv": {
+            "list-name": "Offset material UV",
+            "display-text": "Offset material {0} UV by {1}, {2}",
+            "description": "Offset material UV texture coordinates.",
+            "params": {
+              "material-name": {
+                  "name": "Material name",
+                  "desc": "Material name to offset UVs."
+              },
+              "u-offset": {
+                "name": "U Offset",
+                "desc": "U Offset (-1.0 to 1.0)."
+              },
+              "v-offset": {
+                "name": "V Offset",
+                "desc": "V Offset (-1.0 to 1.0)."
+              }
+            }
+          },
+          "rotate-material-uv": {
+            "list-name": "Rotate material UV",
+            "display-text": "Rotate material {0} UV by {1} around {2}, {3}",
+            "description": "Rotate material UV texture coordinates around point.",
+            "params": {
+              "material-name": {
+                  "name": "Material name",
+                  "desc": "Material name to rotate UVs."
+              },
+              "angle": {
+                "name": "Angle",
+                "desc": "Angle (degrees)."
+              },
+              "x": {
+                "name": "X",
+                "desc": "Center X to rotate around (0-1)."
+              },
+              "y": {
+                "name": "Y",
+                "desc": "Center Y to rotate around (0-1)."
+              }
+            }
+          },
           "load-model-from-template": {
             "list-name": "Load model from prefab instance",
             "display-text": "Load model from prefab uid {0}",

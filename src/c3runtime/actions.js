@@ -286,5 +286,35 @@
         SetAnimationBlend(blendTime) {
             this.animationBlend = blendTime;
         },
+
+        OffsetMaterialUV(materialName, u, v) {
+            if (!this.gltf) return;
+            if (!this.gltf.gltfData) return;
+
+            if (this.materialsModify.has(materialName)) {
+                const materialModify = this.materialsModify.get(materialName);
+                materialModify.offsetUV = {u:u, v:v};
+                this.materialsModify.set(materialName, materialModify);
+            } else {
+                this.materialsModify.set(materialName, {offsetUV:{u:u, v:v}});
+            }
+            this.renderOnce = true;
+        },
+
+        RotateMaterialUV(materialName, angle, x, y) {
+            if (!this.gltf) return;
+            if (!this.gltf.gltfData) return;
+
+            // Change to angle radians
+            angle = angle * Math.PI / 180;
+            if (this.materialsModify.has(materialName)) {
+                const materialModify = this.materialsModify.get(materialName);
+                materialModify.rotateUV = {angle:angle, x:x, y:y};
+                this.materialsModify.set(materialName, materialModify);
+            } else {
+                this.materialsModify.set(materialName, {rotateUV:{angle:angle, x:x, y:y}});
+            }
+            this.renderOnce = true;
+        },
     }
 }

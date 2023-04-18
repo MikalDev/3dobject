@@ -55,6 +55,9 @@
             this.xWireframeWidth = 2;
             this.yWireframeWidth = 2;
             this.zWireframeWidth = 2;
+            this.materialsModify = new Map();
+            this.materialsModify.set('unused', false)
+            debugger
 
             if (properties)
             {
@@ -429,6 +432,7 @@
             this.xWireframeWidth = null;
             this.yWireframeWidth = null;
             this.zWireframeWidth = null;
+            this.materialsModify = null;
             this.gltf = null;
             super.Release();
         }
