@@ -10,7 +10,7 @@
             super(inst);
             this.sdkType = this.GetSdkType();
             this.runtime = inst.GetRuntime();
-            this.renderer = this.runtime.GetCanvasManager().GetWebGLRenderer();
+            this.renderer = this.runtime.GetCanvasManager().GetRenderer();
             this.uid = this.GetInstance().GetUID();
             this.loaded = false;
             this.animationTime = 0;
@@ -56,8 +56,6 @@
             this.yWireframeWidth = 2;
             this.zWireframeWidth = 2;
             this.materialsModify = new Map();
-            this.materialsModify.set('unused', false)
-            debugger
 
             if (properties)
             {
