@@ -505,6 +505,28 @@
                 "initialValue": "0"
                 }
             ]
+          },
+          {
+            "id": "set-light-dir",
+            "scriptName": "SetLightDir",
+            "highlight": false,
+            "params": [
+              {
+                "id": "x",
+                "type": "number",
+                "initialValue": 0
+              },
+              {
+                "id": "y",
+                "type": "number",
+                "initialValue": 0
+              },
+              {
+                "id": "z",
+                "type": "number",
+                "initialValue": 0
+              }
+            ]
           }
       ],
       "expressions": [

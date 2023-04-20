@@ -24,6 +24,7 @@
             this.texture = [];
             this.loadFailed = false;
             this.materialsModify = new Map();
+            this.lightDir = [0,0,0];
         }
 
         Release()

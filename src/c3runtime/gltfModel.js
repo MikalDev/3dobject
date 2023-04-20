@@ -94,6 +94,7 @@ class GltfModel
         let currentTexture = null;
 
         const vec4 = globalThis.glMatrix3D.vec4;
+        const vec3 = globalThis.glMatrix3D.vec3;
         const mat4 = globalThis.glMatrix3D.mat4;
         const quat = globalThis.glMatrix3D.quat;
 
@@ -295,6 +296,16 @@ class GltfModel
                     if (this.inst.wireframe) {
                         this.drawWireFrame(renderer, whiteTexture, tempQuad, x0, y0, z0, x1, y1, z1, x2, y2, z2, xWireframeWidth, yWireframeWidth, zWireframeWidth);
                     } else {
+                        const normal = vec3.create()
+                        const l = this.inst.lightDir
+                        vec3.cross(normal, [x1-x0, y1-y0, z1-z0], [x2-x0, y2-y0, z2-z0])
+                        vec3.normalize(normal, normal)
+                        // const lighDir = vec3.fromValues(this.inst.lightDir[0], this.inst.lightDir[1], this.inst.lightDir[2])
+                        const lighDir = vec3.fromValues(l[0]-x0*this.inst.scale+x, l[1]-y0*this.inst.scale+y, l[2]-z0*this.inst.scale+z)
+                        const distance = vec3.length(lighDir)
+                        vec3.normalize(lighDir, lighDir)
+                        const dot = (vec3.dot(normal, lighDir)*0.5+0.5) * 2
+                        renderer.SetColorRgba(dot, dot, dot, 1)
                         renderer.Quad3D2(
                             x0, y0, z0,
                             x1, y1, z1,

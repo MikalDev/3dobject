@@ -316,5 +316,10 @@
             }
             this.renderOnce = true;
         },
+        SetLightDir(x, y, z) {
+            if (!this.gltf) return
+            if (!this.gltf.gltfData) return
+            this.lightDir = [x,y,z]
+        },
     }
 }
