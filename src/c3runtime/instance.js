@@ -56,6 +56,7 @@
             this.yWireframeWidth = 2;
             this.zWireframeWidth = 2;
             this.materialsModify = new Map();
+            this.lightDir = [0,0,0];
 
             if (properties)
             {

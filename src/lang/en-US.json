@@ -523,6 +523,25 @@
               }
             }
           },
+          "set-light-dir": {
+            "list-name": "Set light direction",
+            "display-text": "Set light direction to {0}, {1}, {2}",
+            "description": "Set light direction.",
+            "params": {
+              "x": {
+                "name": "X",
+                "desc": "Set X light direction."
+              },
+              "y": {
+                "name": "Y",
+                "desc": "Set Y light direction."
+              },
+              "z": {
+                "name": "Z",
+                "desc": "Set Z light direction."
+              }
+            }
+          },
           "load-model-from-template": {
             "list-name": "Load model from prefab instance",
             "display-text": "Load model from prefab uid {0}",
