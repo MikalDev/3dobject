@@ -726,6 +726,76 @@
           ]  
         },
         {
+          "id": "material-rotate-angle",
+          "scriptName": "MaterialRotateAngle",
+          "expressionName": "MaterialRotateAngle",
+          "returnType": "number",
+          "highlight": false,
+          "params": [
+            {
+              "id": "material-name",
+              "type": "string",
+              "initialValue": ""
+            }            
+          ]  
+        },
+        {
+          "id": "material-rotate-x",
+          "scriptName": "MaterialRotateX",
+          "expressionName": "MaterialRotateX",
+          "returnType": "number",
+          "highlight": false,
+          "params": [
+            {
+              "id": "material-name",
+              "type": "string",
+              "initialValue": ""
+            }            
+          ]  
+        },
+        {
+          "id": "material-rotate-y",
+          "scriptName": "MaterialRotateY",
+          "expressionName": "MaterialRotateY",
+          "returnType": "number",
+          "highlight": false,
+          "params": [
+            {
+              "id": "material-name",
+              "type": "string",
+              "initialValue": ""
+            }            
+          ]  
+        },
+        {
+          "id": "material-u-offset",
+          "scriptName": "MaterialUOffset",
+          "expressionName": "MaterialUOffset",
+          "returnType": "number",
+          "highlight": false,
+          "params": [
+            {
+              "id": "material-name",
+              "type": "string",
+              "initialValue": ""
+            }            
+          ]  
+        },        
+        {
+          "id": "material-v-offset",
+          "scriptName": "MaterialVOffset",
+          "expressionName": "MaterialVOffset",
+          "returnType": "number",
+          "highlight": false,
+          "params": [
+            {
+              "id": "material-name",
+              "type": "string",
+              "initialValue": ""
+            }            
+          ]  
+        },        
+        {
           "id": "materials",
           "scriptName": "Materials",
           "expressionName": "Materials",

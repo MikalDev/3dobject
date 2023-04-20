@@ -682,6 +682,56 @@
               }
             }
           },
+          "material-u-offset": {
+            "description": "U offset on node.",
+            "translated-name": "MaterialUOffset",
+            "params": {
+              "material-name": {
+                  "name": "Material name",
+                  "desc": "Material name of offset U."
+              }
+            }
+          },
+          "material-v-offset": {
+            "description": "V offset on material.",
+            "translated-name": "MaterialVOffset",
+            "params": {
+              "material-name": {
+                  "name": "Material name",
+                  "desc": "Material name of offset V."
+              }
+            }
+          },
+          "material-rotate-angle": {
+            "description": "Rotation angle of material.",
+            "translated-name": "MaterialRotateAngle",
+            "params": {
+              "material-name": {
+                  "name": "Material name",
+                  "desc": "Material name of rotate angle."
+              }
+            }
+          },
+          "material-rotate-x": {
+            "description": "Rotation center x of material.",
+            "translated-name": "MaterialRotateX",
+            "params": {
+              "material-name": {
+                  "name": "Material name",
+                  "desc": "Material name of rotation center x."
+              }
+            }
+          },
+          "material-rotate-y": {
+            "description": "Rotation center y of material.",
+            "translated-name": "MaterialRotateY",
+            "params": {
+              "material-name": {
+                  "name": "Material name",
+                  "desc": "Material name of rotation center y."
+              }
+            }
+          },
           "materials": {
             "description": "Material list in JSON string format.",
             "translated-name": "Materials",

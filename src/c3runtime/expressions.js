@@ -88,6 +88,56 @@
                 if ('offsetUV' in node) return node?.offsetUV?.v;
                 return 0;
             },
+            MaterialUOffset(materialName) {
+                if (!this.gltf) return 0;
+                if (!this.gltf.gltfData) return 0;
+
+                const material = this.materialsModify.get(materialName)
+                if (!material) return 0
+                const offset = material.offsetUV
+                if (offset) return 0
+                return offset.u
+            },
+            MaterialVOffset(materialName) {
+                if (!this.gltf) return 0;
+                if (!this.gltf.gltfData) return 0;
+
+                const material = this.materialsModify.get(materialName)
+                if (!material) return 0
+                const offset = material.offsetUV
+                if (offset) return 0
+                return offset.v
+            },
+            MaterialRotateAngle(materialName) {
+                if (!this.gltf) return 0;
+                if (!this.gltf.gltfData) return 0;
+
+                const material = this.materialsModify.get(materialName)
+                if (!material) return 0
+                const rotateUV = material.rotateUV
+                if (offset) return 0
+                return rotateUV.angle
+            },
+            MaterialRotateX(materialName) {
+                if (!this.gltf) return 0;
+                if (!this.gltf.gltfData) return 0;
+
+                const material = this.materialsModify.get(materialName)
+                if (!material) return 0
+                const rotateUV = material.rotateUV
+                if (offset) return 0
+                return rotateUV.x
+            },
+            MaterialRotateY(materialName) {
+                if (!this.gltf) return 0;
+                if (!this.gltf.gltfData) return 0;
+
+                const material = this.materialsModify.get(materialName)
+                if (!material) return 0
+                const rotateUV = material.rotateUV
+                if (offset) return 0
+                return rotateUV.y
+            },
             Materials() {
                 let textures = this.instanceModel ? this.texture : this.sdkType.texture
                 let materials = [];
