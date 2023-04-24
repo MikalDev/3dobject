@@ -321,5 +321,43 @@
             if (!this.gltf.gltfData) return
             this.lightDir = [x,y,z]
         },
+        EnableLight (enable, color) {
+            this.lightEnable = enable
+        },
+        UpdateLight (enable) {
+            this.lightUpdate = enable
+        },
+        EnableSpotLight (enable, x,y,z, cutoff, edge) {
+            this.spotEnable = enable
+            this.spotDir = [x,-y,z]
+            this.spotCutoff = cutoff
+            this.spotEdge = edge
+        },
+        AddLights(name, enable, colorWord, x, y, z, enableSpot, dirX, dirY, dirZ, cutoff, edge) {
+            const r = this.getRValue(colorWord)
+            const g = this.getGValue(colorWord)
+            const b = this.getBValue(colorWord)
+            const a = this.getAValue(colorWord)
+            const color = [r,g,b,a]
+            const spotDir = [dirX, dirY, dirZ]
+            const pos = [x,y,z]
+            this.lights[name] = {
+                enable,
+                color,
+                pos,
+                enableSpot,
+                spotDir,
+                cutoff,
+                edge
+            }
+        },
+        DeleteLights(name){
+            if (!(name in this.lights)) return
+            delete this.lights[name]
+        },
+        EnableLights(name, enable){
+            if (!(name in this.lights)) return
+            this.lights.enable = enable
+        }
     }
 }

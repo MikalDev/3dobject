@@ -95,7 +95,7 @@
                 const material = this.materialsModify.get(materialName)
                 if (!material) return 0
                 const offset = material.offsetUV
-                if (offset) return 0
+                if (!offset) return 0
                 return offset.u
             },
             MaterialVOffset(materialName) {
@@ -105,7 +105,7 @@
                 const material = this.materialsModify.get(materialName)
                 if (!material) return 0
                 const offset = material.offsetUV
-                if (offset) return 0
+                if (!offset) return 0
                 return offset.v
             },
             MaterialRotateAngle(materialName) {
@@ -115,8 +115,8 @@
                 const material = this.materialsModify.get(materialName)
                 if (!material) return 0
                 const rotateUV = material.rotateUV
-                if (offset) return 0
-                return rotateUV.angle
+                if (!rotateUV) return 0
+                return rotateUV.angle * 180 / Math.PI
             },
             MaterialRotateX(materialName) {
                 if (!this.gltf) return 0;
@@ -125,7 +125,7 @@
                 const material = this.materialsModify.get(materialName)
                 if (!material) return 0
                 const rotateUV = material.rotateUV
-                if (offset) return 0
+                if (!rotateUV) return 0
                 return rotateUV.x
             },
             MaterialRotateY(materialName) {
@@ -135,7 +135,7 @@
                 const material = this.materialsModify.get(materialName)
                 if (!material) return 0
                 const rotateUV = material.rotateUV
-                if (offset) return 0
+                if (!rotateUV) return 0
                 return rotateUV.y
             },
             Materials() {
@@ -171,5 +171,16 @@
             AnimationBlendTime() {
                 return this.animationBlend;
             },
+            LightColor(name) {
+                if (!this.gltf) return 0
+                if (!this.gltf.gltfData) return 0
+                if (!(name in this.lights)) return 0
+                const c = this.lights[name].color
+                const packRGBA = this.packRGBAEx(c[0],c[1],c[2],c[3])
+                return packRGBA
+            },
+            LightsData() {
+                return JSON.stringify(this.lights)
+            }            
         };
 }

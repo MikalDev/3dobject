@@ -57,6 +57,14 @@
             this.zWireframeWidth = 2;
             this.materialsModify = new Map();
             this.lightDir = [0,0,0];
+            this.lightEnable = false
+            this.lightUpdate = false
+            this.lightColor = 0
+            this.spotEnable = false
+            this.spotDir = [0,0,0]
+            this.spotCutoff = 0
+            this.spotEdge = 0
+            this.lights = {}
 
             if (properties)
             {
@@ -433,8 +441,91 @@
             this.zWireframeWidth = null;
             this.materialsModify = null;
             this.gltf = null;
+            this.lightEnable = null
+            this.lightColor = null
+            this.spotEnable = null
+            this.spotDir = null
+            this.spotCutoff = null
+            this.spotEdge = null
             super.Release();
         }
+
+        getRValue(rgb)
+        {
+            const ALPHAEX_SHIFT = 1024;
+            const RGBEX_SHIFT = 16384;
+            const RGBEX_MAX = 8191;
+            if (rgb >= 0) return (rgb & 255) / 255;
+            else {
+                let v = Math.floor(-rgb / (RGBEX_SHIFT * RGBEX_SHIFT * ALPHAEX_SHIFT));
+                if (v > RGBEX_MAX) v -= RGBEX_SHIFT;
+                return v / 1024;
+            }
+        };
+    
+        getGValue(rgb)
+        {
+            const ALPHAEX_SHIFT = 1024;
+            const RGBEX_SHIFT = 16384;
+            const RGBEX_MAX = 8191;
+            if (rgb >= 0) return ((rgb & 65280) >> 8) / 255;
+            else {
+            let v = Math.floor(
+                (-rgb % (RGBEX_SHIFT * RGBEX_SHIFT * ALPHAEX_SHIFT)) /
+                (RGBEX_SHIFT * ALPHAEX_SHIFT)
+            );
+            if (v > RGBEX_MAX) v -= RGBEX_SHIFT;
+            return v / 1024;
+            }
+        };
+    
+        getBValue(rgb)
+        {
+            const ALPHAEX_SHIFT = 1024;
+            const RGBEX_SHIFT = 16384;
+            const RGBEX_MAX = 8191;
+            if (rgb >= 0) return ((rgb & 16711680) >> 16) / 255;
+            else {
+            let v = Math.floor(
+                (-rgb % (RGBEX_SHIFT * ALPHAEX_SHIFT)) / ALPHAEX_SHIFT
+            );
+            if (v > RGBEX_MAX) v -= RGBEX_SHIFT;
+            return v / 1024;
+            }
+        };
+    
+        getAValue(rgb)
+        {
+            const ALPHAEX_SHIFT = 1024;
+            const ALPHAEX_MAX = 1023;
+            if (rgb === 0 && 1 / rgb < 0) return 0;
+            else if (rgb >= 0) return 1;
+            else {
+                const v = Math.floor(-rgb % ALPHAEX_SHIFT);
+                return v / ALPHAEX_MAX;
+            }
+        };
+
+        packRGBAEx (red, green, blue, alpha) {
+            const ALPHAEX_SHIFT = 1024;
+            const ALPHAEX_MAX = 1023;
+            const RGBEX_SHIFT = 16384;
+            const RGBEX_MAX = 8191;
+            const RGBEX_MIN = -8192;
+            red = C3.clamp(Math.floor(red * 1024), RGBEX_MIN, RGBEX_MAX);
+            green = C3.clamp(Math.floor(green * 1024), RGBEX_MIN, RGBEX_MAX);
+            blue = C3.clamp(Math.floor(blue * 1024), RGBEX_MIN, RGBEX_MAX);
+            alpha = C3.clamp(Math.floor(alpha * ALPHAEX_MAX), 0, ALPHAEX_MAX);
+            if (red < 0) red += RGBEX_SHIFT;
+            if (green < 0) green += RGBEX_SHIFT;
+            if (blue < 0) blue += RGBEX_SHIFT;
+            return -(
+              red * RGBEX_SHIFT * RGBEX_SHIFT * ALPHAEX_SHIFT +
+              green * RGBEX_SHIFT * ALPHAEX_SHIFT +
+              blue * ALPHAEX_SHIFT +
+              alpha
+            );
+          };
 
         _setCannonBody(body, setRotaion) {
             this.cannonBody = body;

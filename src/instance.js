@@ -24,7 +24,13 @@
             this.texture = [];
             this.loadFailed = false;
             this.materialsModify = new Map();
-            this.lightDir = [0,0,0];
+            this.lightEnable = false
+            this.lightUpdate = false
+            this.lightColor = 0
+            this.spotEnable = false
+            this.spotDir = [0,0,0]
+            this.spotCutoff = 0
+            this.spotEdge = 0
         }
 
         Release()

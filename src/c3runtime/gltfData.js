@@ -33,10 +33,8 @@ class GltfData
                 alert('Cannot load from URL in editor');
                 return false
             } else {
-			// Get iProjectFiles
-            gltfURI = await runtime.GetProjectFileByExportPath(gltfPath);
-            console.log ('gltfURI:', gltfURI)
-            console.log ('gltfPath:', gltfURI?.GetName())
+                // Get iProjectFiles
+                gltfURI = await runtime.GetProjectFileByExportPath(gltfPath);
             }
 		}
 

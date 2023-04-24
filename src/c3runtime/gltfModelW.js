@@ -93,6 +93,7 @@ class GltfModelW
         }
         // Create dedicdated web worker for skinned mesh animation
         this.initDrawMeshes();
+        this.drawMeshesMin = this.drawMeshes
         await this.createWorker(this._runtime)
     }
 
@@ -184,7 +185,7 @@ class GltfModelW
         // Send the gltfModel to the worker
         const bufferViews = this.drawMeshes[this.drawMeshes.length-1].bufferViews;
         const buffLength = bufferViews[bufferViews.length-1].start + bufferViews[bufferViews.length-1].length;
-        this.msgPort.postMessage({type: 'gltf', gltf: this.gltfData, buffLength: buffLength});
+        this.msgPort.postMessage({type: 'gltf', gltf: this.gltfData, buffLength: buffLength, drawMeshes: this.drawMeshes});
         // Now messages can be posted to the worker with:
         // messagePort.postMessage(...);
         // this.msgPort.postMessage({type: 'init'});
@@ -453,18 +454,10 @@ class GltfModelW
         this.msgPort.postMessage({type: "getPolygons", data: data});
     }
 
-    //	Updates scene graph, and as a second step sends transformed skinned mesh points to c2.
-    getPolygonsPrep()
+    getEditorData(isEditor, lightEnable)
     {
-        const gltf = this.gltfData;
-        const xScale = this.inst.scale/(this.inst.xScale == 0 ? 1 : this.inst.xScale);
-        const yScale = this.inst.scale/(this.inst.yScale == 0 ? 1 : this.inst.yScale);        
-        const zScale = this.inst.scale/(this.inst.zScale == 0 ? 1 : this.inst.zScale);
-        this.drawMeshesIndex = -1;
         const tick = this._runtime.GetTickCount();
-        const isEditor = this.inst.isEditor
-        let editorData = {tick, isEditor};
-
+        let editorData = {tick: tick, isEditor: isEditor}        
         if (isEditor) {
             const xAngle = this.inst.xAngle;
             const yAngle = this.inst.yAngle;
@@ -473,6 +466,10 @@ class GltfModelW
             const x = this.inst._inst.GetX();
             const y = this.inst._inst.GetY();
             const z = this.inst.zElevation;
+
+            const xScale = this.inst.scale/(this.inst.xScale == 0 ? 1 : this.inst.xScale);
+            const yScale = this.inst.scale/(this.inst.yScale == 0 ? 1 : this.inst.yScale);        
+            const zScale = this.inst.scale/(this.inst.zScale == 0 ? 1 : this.inst.zScale);    
 
             // Send to worker with postMessage in case in editor
             editorData = {
@@ -488,7 +485,49 @@ class GltfModelW
                 tick,
                 isEditor,
             }
-        }        
+        }
+
+        if (lightEnable) {
+            const wi = this.inst.GetWorldInfo()
+
+            const xAngle = this.inst.xAngle;
+            const yAngle = this.inst.yAngle;
+            const zAngle = this.inst.zAngle;
+
+            const x = wi.GetX();
+            const y = wi.GetY();
+            const z = this.inst.zElevation;
+
+            const xScale = this.inst.scale/(this.inst.xScale == 0 ? 1 : this.inst.xScale);
+            const yScale = this.inst.scale/(this.inst.yScale == 0 ? 1 : this.inst.yScale);        
+            const zScale = this.inst.scale/(this.inst.zScale == 0 ? 1 : this.inst.zScale);
+    
+            // Send to worker with postMessage in case in editor
+            editorData = {
+                xScale,
+                yScale,
+                zScale,
+                xAngle,
+                yAngle,
+                zAngle,
+                x,
+                y,
+                z,
+                tick,
+                isEditor,
+            }
+        }
+        return editorData
+    }
+
+    //	Updates scene graph, and as a second step sends transformed skinned mesh points to c2.
+    getPolygonsPrep()
+    {
+        const gltf = this.gltfData;
+
+        this.drawMeshesIndex = -1;
+
+        const editorData = this.getEditorData(this.inst.isEditor, this.inst.lightEnable)
 
         // update all scene matrixes.
         // only update drawMesh meta data, vertex data will be updated in the worker
@@ -557,19 +596,35 @@ class GltfModelW
         );   
     }
 
+    getLightData() {
+        const lightData = {
+            lightPos : this.inst.lightDir,
+            lightEnable: this.inst.lightEnable,
+            lightUpdate: this.inst.lightUpdate,
+            lightColoir: this.inst.lightColor,
+            spotEnable: this.inst.spotEnable,
+            spotDir: this.inst.spotDir,
+            spotCutoff: this.inst.spotCutoff,
+            spotEdge: this.inst.spotEdge
+        }
+        return lightData
+    }
+
     updateAnimationPolygons(index, time, onScreen, deltaTime) {
         this.updateAnimation(index, time, onScreen, deltaTime);
         const animationBlend = this.inst.animationBlend;
         const animationLoop = this.inst.animationLoop;
+        let lightData 
         let animationData = { index, time, onScreen, deltaTime, animationBlend, animationLoop };
         let editorData = {}
         if (onScreen)
         {
             editorData = this.getPolygonsPrep();
+            lightData = this.getLightData()
             this.inst.runtime.UpdateRender();
             this.inst.updateBbox = true
         }
-        const data = {animationData, editorData};
+        const data = {animationData, editorData, lightData};
         this.msgPort.postMessage({type: "updateAnimationPolygons", data: data});
         // if (this.inst.debug) console.log('postMsg t:',this.inst.runtime.GetTickCount())
     }

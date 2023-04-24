@@ -87,11 +87,18 @@ class GltfModel
         });
     }
 
+    _smoothstep (min, max, value) {
+        var x = Math.max(0, Math.min(1, (value-min)/(max-min)));
+        return x*x*(3 - 2*x);
+    };
+
     render(renderer, x, y, z, tempQuad, whiteTexture, instanceC3Color, textures, instanceTexture)
     {
         let totalTriangles = 0;
         let currentColor = [-1,-1,-1,-1];
         let currentTexture = null;
+        const lightUpdate = this.inst.lightUpdate
+        const lightEnable = this.inst.lightEnable
 
         const vec4 = globalThis.glMatrix3D.vec4;
         const vec3 = globalThis.glMatrix3D.vec3;
@@ -149,12 +156,13 @@ class GltfModel
             const drawVerts = this.drawMeshes[j].drawVerts;
             const drawUVs = this.drawMeshes[j].drawUVs;
             const drawIndices = this.drawMeshes[j].drawIndices;
+            const drawLights = this.drawMeshes[j].drawLights;
             const material = this.drawMeshes[j].material;
             const hasTexture = (material && 'pbrMetallicRoughness' in material && 'baseColorTexture' in material.pbrMetallicRoughness);
             const offsetUV = this.drawMeshes[j].offsetUV;
             const materialsModify = this.inst.materialsModify;
-            const offsetMaterial = materialsModify.has(material.name) && materialsModify.get(material.name)?.offsetUV;
-            const rotateMaterial = materialsModify.has(material.name) && materialsModify.get(material.name)?.rotateUV;
+            const offsetMaterial = materialsModify.has(material?.name) && materialsModify.get(material?.name)?.offsetUV;
+            const rotateMaterial = materialsModify.has(material?.name) && materialsModify.get(material?.name)?.rotateUV;
 
 
             // Check if the map this.inst.materialsModify contains the key material.name
@@ -205,6 +213,9 @@ class GltfModel
                 mat2.fromRotation(rotateMatrix, rotateUV.angle);
             }
 
+            if (this.inst.lightUpdate) {
+                drawLights.length = 0
+            }
             for (let ii=0; ii<drawVerts.length; ii++)
             {
                 let v = drawVerts[ii];
@@ -293,19 +304,70 @@ class GltfModel
                     y2 = (v[ind[i3+2]*3+1]);
                     z2 = (v[ind[i3+2]*3+2])-z;
 
+                    let lightSum = 0
+                    let colorSum
+                    if (this.inst.lightUpdate) colorSum = vec4.create()
+
                     if (this.inst.wireframe) {
                         this.drawWireFrame(renderer, whiteTexture, tempQuad, x0, y0, z0, x1, y1, z1, x2, y2, z2, xWireframeWidth, yWireframeWidth, zWireframeWidth);
                     } else {
-                        const normal = vec3.create()
-                        const l = this.inst.lightDir
-                        vec3.cross(normal, [x1-x0, y1-y0, z1-z0], [x2-x0, y2-y0, z2-z0])
-                        vec3.normalize(normal, normal)
-                        // const lighDir = vec3.fromValues(this.inst.lightDir[0], this.inst.lightDir[1], this.inst.lightDir[2])
-                        const lighDir = vec3.fromValues(l[0]-x0*this.inst.scale+x, l[1]-y0*this.inst.scale+y, l[2]-z0*this.inst.scale+z)
-                        const distance = vec3.length(lighDir)
-                        vec3.normalize(lighDir, lighDir)
-                        const dot = (vec3.dot(normal, lighDir)*0.5+0.5) * 2
-                        renderer.SetColorRgba(dot, dot, dot, 1)
+                        if (lightEnable && lightUpdate) {
+
+                            const normal = vec3.create()
+                            const v0 = vec3.fromValues(x0,y0,z0+z)
+                            const v1 = vec3.fromValues(x1,y1,z1+z)
+                            const v2 = vec3.fromValues(x2,y2,z2+z)
+
+                            vec3.transformMat4(v0, v0, this.modelRotate);
+                            vec3.transformMat4(v1, v1, this.modelRotate);
+                            vec3.transformMat4(v2, v2, this.modelRotate);
+                            const c = vec3.clone(v0)
+                            vec3.add(c,c,v1)
+                            vec3.add(c,c,v2)
+                            vec3.div(c,c,[3,3,3])
+
+                            vec3.cross(normal, [v1[0]-v0[0], v1[1]-v0[1], v1[2]-v0[2]], [v2[0]-v0[0], v2[1]-v0[1], v2[2]-v0[2]])
+                            vec3.normalize(normal, normal)
+
+                            for (const light of Object.values(this.inst.lights)) {
+                                const l = light.pos
+                                const enableSpot = light.enableSpot
+                                const spotDir = light.spotDir
+                                const cutoff = light.cutoff
+                                const edge = light.edge
+                                const color = light.color
+                                const lightDir = vec3.fromValues(c[0]-l[0], c[1]-l[1], c[2]-l[2])
+                                const distance = vec3.length(lightDir)
+                                vec3.normalize(lightDir, lightDir)
+                                let dot = vec3.dot(normal, lightDir) * 0.5 + 0.5
+                                let att = 1.0;
+                                if (enableSpot) {
+                                    const spotDirN = vec3.clone(spotDir)
+                                    vec3.normalize(spotDirN, spotDir)    
+                                    att = vec3.dot(spotDirN, lightDir);
+                                    // console.log (att, spotDirN)
+                                    if (att < cutoff) 
+                                    {
+                                        att = this._smoothstep(cutoff-edge,cutoff, att);
+                                    } else {
+                                        att = 1.0;
+                                    }
+                                }
+                                dot = dot * dot * att
+                                dot = dot < 0.1 ? 0.1 : dot
+                                vec4.add(colorSum, colorSum, [dot*color[0], dot*color[1], dot*color[2], dot*color[3]])
+                            }
+                            // Clamp color
+                            colorSum[0] = colorSum[0] < 0.1 ? 0.1 : colorSum[0] > 1.0 ? 1.0 : colorSum[0]
+                            colorSum[1] = colorSum[1] < 0.1 ? 0.1 : colorSum[1] > 1.0 ? 1.0 : colorSum[1]
+                            colorSum[2] = colorSum[2] < 0.1 ? 0.1 : colorSum[2] > 1.0 ? 1.0 : colorSum[2]
+                            colorSum[3] = colorSum[3] < 0.1 ? 0.1 : colorSum[3] > 1.0 ? 1.0 : colorSum[3]
+                            drawLights.push(colorSum)
+                        }
+                        if (lightEnable) {
+                            const c = drawLights[i]
+                            renderer.SetColorRgba(c[0], c[1], c[2], 1)
+                        }
                         renderer.Quad3D2(
                             x0, y0, z0,
                             x1, y1, z1,
@@ -386,6 +448,7 @@ class GltfModel
                             drawVerts: [],
                             drawUVs: [],
                             drawIndices: [],
+                            drawLights: [],
                             disabled: false,
                         }
                     )
@@ -553,6 +616,7 @@ class GltfModel
                             drawVerts: [],
                             drawUVs: [],
                             drawIndices: [],
+                            drawLights: [],
                             disabled: true,
                         }
                     )

@@ -11,6 +11,7 @@ let buffLength = 0
 const disabledNodes = new Map();
 let activeNodes = [];
 let nodeIndex = 0;
+let drawMeshes = null
 
 function initEventListeners(e) {
 	if (e.data && e.data["type"] === "construct-worker-init")
@@ -33,6 +34,7 @@ function OnMessage(e)
       case 'gltf':
           gltf = e.data.gltf
           buffLength = e.data.buffLength
+          drawMeshes = e.data.drawMeshes
           break
       case 'updateAnimationPolygons':
           updateAnimationPolygons(e.data.data)
@@ -89,9 +91,18 @@ let lastIndex = 0;
 let animationFinished = false;
 let currentAnimationFrame = 0;
 
+function smoothstep (min, max, value) {
+  var x = Math.max(0, Math.min(1, (value-min)/(max-min)));
+  return x*x*(3 - 2*x);
+}
+
 function updateAnimationPolygons(data) {
     const animationData = data.animationData
     const editorData = data.editorData
+    const lightData = data.lightData
+    const lightEnable = lightData?.lightEnable
+    let drawLightsBuffer = null
+
     updateAnimation(animationData);
     if (animationData.onScreen)
     {
@@ -101,9 +112,16 @@ function updateAnimationPolygons(data) {
     // Last float in array will be tick that requested the update
     if (animationData.onScreen)
     {
+      /*
+      if (lightEnable)  {
+        typedVertsToDrawVerts()
+        updateLight(lightData)
+        drawLightsBuffer = getDrawLightsBuffer()
+      }
+      */
       drawVerts[drawVerts.length-1] = editorData.tick;
       setBBInVerts(drawVerts, minBB, maxBB)
-      const data = {buff: buff, activeNodes: activeNodes }
+      const data = {buff: buff, activeNodes: activeNodes, drawLightsBuffer: drawLightsBuffer }
       msgPort.postMessage(data, [data.buff])
     }
 }
@@ -133,8 +151,6 @@ function updateAnimation(animationData)
     const vec3 = glMatrix.vec3;
     // @ts-ignore
     const quat = glMatrix.quat;
-    // const gltf = this.gltfData;
-    // const animationBlend = this.inst.animationBlend;
     const index = animationData.index
     let time = animationData.time
     const onScreen = animationData.onScreen
@@ -214,8 +230,6 @@ function updateAnimation(animationData)
                 if (animationFinished)
                 {
                     animationFinished = true;
-                    // @ts-ignore
-                    // YYY this.inst.Trigger(self.C3.Plugins.Mikal_3DObject.Cnds.OnAnimationFinished);
                 }
             }
         }
@@ -282,6 +296,32 @@ function updateAnimation(animationData)
               currentTarget.node.scale = vec3.clone(target.node.scale);
           }
           lastTarget[lastTargetIndex].push(currentTarget);
+      }
+  }
+}
+
+function typedVertsToDrawVerts() {
+  const length = drawMeshes.length
+  for (let j=0; j<= length; j++) {
+      const drawVerts = drawMeshes[j].drawVerts;
+      const bufferViews = drawMeshes[j].bufferViews;
+      drawVerts.length = 0
+      if (!activeNodes.includes(j)) {
+          drawVerts.push([]);
+          continue;
+      }
+      for (let ii=0; ii<bufferViews.length; ii++)
+      {
+          const bufferView = bufferViews[ii];
+          let buffStart = bufferView.start;
+          
+          // Convert typed array to regular array
+          // to speed access to data, net win is 10-20%
+          const v = new Array(bufferView.length);
+          for (let a=0; a<bufferView.length; a++) {
+              v[a] = drawVerts[buffStart+a];
+          }
+          drawVerts.push(v);
       }
   }
 }
@@ -483,8 +523,130 @@ function transformNode(node, parentMat, modelScaleRotate, isEditor)
     }    
     if(node.children != undefined)
         for(let i = 0; i < node.children.length; i++)
-            this.transformNode(node.children[i], node.matrix, modelScaleRotate, isEditor);
+            transformNode(node.children[i], node.matrix, modelScaleRotate, isEditor);
 }
+
+function getDrawLightsBuffer() {
+  const drawLightsBuffer = []
+  const length = drawMeshes.length
+  for (let j=0; j<= length; j++) {
+    const drawMesh = drawMeshes[j]
+    drawLightBuffer.push(drawMesh.drawLights)
+  }
+  return drawLightsBuffer
+}
+
+function updateLight(editorData, lightData)
+{
+    const vec3 = glMatrix.vec3;
+    const mat4 = glMatrix.mat4;
+    const quat = glMatrix.quat;
+ 
+    const lightPos = lightData.lightPos
+    const spotDir = lightData.spotDir
+    const spotEnable = lightData.spotEnable
+    const cutoff = lightData.cutoff
+    const edge = lightData.edge
+    const cannonBody = null
+    const cannonSetRotation = null 
+
+    const xScale = editorData.xScale;
+    const yScale = editorData.yScale;        
+    const zScale = editorData.zScale;
+
+    const xAngle = editorData.xAngle
+    const yAngle = editorData.yAngle
+    const zAngle = editorData.zAngle
+
+    const x = editorData.x
+    const y = editorData.y
+    const z = editorData.z
+
+    const modelRotate = mat4.create();
+    const rotate = quat.create();
+
+    if (cannonBody && cannonSetRotation) {
+        quat.set(rotate, cannonBody.quaternion.x, cannonBody.quaternion.y, cannonBody.quaternion.z, cannonBody.quaternion.w);
+    } else {
+        quat.fromEuler(rotate, xAngle, yAngle, zAngle);
+    }
+    mat4.fromRotationTranslationScale(modelRotate, rotate, [x,y,z], [xScale,-yScale,zScale]);
+
+    let spotDirN = vec3.clone(lightData.spotDir)
+    vec3.normalize(spotDirN, spotDirN)
+
+    const length = drawMeshes.length
+    for (let j=0; j<= length; j++)
+    {
+        const drawVerts = drawMeshes[j].drawVerts;
+        const drawIndices = drawMeshes[j].drawIndices;
+        const drawLights = drawMeshes[j].drawLights;
+        const drawLight = []
+        drawLights.length = 0
+
+        // Create const for mat2
+        const mat2 = glMatrix.mat2;
+        const vec2 = glMatrix.vec2;
+
+        drawLights.length = 0
+
+        for (let ii=0; ii<drawVerts.length; ii++)
+        {
+            let v = drawVerts[ii];
+            let ind = drawIndices[ii];
+
+            let triangleCount = ind.length/3;
+            for(let i = 0; i<triangleCount; i++)
+            {
+                
+                let i3 = i*3;
+                let x0, y0, z0, x1, y1, z1, x2, y2, z2;
+
+                x0 = (v[ind[i3+0]*3+0]);
+                y0 = (v[ind[i3+0]*3+1]);
+                z0 = (v[ind[i3+0]*3+2]);
+                x1 = (v[ind[i3+1]*3+0]);
+                y1 = (v[ind[i3+1]*3+1]);
+                z1 = (v[ind[i3+1]*3+2]);
+                x2 = (v[ind[i3+2]*3+0]);
+                y2 = (v[ind[i3+2]*3+1]);
+                z2 = (v[ind[i3+2]*3+2]);
+
+                const normal = vec3.create()
+                const l = lightPos
+                const v0 = vec3.fromValues(x0,y0,z0)
+                const v1 = vec3.fromValues(x1,y1,z1)
+                const v2 = vec3.fromValues(x2,y2,z2)
+
+                vec3.transformMat4(v0, v0, modelRotate);
+                vec3.transformMat4(v1, v1, modelRotate);
+                vec3.transformMat4(v2, v2, modelRotate);
+
+                vec3.cross(normal, [v1[0]-v0[0], v1[1]-v0[1], v1[2]-v0[2]], [v2[0]-v0[0], v2[1]-v0[1], v2[2]-v0[2]])
+                vec3.normalize(normal, normal)
+                const lighDir = vec3.fromValues(v0[0]-l[0], l[1]-v0[1], v0[2]-l[2])
+                const distance = vec3.length(lighDir)
+                vec3.normalize(lighDir, lighDir)
+                // let dot = (vec3.dot(normal, lighDir)*0.5+0.5)*2
+                let dot = vec3.dot(normal, lighDir) * 0.5 + 0.5
+                let att = 1.0;
+                if (spotEnable) {
+                    att = vec3.dot(spotDirN, lighDir);
+                    // console.log (att, spotDirN)
+                    if (att < cutoff) 
+                    {
+                        att = smoothstep(cutoff-edge,cutoff, att);
+                    } else {
+                        att = 1.0;
+                    }
+                }
+                dot = dot * dot * att
+                drawLights.push(dot)
+            }
+        }
+    }
+}
+
 
 // @ts-check
 /*!

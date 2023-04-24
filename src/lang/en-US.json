@@ -563,6 +563,110 @@
                       "desc": "Blend time in seconds."
                   }
               }
+          },
+          "enable-light": {
+            "list-name": "Enable lights",
+            "display-text": "Enable lights {0}",
+            "description": "Enable lights",
+            "params": {
+                  "enable": {
+                      "name": "Enable",
+                      "desc": "Enable."
+                  }
+            }
+          },
+          "update-light": {
+            "list-name": "Update light",
+            "display-text": "Update light {0}",
+            "description": "Update light",
+            "params": {
+                  "enable": {
+                      "name": "Update",
+                      "desc": "Update light."
+                  }
+            }
+          },
+          "add-lights": {
+            "list-name": "Add light",
+            "display-text": "Add light {0}, {1},{2},{3},{4},{5},{6},{6} {7} {8} {9} {10} {11}",
+            "description": "Add light.",
+            "params": {
+                "name": {
+                    "name": "Name",
+                    "desc": "Light name."
+                },
+                "enable": {
+                    "name": "Enable",
+                    "desc": "Enable."
+                },
+                "color": {
+                  "name": "Color",
+                  "desc": "Color, use RgbEx()."
+                },
+                "x": {
+                  "name": "X",
+                  "desc": "X."
+                },
+                "y": {
+                  "name": "Y",
+                  "desc": "Y."
+                },
+                "z": {
+                  "name": "Z",
+                  "desc": "Z."
+                },
+                "enable-spot": {
+                  "name": "Enable spot",
+                  "desc": "Enable spot light."
+                },
+                "dir-x": {
+                  "name": "Dir X",
+                  "desc": "Direction X."
+                },
+                "dir-y": {
+                  "name": "Dir Y",
+                  "desc": "Direction Y."
+                },
+                "dir-z": {
+                  "name": "Dir Z",
+                  "desc": "Direction Z."
+                },
+                "cutoff": {
+                    "name": "Cutoff",
+                    "desc": "Cosine cutoff."
+                },
+                "edge": {
+                  "name": "Soft edge",
+                  "desc": "Soft edge."
+                }
+
+            }
+          },
+          "enable-lights": {
+            "list-name": "Enable light",
+            "display-text": "Enable light {0} {1}",
+            "description": "Enable light",
+            "params": {
+                  "name": {
+                    "name": "Name",
+                    "desc": "Light name."
+                },              
+                  "enable": {
+                      "name": "Enable",
+                      "desc": "Enable."
+                  }
+            }
+          },
+          "delete-lights": {
+            "list-name": "Delete light",
+            "display-text": "Delete light {0}",
+            "description": "Delete light",
+            "params": {
+                  "name": {
+                    "name": "Name",
+                    "desc": "Light name."
+                }              
+            }
           }
         },
         "expressions": {
@@ -784,6 +888,22 @@
             "description": "Animation blend time.",
             "translated-name": "AnimationBlendTime",
             "params": {}
+          },
+          "light-color": {
+            "description": "Light color value.",
+            "translated-name": "LightColor",
+            "params": {
+              "name": {
+                "name": "name",
+                "desc": "Color name."
+              }
+            }
+          },
+          "lights-data": {
+            "description": "Lights data as JSON string.",
+            "translated-name": "LightsData",
+            "params": {
+            }
           }
         }
       }

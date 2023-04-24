@@ -507,9 +507,34 @@
             ]
           },
           {
+            "id": "enable-light",
+            "scriptName": "EnableLight",
+            "highlight": false,
+            "params": [
+              {
+                "id": "enable",
+                "type": "boolean",
+                "initialValue": "false"
+              }
+            ]
+          },
+          {
+            "id": "update-light",
+            "scriptName": "UpdateLight",
+            "highlight": false,
+            "params": [
+              {
+                "id": "enable",
+                "type": "boolean",
+                "initialValue": "false"
+              }
+            ]
+          },
+          {
             "id": "set-light-dir",
             "scriptName": "SetLightDir",
             "highlight": false,
+            "isDeprecated": true,
             "params": [
               {
                 "id": "x",
@@ -523,6 +548,102 @@
               },
               {
                 "id": "z",
+                "type": "number",
+                "initialValue": 0
+              }
+            ]
+          },
+          {
+            "id": "enable-lights",
+            "scriptName": "EnableLights",
+            "highlight": false,
+            "params": [
+              {
+                "id": "name",
+                "type": "string",
+                "initialValue": ""
+              },
+              {
+                "id": "enable",
+                "type": "boolean",
+                "initialValue": "false"
+              }
+            ]
+          },
+          {
+            "id": "delete-lights",
+            "scriptName": "DeleteLights",
+            "highlight": false,
+            "params": [
+              {
+                "id": "name",
+                "type": "string",
+                "initialValue": ""
+              }
+            ]
+          },
+          {
+            "id": "add-lights",
+            "scriptName": "AddLights",
+            "highlight": false,
+            "params": [
+              {
+                "id": "name",
+                "type": "string",
+                "initialValue": ""
+              },
+              {
+                "id": "enable",
+                "type": "boolean",
+                "initialValue": "false"
+              },
+              {
+                "id": "color",
+                "type": "number",
+                "initialValue": 0
+              },
+              {
+                "id": "x",
+                "type": "number",
+                "initialValue": 0
+              },
+              {
+                "id": "y",
+                "type": "number",
+                "initialValue": 0
+              },
+              {
+                "id": "z",
+                "type": "number",
+                "initialValue": 0
+              },
+              {
+                "id": "enable-spot",
+                "type": "boolean",
+                "initialValue": "false"
+              },
+              {
+                "id": "dir-x",
+                "type": "number",
+                "initialValue": 0
+              },
+              {
+                "id": "dir-y",
+                "type": "number",
+                "initialValue": 0
+              },
+              {
+                "id": "dir-z",
+                "type": "number",
+                "initialValue": 0
+              },
+              {
+                "id": "cutoff",
+                "type": "number",
+                "initialValue": 0
+              },
+              {
+                "id": "edge",
                 "type": "number",
                 "initialValue": 0
               }
@@ -868,7 +989,30 @@
           "highlight": false,
           "params": [
           ]  
-        }                              
+        },
+        {
+          "id": "light-color",
+          "scriptName": "LightColor",
+          "expressionName": "LightColor",
+          "returnType": "number",
+          "highlight": false,
+          "params": [
+            {
+              "id": "name",
+              "type": "string",
+              "initialValue": ""
+            }
+          ]  
+        },
+        {
+          "id": "lights-data",
+          "scriptName": "LightsData",
+          "expressionName": "LightsData",
+          "returnType": "string",
+          "highlight": false,
+          "params": [
+          ]  
+        }                                        
       ]
     }
   }
