@@ -357,7 +357,7 @@
         },
         EnableLights(name, enable){
             if (!(name in this.lights)) return
-            this.lights.enable = enable
+            this.lights[name].enable = enable
         }
     }
 }
