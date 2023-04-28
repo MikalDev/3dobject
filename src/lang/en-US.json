@@ -542,6 +542,25 @@
               }
             }
           },
+          "set-view-pos": {
+            "list-name": "Set view position",
+            "display-text": "Set view position to {0}, {1}, {2}",
+            "description": "Set view position for specular lighting.",
+            "params": {
+              "x": {
+                "name": "X",
+                "desc": "Set X view position."
+              },
+              "y": {
+                "name": "Y",
+                "desc": "Set Y view position."
+              },
+              "z": {
+                "name": "Z",
+                "desc": "Set Z view position."
+              }
+            }
+          },
           "load-model-from-template": {
             "list-name": "Load model from prefab instance",
             "display-text": "Load model from prefab uid {0}",
@@ -588,7 +607,7 @@
           },
           "add-lights": {
             "list-name": "Add light",
-            "display-text": "Add light {0}, {1},{2},{3},{4},{5},{6},{6} {7} {8} {9} {10} {11}",
+            "display-text": "Add light {0},{1},{2},{3},{4},{5},{6},{6},{7},{8},{9},{10},{11},{12},{13},{14},{15},{16},{17}",
             "description": "Add light.",
             "params": {
                 "name": {
@@ -632,14 +651,37 @@
                   "desc": "Direction Z."
                 },
                 "cutoff": {
-                    "name": "Cutoff",
-                    "desc": "Cosine cutoff."
+                    "name": "Spot cone angle",
+                    "desc": "Spot light cone angle."
                 },
                 "edge": {
                   "name": "Soft edge",
-                  "desc": "Soft edge."
-                }
-
+                  "desc": "Soft edge (0-1)"
+                },
+                "att-constant": {
+                  "name": "Attenuation constant",
+                  "desc": "Constant attenuation (1.0+)"
+                },
+                "att-linear": {
+                  "name": "Attenuation linear",
+                  "desc": "Linear distance attenuation"
+                },
+                "att-square": {
+                  "name": "Attenuation square",
+                  "desc": "Square distance attenuation"
+                },
+                "specular-enable": {
+                  "name": "Specular enable",
+                  "desc": "Enable specular light"
+                },
+                "specular-att": {
+                  "name": "Specular attenuation",
+                  "desc": "Attenuate specular light"
+                },
+                "specular-power": {
+                  "name": "Specular shininess",
+                  "desc": "Shiniess of specular light (1-128)"
+                }                
             }
           },
           "enable-lights": {

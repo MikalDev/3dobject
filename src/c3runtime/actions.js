@@ -321,6 +321,12 @@
             if (!this.gltf.gltfData) return
             this.lightDir = [x,y,z]
         },
+        SetViewPos(x, y, z) {
+            if (!this.gltf) return
+            if (!this.gltf.gltfData) return
+            this.viewPos = [x,y,z]
+            debugger
+        },        
         EnableLight (enable, color) {
             this.lightEnable = enable
         },
@@ -333,7 +339,7 @@
             this.spotCutoff = cutoff
             this.spotEdge = edge
         },
-        AddLights(name, enable, colorWord, x, y, z, enableSpot, dirX, dirY, dirZ, cutoff, edge) {
+        AddLights(name, enable, colorWord, x, y, z, enableSpot, dirX, dirY, dirZ, cutoff, edge, attConstant, attLinear, attSquare, enableSpecular, specularAtt, specularPower) {
             const r = this.getRValue(colorWord)
             const g = this.getGValue(colorWord)
             const b = this.getBValue(colorWord)
@@ -341,14 +347,22 @@
             const color = [r,g,b,a]
             const spotDir = [dirX, dirY, dirZ]
             const pos = [x,y,z]
+            const cosTheta = Math.cos(cutoff/2 * Math.PI / 180)
+            const cosThetaEdge = edge * cosTheta
             this.lights[name] = {
                 enable,
                 color,
                 pos,
                 enableSpot,
                 spotDir,
-                cutoff,
-                edge
+                cutoff: cosTheta,
+                edge: cosThetaEdge,
+                attConstant,
+                attLinear,
+                attSquare,
+                enableSpecular,
+                specularAtt,
+                specularPower
             }
         },
         DeleteLights(name){

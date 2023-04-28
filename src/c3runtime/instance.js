@@ -65,6 +65,7 @@
             this.spotCutoff = 0
             this.spotEdge = 0
             this.lights = {}
+            this.viewPos = [0,0,0]
 
             if (properties)
             {

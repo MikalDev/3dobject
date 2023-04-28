@@ -24,6 +24,7 @@ class GltfModel
         this.nodeMeshMap = {};
         this.modelRotate = mat4.create();
         this.meshNames = new Map()
+        this.viewPos = [0,0,0]
     }
 
     async init() {
@@ -314,6 +315,7 @@ class GltfModel
                         if (lightEnable && lightUpdate) {
 
                             const normal = vec3.create()
+                            const viewDir = vec3.create()
                             const v0 = vec3.fromValues(x0,y0,z0+z)
                             const v1 = vec3.fromValues(x1,y1,z1+z)
                             const v2 = vec3.fromValues(x2,y2,z2+z)
@@ -330,38 +332,59 @@ class GltfModel
                             vec3.normalize(normal, normal)
 
                             for (const light of Object.values(this.inst.lights)) {
+                                if (!light.enable) continue
                                 const l = light.pos
                                 const enableSpot = light.enableSpot
+                                const enableSpecular = light.enableSpecular
                                 const spotDir = light.spotDir
                                 const cutoff = light.cutoff
                                 const edge = light.edge
                                 const color = light.color
                                 const lightDir = vec3.fromValues(c[0]-l[0], c[1]-l[1], c[2]-l[2])
                                 const distance = vec3.length(lightDir)
+                                const attConstant = light.attConstant
+                                const attLinear = light.attLinear
+                                const attSquare = light.attSquare
                                 vec3.normalize(lightDir, lightDir)
                                 let dot = vec3.dot(normal, lightDir) * 0.5 + 0.5
                                 let att = 1.0;
+                                let specular = 0.0
                                 if (enableSpot) {
                                     const spotDirN = vec3.clone(spotDir)
                                     vec3.normalize(spotDirN, spotDir)    
                                     att = vec3.dot(spotDirN, lightDir);
-                                    // console.log (att, spotDirN)
                                     if (att < cutoff) 
                                     {
-                                        att = this._smoothstep(cutoff-edge,cutoff, att);
+                                        att = this._smoothstep(cutoff*(1-edge),cutoff, att);
                                     } else {
                                         att = 1.0;
                                     }
                                 }
+                                if (enableSpecular) {
+                                    vec3.sub(viewDir, this.inst.viewPos, c)
+                                    vec3.normalize(viewDir, viewDir)
+                                    const reflectDir = vec3.create()
+                                    const dotNI = vec3.create()
+                                    vec3.dot(dotNI, normal, lightDir)
+                                    vec3.scale(dotNI, dotNI, 2.0)
+                                    vec3.mul(dotNI, dotNI, normal)
+                                    vec3.sub(reflectDir,dotNI,lightDir)
+                                    // I - 2.0 * dot(N, I) * N.
+                                    vec3.sub(reflectDir, lightDir, normal)
+                                    vec3.normalize(reflectDir, reflectDir)
+                                    const spec = Math.pow(Math.max(vec3.dot(reflectDir, viewDir), 0.0), light.specularPower);
+                                    specular = light.specularAtt * spec; 
+                                }
+                                att = att / (1.0 * attConstant + distance * attLinear + distance * distance * attSquare);
+                                att = att + specular
                                 dot = dot * dot * att
-                                dot = dot < 0.1 ? 0.1 : dot
                                 vec4.add(colorSum, colorSum, [dot*color[0], dot*color[1], dot*color[2], dot*color[3]])
                             }
                             // Clamp color
-                            colorSum[0] = colorSum[0] < 0.1 ? 0.1 : colorSum[0] > 1.0 ? 1.0 : colorSum[0]
-                            colorSum[1] = colorSum[1] < 0.1 ? 0.1 : colorSum[1] > 1.0 ? 1.0 : colorSum[1]
-                            colorSum[2] = colorSum[2] < 0.1 ? 0.1 : colorSum[2] > 1.0 ? 1.0 : colorSum[2]
-                            colorSum[3] = colorSum[3] < 0.1 ? 0.1 : colorSum[3] > 1.0 ? 1.0 : colorSum[3]
+                            colorSum[0] = colorSum[0] < 0.02 ? 0.02 : colorSum[0] > 1.0 ? 1.0 : colorSum[0]
+                            colorSum[1] = colorSum[1] < 0.02 ? 0.02 : colorSum[1] > 1.0 ? 1.0 : colorSum[1]
+                            colorSum[2] = colorSum[2] < 0.02 ? 0.02 : colorSum[2] > 1.0 ? 1.0 : colorSum[2]
+                            colorSum[3] = colorSum[3] < 0.02 ? 0.02 : colorSum[3] > 1.0 ? 1.0 : colorSum[3]
                             drawLights.push(colorSum)
                         }
                         if (lightEnable) {
@@ -373,7 +396,8 @@ class GltfModel
                             x1, y1, z1,
                             x2, y2, z2,
                             x2, y2, z2,
-                            tempQuad
+                            tempQuad,
+                            true
                             );
                     }
                 }
@@ -734,21 +758,24 @@ class GltfModel
             x0+xWidth, y0+yWidth, z0+zWidth,
             x1, y1, z1,
             x1+xWidth, y1+yWidth, z1+zWidth,
-            tempQuad
+            tempQuad,
+            true
         );
         renderer.Quad3D2(
             x1, y1, z1,
             x1+xWidth, y1+yWidth, z1+zWidth,
             x2, y2, z2,
             x2+xWidth, y2+yWidth, z2+zWidth,
-            tempQuad
+            tempQuad,
+            true
         );
         renderer.Quad3D2(
             x2, y2, z2,
             x2+xWidth, y2+yWidth, z2+zWidth,
             x0, y0, z0,
             x0+xWidth, y0+yWidth, z0+zWidth,
-            tempQuad
+            tempQuad,
+            true
         );   
     }
 

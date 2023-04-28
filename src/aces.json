@@ -640,10 +640,62 @@
               {
                 "id": "cutoff",
                 "type": "number",
-                "initialValue": 0
+                "initialValue": 90
               },
               {
                 "id": "edge",
+                "type": "number",
+                "initialValue": 0.05
+              },
+              {
+                "id": "att-constant",
+                "type": "number",
+                "initialValue": 1
+              },
+              {
+                "id": "att-linear",
+                "type": "number",
+                "initialValue": 0.00001
+              },
+              {
+                "id": "att-square",
+                "type": "number",
+                "initialValue":  0.000005
+              },              
+              {
+                "id": "specular-enable",
+                "type": "boolean",
+                "initialValue": "false"
+              },
+              {
+                "id": "specular-att",
+                "type": "number",
+                "initialValue": 0.5
+              },
+              {
+                "id": "specular-power",
+                "type": "number",
+                "initialValue": 32
+              }              
+            ]
+          },
+          {
+            "id": "set-view-pos",
+            "scriptName": "SetViewPos",
+            "highlight": false,
+            "params": [
+              {
+                "id": "x",
+                "type": "number",
+                "initialValue": 0
+              },
+              {
+                "id": "y",
+                "type": "number",
+                "initialValue": 0
+              },
+              {
+                "id": "z",
                 "type": "number",
                 "initialValue": 0
               }
