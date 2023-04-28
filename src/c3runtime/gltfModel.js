@@ -98,7 +98,6 @@ class GltfModel
         let totalTriangles = 0;
         let currentColor = [-1,-1,-1,-1];
         let currentTexture = null;
-        const lightUpdate = this.inst.lightUpdate
         const lightEnable = this.inst.lightEnable
 
         const vec4 = globalThis.glMatrix3D.vec4;
@@ -164,6 +163,8 @@ class GltfModel
             const materialsModify = this.inst.materialsModify;
             const offsetMaterial = materialsModify.has(material?.name) && materialsModify.get(material?.name)?.offsetUV;
             const rotateMaterial = materialsModify.has(material?.name) && materialsModify.get(material?.name)?.rotateUV;
+            const lightUpdate = this.inst.lightUpdate || (drawLights.length == 0)
+
 
 
             // Check if the map this.inst.materialsModify contains the key material.name
@@ -214,7 +215,7 @@ class GltfModel
                 mat2.fromRotation(rotateMatrix, rotateUV.angle);
             }
 
-            if (this.inst.lightUpdate) {
+            if (lightUpdate) {
                 drawLights.length = 0
             }
             for (let ii=0; ii<drawVerts.length; ii++)
@@ -307,7 +308,7 @@ class GltfModel
 
                     let lightSum = 0
                     let colorSum
-                    if (this.inst.lightUpdate) colorSum = vec4.create()
+                    if (lightUpdate) colorSum = vec4.create()
 
                     if (this.inst.wireframe) {
                         this.drawWireFrame(renderer, whiteTexture, tempQuad, x0, y0, z0, x1, y1, z1, x2, y2, z2, xWireframeWidth, yWireframeWidth, zWireframeWidth);
