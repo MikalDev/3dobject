@@ -372,6 +372,14 @@
         EnableLights(name, enable){
             if (!(name in this.lights)) return
             this.lights[name].enable = enable
-        }
+        },
+        SetAmbientColor(colorWord){
+            const r = this.getRValue(colorWord)
+            const g = this.getGValue(colorWord)
+            const b = this.getBValue(colorWord)
+            const a = this.getAValue(colorWord)
+            const color = [r,g,b,a]
+            this.ambientColor = color
+        },
     }
 }

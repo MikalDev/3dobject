@@ -147,6 +147,9 @@ class GltfModel
 
         // Default color
         renderer.SetColor(instanceC3Color);
+        vec4.copy(currentColor, instanceColor);
+        let baseColorChanged = false;
+        if (!vec4.equals(currentColor, [1,1,1,1])) baseColorChanged = true;
 
         for (let j=0; j<= this.drawMeshesIndex; j++)
         {
@@ -183,6 +186,7 @@ class GltfModel
                 if (vec4.equals(finalColor, currentColor) == false) {
                     vec4.copy(currentColor, finalColor);
                     renderer.SetColorRgba(finalColor[0], finalColor[1], finalColor[2], finalColor[3]);
+                    baseColorChanged = true
                 }
             }
 
@@ -306,7 +310,6 @@ class GltfModel
                     y2 = (v[ind[i3+2]*3+1]);
                     z2 = (v[ind[i3+2]*3+2])-z;
 
-                    let lightSum = 0
                     let colorSum
                     if (lightUpdate) colorSum = vec4.create()
 
@@ -381,15 +384,19 @@ class GltfModel
                                 dot = dot * dot * att
                                 vec4.add(colorSum, colorSum, [dot*color[0], dot*color[1], dot*color[2], dot*color[3]])
                             }
+                            // Add ambient color to colorSum
+                            vec4.add(colorSum, colorSum, this.inst.ambientColor)
                             // Clamp color
-                            colorSum[0] = colorSum[0] < 0.02 ? 0.02 : colorSum[0] > 1.0 ? 1.0 : colorSum[0]
-                            colorSum[1] = colorSum[1] < 0.02 ? 0.02 : colorSum[1] > 1.0 ? 1.0 : colorSum[1]
-                            colorSum[2] = colorSum[2] < 0.02 ? 0.02 : colorSum[2] > 1.0 ? 1.0 : colorSum[2]
-                            colorSum[3] = colorSum[3] < 0.02 ? 0.02 : colorSum[3] > 1.0 ? 1.0 : colorSum[3]
+                            colorSum[0] = colorSum[0] < 0.0 ? 0.0 : colorSum[0] > 1.0 ? 1.0 : colorSum[0]
+                            colorSum[1] = colorSum[1] < 0.0 ? 0.0 : colorSum[1] > 1.0 ? 1.0 : colorSum[1]
+                            colorSum[2] = colorSum[2] < 0.0 ? 0.0 : colorSum[2] > 1.0 ? 1.0 : colorSum[2]
+                            colorSum[3] = colorSum[3] < 0.0 ? 0.0 : colorSum[3] > 1.0 ? 1.0 : colorSum[3]
+
                             drawLights.push(colorSum)
                         }
                         if (lightEnable) {
                             const c = drawLights[i]
+                            if (baseColorChanged) vec4.mul(c, c, currentColor)
                             renderer.SetColorRgba(c[0], c[1], c[2], 1)
                         }
                         renderer.Quad3D2(

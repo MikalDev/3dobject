@@ -709,6 +709,17 @@
                     "desc": "Light name."
                 }              
             }
+          },
+          "set-ambient-color": {
+            "list-name": "Set ambient color",
+            "display-text": "Set ambient color {0}",
+            "description": "Set ambient color",
+            "params": {
+                  "color": {
+                      "name": "Color",
+                      "desc": "Color value, use rgbaEx()."
+                  }
+            }
           }
         },
         "expressions": {

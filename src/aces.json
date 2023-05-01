@@ -55,6 +55,18 @@
       ],
       "actions": [
         {
+          "id": "set-ambient-color",
+          "scriptName": "SetAmbientColor",
+          "highlight": false,
+          "params": [
+            {
+              "id": "color",
+              "type": "number",
+              "initialValue": 0
+            }
+          ]
+        },
+        {
         "id": "rotate",
         "scriptName": "Rotate",
         "highlight": false,

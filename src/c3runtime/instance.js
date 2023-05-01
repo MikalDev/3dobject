@@ -66,6 +66,7 @@
             this.spotEdge = 0
             this.lights = {}
             this.viewPos = [0,0,0]
+            this.ambientColor = [0,0,0,0]
 
             if (properties)
             {
@@ -448,6 +449,7 @@
             this.spotDir = null
             this.spotCutoff = null
             this.spotEdge = null
+            this.ambientColor = null
             super.Release();
         }
 
