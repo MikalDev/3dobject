@@ -10,6 +10,9 @@
         OnAnimationFinished() {
             return true;
         },
+        OnAnimationNameFinished(name) {
+            return (this.animationNameFinished == name);
+        },
         IsAnimationFinished() {
             return this.IsAnimationFinished;
         },

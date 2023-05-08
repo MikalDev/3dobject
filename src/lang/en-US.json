@@ -118,6 +118,17 @@
             "display-text": "On animation finished ",
             "description": "Triggers when the animation has finished (only triggered if not looping)."
           },
+          "on-animation-name-finished": {
+            "list-name": "On animation name finished",
+            "display-text": "On animation {0} finished ",
+            "description": "Triggers when the named animation has finished (only triggered if not looping).",
+            "params": {
+              "name": {
+                "name": "Name",
+                "desc": "Enter the name of animation to check if playing."
+              }
+            }
+          },
           "is-wireframe-enabled": {
             "list-name": "Is wireframe enabled",
             "display-text": "Is wireframe enabled",
@@ -955,6 +966,12 @@
           "lights-data": {
             "description": "Lights data as JSON string.",
             "translated-name": "LightsData",
+            "params": {
+            }
+          },
+          "animation-speed": {
+            "description": "Animation speed.",
+            "translated-name": "AnimationSpeed",
             "params": {
             }
           }

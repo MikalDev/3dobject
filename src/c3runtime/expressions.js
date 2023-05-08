@@ -181,6 +181,9 @@
             },
             LightsData() {
                 return JSON.stringify(this.lights)
-            }            
+            },
+            AnimationSpeed(speed) {
+                return this.animationSpeed
+            },            
         };
 }

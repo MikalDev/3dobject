@@ -67,6 +67,7 @@
             this.lights = {}
             this.viewPos = [0,0,0]
             this.ambientColor = [0,0,0,0]
+            this.animationNameFinished = ''
 
             if (properties)
             {

@@ -662,8 +662,6 @@ class GltfModelW
         {
             let c = anim.channels[i];
             let timeValues = c.sampler.input;
-            let otherValues = c.sampler.output.data;
-            let target = c.target;
             
             if (this.inst.animationLoop)
             {
@@ -676,8 +674,12 @@ class GltfModelW
                     if (!this.inst.animationFinished)
                     {
                         this.inst.animationFinished = true;
+                        this.inst.animationNameFinished = this.inst.animationName;
                         // @ts-ignore
                         this.inst.Trigger(self.C3.Plugins.Mikal_3DObject.Cnds.OnAnimationFinished);
+                        // @ts-ignore
+                        this.inst.Trigger(self.C3.Plugins.Mikal_3DObject.Cnds.OnAnimationNameFinished);
+
                     }
                 }
             }            

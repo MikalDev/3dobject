@@ -30,6 +30,21 @@
           "isCompatibleWithTriggers": false
         },
         {
+          "id": "on-animation-name-finished",
+          "scriptName": "OnAnimationNameFinished",
+          "highlight": false,
+          "isTrigger": true,
+          "isInvertible": false,
+          "isCompatibleWithTriggers": false,
+          "params": [
+            {
+                "id": "name",
+                "type": "string",
+                "initialValue": ""
+            }
+          ]
+        },
+        {
           "id": "is-wireframe-enabled",
           "scriptName": "IsWireframeEnabled",
           "highlight": false,
@@ -1073,6 +1088,15 @@
           "scriptName": "LightsData",
           "expressionName": "LightsData",
           "returnType": "string",
+          "highlight": false,
+          "params": [
+          ]  
+        },
+        {
+          "id": "animation-speed",
+          "scriptName": "AnimationSpeed",
+          "expressionName": "AnimationSpeed",
+          "returnType": "number",
           "highlight": false,
           "params": [
           ]  
