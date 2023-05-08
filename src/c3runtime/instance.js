@@ -386,9 +386,14 @@
 
         Release()
         {
-            if (this.texture.length > 0) {
-                for (let i = 0; i < this.texture.length; i++) {
-                    this.renderer.DeleteTexture(this.texture[i]);
+            console.log("release");
+            const textureNames = Object.keys(this.texture);
+            console.log("textureNames", textureNames);
+            if (textureNames.length > 0) {
+                for (const textureName of textureNames)
+                {
+                    this.renderer.DeleteTexture(this.texture[textureName]);
+                    console.log("delete texture", textureName);
                 }
             }
             if (this.whiteTexture) {
