@@ -112,9 +112,9 @@ class GltfModel
             const yScale = this.inst.scale/(this.inst.yScale == 0 ? 1 : this.inst.yScale);        
             const zScale = this.inst.scale/(this.inst.zScale == 0 ? 1 : this.inst.zScale);
 
-            xWireframeWidth = this.inst.isEditor ? this.inst.xWireframeWidth : this.inst.xWireframeWidth/xScale;
-            yWireframeWidth = this.inst.isEditor ? this.inst.yWireframeWidth : this.inst.yWireframeWidth/yScale;
-            zWireframeWidth = this.inst.isEditor ? this.inst.zWireframeWidth : this.inst.zWireframeWidth/zScale;
+            xWireframeWidth = this.inst.isEditor || this.inst.cpuXform ? this.inst.xWireframeWidth : this.inst.xWireframeWidth/xScale;
+            yWireframeWidth = this.inst.isEditor || this.inst.cpuXform ? this.inst.yWireframeWidth : this.inst.yWireframeWidth/yScale;
+            zWireframeWidth = this.inst.isEditor || this.inst.cpuXform ? this.inst.zWireframeWidth : this.inst.zWireframeWidth/zScale;
         }
 
 
@@ -123,7 +123,7 @@ class GltfModel
 
         const tmpModelView = mat4.create();
         const modelRotate = mat4.create();
-        if (!this.inst.isEditor) {
+        if (!(this.inst.isEditor || this.inst.cpuXform)) {
             mat4.copy(tmpModelView, renderer._matMV);
             const xAngle = this.inst.xAngle;
             const yAngle = this.inst.yAngle;
@@ -412,7 +412,7 @@ class GltfModel
             }
         }
         // Restore modelview matrix
-        if (!this.inst.isEditor) {
+        if (!(this.inst.isEditor || this.inst.cpuXform)) {
             renderer.SetModelViewMatrix(tmpModelView);
         }
     }
@@ -462,15 +462,22 @@ class GltfModel
                 let transformedVerts = [];
                 transformedVerts.length = 0;
                 let posData = node.mesh.primitives[i].attributes.POSITION.data;
+                const weights = node.mesh.weights
 
                 let morphActive = false;
                 let morphTargets = null;
                 let morphWeights = null;
     
-                if (node.weights) {
+                if (weights || node.morphWeights) {
+                    if (!node.weights) node.weights = new Float32Array(node.mesh.primitives[i].targets.length);
                     morphActive = true;
                     morphTargets = node.mesh.primitives[i].targets;
-                    morphWeights = node.weights;
+                    morphWeights = [...weights];
+                    if(node.morphWeights) {
+                        for(let j = 0; j < morphWeights.length; j++) {
+                            if (node.morphWeights.has(j)) morphWeights[j] = node.morphWeights.get(j);
+                        }
+                    }
                 }
                 
                 this.drawMeshesIndex++;
@@ -482,6 +489,7 @@ class GltfModel
                             drawIndices: [],
                             drawLights: [],
                             disabled: false,
+                            morphWeights: null,
                         }
                     )
                     this.meshNames.set(node.name, this.drawMeshesIndex)
@@ -518,7 +526,7 @@ class GltfModel
                     // vec3.transformMat4(v, vv, node.matrix);
                     // mat4.multiplyVec3(node.matrix, posData.subarray(j*3, j*3+3), v);
 
-                    if (this.inst.isEditor) {
+                    if (this.inst.isEditor || this.inst.cpuXform) {
                         vec3.transformMat4(v, v, modelScaleRotate);
                     }
 
@@ -591,14 +599,14 @@ class GltfModel
 
         const modelScaleRotate = mat4.create();
 
-        if (this.inst.isEditor) {
+        if (this.inst.isEditor || this.inst.cpuXform) {
             const xAngle = this.inst.xAngle;
             const yAngle = this.inst.yAngle;
             const zAngle = this.inst.zAngle;
 
-            const x = this.inst._inst.GetX();
-            const y = this.inst._inst.GetY();
-            const z = this.inst.zElevation;
+            const x = this.inst.isEditor ? this.inst._inst.GetX() : this.inst.GetWorldInfo().GetX() ;
+            const y = this.inst.isEditor ? this.inst._inst.GetY() : this.inst.GetWorldInfo().GetY() ;
+            const z = this.inst.isEditor ? this.inst.zElevation : this.inst.GetWorldInfo().GetZElevation();
 
             const rotate = quat.create();
             quat.fromEuler(rotate, xAngle, yAngle, zAngle);
@@ -659,10 +667,15 @@ class GltfModel
                 let morphTargets = null;
                 let morphWeights = null;
 
-                if (node.weights) {
+                if (node.weights || node.morphWeights) {
+                    if (!node.weights) node.weights = new Float32Array(node.mesh.primitives[i].targets.length);
                     morphActive = true;
                     morphTargets = node.mesh.primitives[i].targets;
-                    morphWeights = node.weights;
+                    morphWeights = [...node.weights];
+                    if(node.morphWeights)
+                        for(let j = 0; j < morphWeights.length; j++) {
+                            if (node.morphWeights.has(j)) morphWeights[j] = node.morphWeights.get(j);
+                        }
                 }
                 this.drawMeshes[this.drawMeshesIndex].disabled = node.disabled;
                 if (node.offsetUV) this.drawMeshes[this.drawMeshesIndex].offsetUV = node.offsetUV;
@@ -707,7 +720,7 @@ class GltfModel
                         vec3.add(vsum, vsum, v);
                         // vec3.add(vsum, v);
                     }
-                    if (this.inst.isEditor) {
+                    if (this.inst.isEditor || this.inst.cpuXform) {
                         vec3.transformMat4(vsum, vsum, modelScaleRotate );
                     }
 

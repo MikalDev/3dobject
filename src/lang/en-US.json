@@ -92,6 +92,10 @@
           "worker-animation": {
             "name": "Worker animation",
             "desc": "Offload animation to worker useful for larger animated models."
+          },
+          "cpu-xform": {
+            "name": "TBD",
+            "desc": "TBD"
           }
         },
         "aceCategories": {
@@ -730,6 +734,40 @@
                       "name": "Color",
                       "desc": "Color value, use rgbaEx()."
                   }
+            }
+          },
+          "set-node-morph-weight": {
+            "list-name": "Set node morph target weight",
+            "display-text": "Set node {0} target {1} weight to {2}",
+            "description": "Set node morph target weight.",
+            "params": {
+              "name": {
+                "name": "Node name",
+                "desc": "Node name."
+              },
+              "index": {
+                "name": "Target",
+                "desc": "Target index."
+              },
+              "weight": {
+                "name": "Weight",
+                "desc": "Target weight."
+              }
+            }
+          },
+          "delete-node-morph-weight": {
+            "list-name": "Delete node morph target weight",
+            "display-text": "Delete node {0} target {1} weight",
+            "description": "Delete node morph target weight.",
+            "params": {
+              "name": {
+                "name": "Node name",
+                "desc": "Node name."
+              },
+              "index": {
+                "name": "Target",
+                "desc": "Target index."
+              }
             }
           }
         },

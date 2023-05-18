@@ -196,6 +196,14 @@ class GltfModelW
         this.msgPort.postMessage({type: 'enableNode', nodeName: nodeName, enable: enable});
     }
 
+    setNodeMorphWeight(nodeName, index, weight) {
+        this.msgPort.postMessage({type: 'setNodeMorphWeight', nodeName, index, weight});
+    }
+
+    deleteNodeMorphWeight(nodeName, index) {
+        this.msgPort.postMessage({type: 'deleteNodeMorphWeight', nodeName, index});
+    }
+
     setBBFromVerts(verts, minBBox, maxBBox) {
         let l = verts.length-2
         maxBBox[2] =  verts[l--]
@@ -243,7 +251,7 @@ class GltfModelW
 
         const tmpModelView = mat4.create();
         const modelRotate = mat4.create();
-        if (!this.inst.isEditor) {
+        if (!(this.inst.isEditor || this.inst.cpuXform)) {
             mat4.copy(tmpModelView, renderer._matMV);
             const xAngle = this.inst.xAngle;
             const yAngle = this.inst.yAngle;
@@ -390,7 +398,7 @@ class GltfModelW
             }
         }
         // Restore modelview matrix
-        if (!this.inst.isEditor) {
+        if (!(this.inst.isEditor || this.inst.cpuXform)) {
             renderer.SetModelViewMatrix(tmpModelView);
         }
     }

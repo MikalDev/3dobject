@@ -3,7 +3,7 @@
     const SDK = self.SDK;
 
     const PLUGIN_ID = "Mikal_3DObject";
-    const PLUGIN_VERSION = "2.46.1";
+    const PLUGIN_VERSION = "2.48.1";
     const PLUGIN_CATEGORY = "3d";
 
     const PLUGIN_CLASS = SDK.Plugins.Mikal_3DObject = class Object3DPlugin extends SDK.IPluginBase
@@ -111,6 +111,10 @@
                 "interpolatable": false
             }),
             new SDK.PluginProperty("check", "worker-animation", false,
+            {
+                "interpolatable": false
+            }),
+            new SDK.PluginProperty("check", "cpu-xform", false,
             {
                 "interpolatable": false
             }),

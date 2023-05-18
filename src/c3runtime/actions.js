@@ -212,6 +212,34 @@
                 this.gltf.enableNode(nodeName, enable);
             }
         },
+
+        SetNodeMorphWeight(nodeName, index, weight) {
+            if (!this.gltf) return;
+            if (!this.gltf.gltfData) return;
+
+            const node = this._findNode(nodeName);
+            if (!node) return
+            if (!node.morphWeights) node.morphWeights = new Map();
+            node.morphWeights.set(index, weight);
+            this.renderOnce = true;
+            if (this.workerAnimation) {
+                this.gltf.setNodeMorphWeight(nodeName, index, weight);
+            }
+        },
+
+        DeleteNodeMorphWeight(nodeName, index) {
+            if (!this.gltf) return;
+            if (!this.gltf.gltfData) return;
+
+            const node = this._findNode(nodeName);
+            if (!node) return
+            if (!node.morphWeights) return;
+            node.morphWeights.delete(index);
+            this.renderOnce = true;
+            if (this.workerAnimation) {
+                this.gltf.deleteNodeMorphWeight(nodeName, index);
+            }
+        },
         
         OffsetNodeUV(nodeName, u, v) {
             if (!this.gltf) return;

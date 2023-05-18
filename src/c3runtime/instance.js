@@ -68,6 +68,7 @@
             this.viewPos = [0,0,0]
             this.ambientColor = [0,0,0,0]
             this.animationNameFinished = ''
+            this.cpuXform = false
 
             if (properties)
             {
@@ -89,6 +90,7 @@
                 this.zScale = properties[13];
                 this.wireframe = properties[14];
                 this.workerAnimation = properties[15];
+                // this.cpuXform = properties[16];
             }
 
             this.localCenter = [0,0,0]
@@ -267,19 +269,30 @@
             if (this.loaded && this.gltfPath != 'path')
             {
                 this.gltf.render(renderer, x, y, z, tempQuad, whiteTextureOwner.whiteTexture, wi.GetPremultipliedColor(), textures, this.instanceTexture);
-
-                const xScale = this.scale/(this.xScale == 0 ? 1 : this.xScale);
-                const yScale = this.scale/(this.yScale == 0 ? 1 : this.yScale);        
-                const zScale = this.scale/(this.zScale == 0 ? 1 : this.zScale);
         
                 if (this.updateBbox)
                 {
-                    this._updateBoundingBox(x,y,z);
-                    // wi.SetOriginY(this.maxBB[1]/Math.abs(this.maxBB[1]-this.minBB[1]));
+                    if (this.cpuXform) {
+                        this._updateBoundingBoxCPU(x,y,z);
+                    } else {
+                        this._updateBoundingBox(x,y,z);
+                    }
+
                     wi.SetBboxChanged()
                     this.updateBbox = false
                 }
             }
+        }
+
+        _updateBoundingBoxCPU(x, y, z) {
+            const wi = this.GetWorldInfo();
+            let width = this.maxBB[0]-this.minBB[0];
+            let height = this.maxBB[1]-this.minBB[1];
+            height = height == 0 ? 1 : height;
+            width = width == 0 ? 1 : width;
+            wi.SetSize(width, height);
+            wi.SetOriginX(-(this.minBB[0]-x)/(width));
+            wi.SetOriginY(-(this.minBB[1]-y)/(height));
         }
 
         _updateBoundingBox(x, y, z) {
@@ -386,14 +399,11 @@
 
         Release()
         {
-            console.log("release");
             const textureNames = Object.keys(this.texture);
-            console.log("textureNames", textureNames);
             if (textureNames.length > 0) {
                 for (const textureName of textureNames)
                 {
                     this.renderer.DeleteTexture(this.texture[textureName]);
-                    console.log("delete texture", textureName);
                 }
             }
             if (this.whiteTexture) {

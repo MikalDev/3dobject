@@ -9,6 +9,7 @@ let minBB = [Number.POSITIVE_INFINITY,Number.POSITIVE_INFINITY,Number.POSITIVE_I
 let maxBB = [Number.NEGATIVE_INFINITY,Number.NEGATIVE_INFINITY,Number.NEGATIVE_INFINITY];
 let buffLength = 0
 const disabledNodes = new Map();
+const nodeMorphWeights = new Map();
 let activeNodes = [];
 let nodeIndex = 0;
 let drawMeshes = null
@@ -33,6 +34,7 @@ function OnMessage(e)
           break;
       case 'gltf':
           gltf = e.data.gltf
+          console.log('gltf',gltf)
           buffLength = e.data.buffLength
           drawMeshes = e.data.drawMeshes
           break
@@ -54,6 +56,21 @@ function OnMessage(e)
             disabledNodes.set(e.data.nodeName, true)
           }
           break;
+      case 'setNodeMorphWeight': {
+        const nodeName = e.data.nodeName
+        const index = e.data.index
+        const weight = e.data.weight
+        if (!nodeMorphWeights.has(nodeName)) nodeMorphWeights.set(nodeName, new Map())
+        nodeMorphWeights.get(nodeName).set(index, weight)
+        break;
+      }
+      case 'deleteNodeMorphWeight': {
+        const nodeName = e.data.nodeName
+        const index = e.data.index
+        if (!nodeMorphWeights.has(nodeName)) return
+        nodeMorphWeights.get(nodeName).delete(index)
+        break;
+      }
       default:
           console.warn('unknown message type:', e.data.type)
   }
@@ -267,6 +284,16 @@ function updateAnimation(animationData)
         else if(target.path == "scale")
             vec3.lerp(target.node.scale, otherValues.subarray(t0*3,t0*3+3), otherValues.subarray(t1*3,t1*3+3), t);
             // vec3.lerp(otherValues.subarray(t0*3,t0*3+3), otherValues.subarray(t1*3,t1*3+3), t, target.node.scale);
+        else if(target.path == "weights") {
+          // Apply gltf morph target weights to node weights using lerp between two targets
+          const node = target.node;
+          node.weights = new Float32Array(node.mesh.primitives[0].targets.length);
+          const weights = node.weights;
+          const stride = weights.length
+          for (let j = 0; j < stride; j++) {
+              weights[j] = lerp(otherValues[t0*stride+j], otherValues[t1*stride+j], t);
+          }
+        }
 
         // Blend to last animation if during blend
         if (blendState == 'blend') {
@@ -298,6 +325,11 @@ function updateAnimation(animationData)
           lastTarget[lastTargetIndex].push(currentTarget);
       }
   }
+}
+
+function lerp( a, b, alpha ) {
+  const value = a + alpha * (b-a);
+  return value
 }
 
 function typedVertsToDrawVerts() {
@@ -408,9 +440,24 @@ function getPolygonsPrep(editorData)
             // Don't animate disabled nodes
             if (disabledNodes.get(node.name)) {
               index+=posData.length;
-              // console.log("disabled skinned node: " + node.name)
               nodeIndex++;
               continue;
+            }
+
+            let morphActive = false;
+            let morphTargets = null;
+            let morphWeights = null;
+
+            const nodeMorphWeightSet = nodeMorphWeights.get(node.name)
+            if (node.weights || nodeMorphWeightSet) {
+                morphActive = true;
+                morphTargets = node.mesh.primitives[i].targets;
+                if (!node.weights) node.weights = new Float32Array(morphTargets.length);
+                morphWeights = [...node.weights];
+                if(nodeMorphWeightSet)
+                    for(let j = 0; j < morphWeights.length; j++) {
+                        if (nodeMorphWeightSet.has(j)) morphWeights[j] = nodeMorphWeightSet.get(j);
+                    }
             }
 
             activeNodes.push(nodeIndex);
@@ -422,6 +469,10 @@ function getPolygonsPrep(editorData)
                 let b = joints.subarray(j*4, j*4+4);
                 let vin = posData.subarray(j*3, j*3+3)
                 let v = [0,0,0], vsum = [0,0,0];
+
+                if (morphActive) {
+                    vin = morphTargetsXform(vin, j, morphWeights, morphTargets);
+                }
                 
                 for(let i=0; i<4; i++)
                 {
@@ -492,12 +543,33 @@ function transformNode(node, parentMat, modelScaleRotate, isEditor)
               continue;
             }
 
+            let morphActive = false;
+            let morphTargets = null;
+            let morphWeights = null;
+
+            const nodeMorphWeightSet = nodeMorphWeights.get(node.name)
+            if (node.weights || nodeMorphWeightSet) {
+                morphActive = true;
+                morphTargets = node.mesh.primitives[i].targets;
+                if (!node.weights) node.weights = new Float32Array(morphTargets.length);
+                morphWeights = [...node.weights];
+                if(nodeMorphWeightSet)
+                    for(let j = 0; j < morphWeights.length; j++) {
+                        if (nodeMorphWeightSet.has(j)) morphWeights[j] = nodeMorphWeightSet.get(j);
+                    }
+            }
+
             activeNodes.push(nodeIndex);
             nodeIndex++;
 
             for(let j=0; j<posData.length/3; j++)
             {
-                vec3.transformMat4(v, posData.subarray(j*3, j*3+3), node.matrix);
+              let vin = posData.subarray(j*3, j*3+3);
+              if (morphActive) {
+                  vin =  morphTargetsXform(vin, j, morphWeights, morphTargets);
+              }
+
+              vec3.transformMat4(v, vin, node.matrix);
 
                 if (isEditor) {
                     vec3.transformMat4(v, v, modelScaleRotate);
@@ -524,6 +596,19 @@ function transformNode(node, parentMat, modelScaleRotate, isEditor)
     if(node.children != undefined)
         for(let i = 0; i < node.children.length; i++)
             transformNode(node.children[i], node.matrix, modelScaleRotate, isEditor);
+}
+
+function morphTargetsXform(vin, index, weights, targets) {
+  const vec3 = glMatrix.vec3;
+  const vout = vec3.create();
+  vec3.copy(vout, vin);
+  for (let i = 0; i < targets.length; i++) {
+      const w = weights[i];
+      if (w == 0) continue;
+      const v = targets[i].POSITION.data.subarray(index * 3, index * 3 + 3);
+      vec3.scaleAndAdd(vout, vout, v, w);
+  }
+  return vout;
 }
 
 function getDrawLightsBuffer() {
