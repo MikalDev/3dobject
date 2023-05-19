@@ -467,12 +467,11 @@ class GltfModel
                 let morphActive = false;
                 let morphTargets = null;
                 let morphWeights = null;
-    
-                if (weights || node.morphWeights) {
+                if (node.weights || node.morphWeights) {
                     if (!node.weights) node.weights = new Float32Array(node.mesh.primitives[i].targets.length);
                     morphActive = true;
                     morphTargets = node.mesh.primitives[i].targets;
-                    morphWeights = [...weights];
+                    morphWeights = [...node.weights];
                     if(node.morphWeights) {
                         for(let j = 0; j < morphWeights.length; j++) {
                             if (node.morphWeights.has(j)) morphWeights[j] = node.morphWeights.get(j);

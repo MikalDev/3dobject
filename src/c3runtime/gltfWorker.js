@@ -149,7 +149,9 @@ function getPolygons(data) {
     // Post buffer to messagePort
     // Last float in array will be tick that requested the update
     drawVerts[drawVerts.length-1] = editorData.tick;
-    msgPort.postMessage(buff, [buff])
+    setBBInVerts(drawVerts, minBB, maxBB)
+    const msg = {buff: buff, activeNodes: activeNodes}
+  msgPort.postMessage(msg, [msg.buff])
 }
 
 function setBBInVerts(verts, minBBox, maxBBox) {

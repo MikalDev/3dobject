@@ -353,7 +353,6 @@
             if (!this.gltf) return
             if (!this.gltf.gltfData) return
             this.viewPos = [x,y,z]
-            debugger
         },        
         EnableLight (enable, color) {
             this.lightEnable = enable
