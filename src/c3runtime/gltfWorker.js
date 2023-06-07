@@ -1,8 +1,14 @@
+// @ts-check
+'use strict';
+
 // The MessagePort for communicating with the runtime
 let msgPort = null;
 let id = Math.random()
 let buff = null;
+let buffLights = null;
 let drawVerts = null;
+let drawLights = null;
+let drawLightsBufferViews = []
 let index = 0;
 let gltf = null
 let minBB = [Number.POSITIVE_INFINITY,Number.POSITIVE_INFINITY,Number.POSITIVE_INFINITY];
@@ -37,6 +43,7 @@ function OnMessage(e)
           console.log('gltf',gltf)
           buffLength = e.data.buffLength
           drawMeshes = e.data.drawMeshes
+          console.log('drawMeshes',drawMeshes)
           break
       case 'updateAnimationPolygons':
           updateAnimationPolygons(e.data.data)
@@ -83,11 +90,17 @@ function release() {
       msgPort = null;
   }
   buff = null
+  buffLights = null
+  drawLights = null
   drawVerts = null
+  // @ts-ignore
   index = null
   gltf = null
+  // @ts-ignore
   minBB = null
+  // @ts-ignore
   maxBB = null
+  // @ts-ignore
   buffLength = null
 }
 
@@ -98,10 +111,10 @@ function OnReady()
     // Updates animation at index to be at time.  Is used to play animation.
 
 let blendState = 'init';
-lastTarget = new Array(2);
+const lastTarget = new Array(2);
 lastTarget[0] = [];
 lastTarget[1] = [];
-lastTargetIndex = 0;
+let lastTargetIndex = 0;
 let blendTarget = [];
 let blendTime = 0;
 let lastIndex = 0;
@@ -116,9 +129,7 @@ function smoothstep (min, max, value) {
 function updateAnimationPolygons(data) {
     const animationData = data.animationData
     const editorData = data.editorData
-    const lightData = data.lightData
-    const lightEnable = lightData?.lightEnable
-    let drawLightsBuffer = null
+    const lightEnable = editorData.lightEnable
 
     updateAnimation(animationData);
     if (animationData.onScreen)
@@ -129,29 +140,25 @@ function updateAnimationPolygons(data) {
     // Last float in array will be tick that requested the update
     if (animationData.onScreen)
     {
-      /*
-      if (lightEnable)  {
-        typedVertsToDrawVerts()
-        updateLight(lightData)
-        drawLightsBuffer = getDrawLightsBuffer()
-      }
-      */
       drawVerts[drawVerts.length-1] = editorData.tick;
       setBBInVerts(drawVerts, minBB, maxBB)
-      const data = {buff: buff, activeNodes: activeNodes, drawLightsBuffer: drawLightsBuffer }
-      msgPort.postMessage(data, [data.buff])
-    }
+      if (lightEnable) updateLight(editorData)
+      const msg = {buff, activeNodes, buffLights, drawLightsBufferViews, drawLightsEnable: lightEnable}
+      msgPort.postMessage(msg, [msg.buff, msg.buffLights])
+      }
 }
 
 function getPolygons(data) {
     const editorData = data.editorData
+    const lightEnable = editorData.lightEnable
     getPolygonsPrep(editorData);
     // Post buffer to messagePort
     // Last float in array will be tick that requested the update
     drawVerts[drawVerts.length-1] = editorData.tick;
     setBBInVerts(drawVerts, minBB, maxBB)
-    const msg = {buff: buff, activeNodes: activeNodes}
-  msgPort.postMessage(msg, [msg.buff])
+    if (lightEnable) updateLight(editorData)
+    const msg = {buff, activeNodes, buffLights, drawLightsBufferViews, drawLightsEnable: lightEnable}
+    msgPort.postMessage(msg, [msg.buff, msg.buffLights])
 }
 
 function setBBInVerts(verts, minBBox, maxBBox) {
@@ -253,8 +260,6 @@ function updateAnimation(animationData)
             }
         }
         
-        currentAnimationTime = time;
-
         // If not on screen no more animation required.
         if (!onScreen) continue
 
@@ -333,33 +338,6 @@ function lerp( a, b, alpha ) {
   const value = a + alpha * (b-a);
   return value
 }
-
-function typedVertsToDrawVerts() {
-  const length = drawMeshes.length
-  for (let j=0; j<= length; j++) {
-      const drawVerts = drawMeshes[j].drawVerts;
-      const bufferViews = drawMeshes[j].bufferViews;
-      drawVerts.length = 0
-      if (!activeNodes.includes(j)) {
-          drawVerts.push([]);
-          continue;
-      }
-      for (let ii=0; ii<bufferViews.length; ii++)
-      {
-          const bufferView = bufferViews[ii];
-          let buffStart = bufferView.start;
-          
-          // Convert typed array to regular array
-          // to speed access to data, net win is 10-20%
-          const v = new Array(bufferView.length);
-          for (let a=0; a<bufferView.length; a++) {
-              v[a] = drawVerts[buffStart+a];
-          }
-          drawVerts.push(v);
-      }
-  }
-}
-
     //	Updates scene graph, and as a second step sends transformed skinned mesh points to c2.
 function getPolygonsPrep(editorData)
 {
@@ -369,11 +347,13 @@ function getPolygonsPrep(editorData)
     const mat4 = glMatrix.mat4;
     // @ts-ignore
     const quat = glMatrix.quat;
-    drawMeshesIndex = -1;
     // New array buffer for each frame
     // Extra data: minBB, maxBB, tick
     buff = new ArrayBuffer((buffLength+7)*4)
     drawVerts = new Float32Array(buff);
+    // One light per triangle
+    buffLights = new ArrayBuffer((buffLength/2)*4*4)
+    drawLights = new Float32Array(buffLights)
     // drawVerts index
     index = 0;
     const isEditor = editorData.isEditor
@@ -540,7 +520,6 @@ function transformNode(node, parentMat, modelScaleRotate, isEditor)
             let v = [0,0,0];
             if (disabledNodes.get(node.name)) {
               index+=posData.length;
-              // console.log("disabled node: " + node.name)
               nodeIndex++;
               continue;
             }
@@ -601,6 +580,7 @@ function transformNode(node, parentMat, modelScaleRotate, isEditor)
 }
 
 function morphTargetsXform(vin, index, weights, targets) {
+  // @ts-ignore
   const vec3 = glMatrix.vec3;
   const vout = vec3.create();
   vec3.copy(vout, vin);
@@ -613,29 +593,96 @@ function morphTargetsXform(vin, index, weights, targets) {
   return vout;
 }
 
-function getDrawLightsBuffer() {
-  const drawLightsBuffer = []
-  const length = drawMeshes.length
-  for (let j=0; j<= length; j++) {
-    const drawMesh = drawMeshes[j]
-    drawLightBuffer.push(drawMesh.drawLights)
-  }
-  return drawLightsBuffer
+function calculateLight(v0, v1, v2, normal, viewDir, colorSum, c, modelRotate, lights, viewPos, ambientColor) {
+    // @ts-ignore
+    const vec3 = glMatrix.vec3;
+    // @ts-ignore
+    const vec4 = glMatrix.vec4;
+
+    vec3.transformMat4(v0, v0, modelRotate);
+    vec3.transformMat4(v1, v1, modelRotate);
+    vec3.transformMat4(v2, v2, modelRotate);
+    vec3.set(c, v0[0], v0[1], v0[2])
+    vec3.add(c,c,v1)
+    vec3.add(c,c,v2)
+    vec3.div(c,c,[3,3,3])
+
+    vec3.cross(normal, [v1[0]-v0[0], v1[1]-v0[1], v1[2]-v0[2]], [v2[0]-v0[0], v2[1]-v0[1], v2[2]-v0[2]])
+    vec3.normalize(normal, normal)
+    vec4.set(colorSum,0,0,0,0)
+    for (const light of Object.values(lights)) {
+        if (!light.enable) continue
+        const l = light.pos
+        const enableSpot = light.enableSpot
+        const enableSpecular = light.enableSpecular
+        const spotDir = light.spotDir
+        const cutoff = light.cutoff
+        const edge = light.edge
+        const color = light.color
+        const lightDir = vec3.fromValues(c[0]-l[0], c[1]-l[1], c[2]-l[2])
+        const distance = vec3.length(lightDir)
+        const attConstant = light.attConstant
+        const attLinear = light.attLinear
+        const attSquare = light.attSquare
+        vec3.normalize(lightDir, lightDir)
+        let dot = vec3.dot(normal, lightDir) * 0.5 + 0.5
+        let att = 1.0;
+        let specular = 0.0
+        if (enableSpot) {
+            const spotDirN = vec3.clone(spotDir)
+            vec3.normalize(spotDirN, spotDir)
+            att = vec3.dot(spotDirN, lightDir);
+            if (att < cutoff) 
+            {
+                att = smoothstep(cutoff*(1-edge),cutoff, att);
+            } else {
+                att = 1.0;
+            }
+        }
+        if (enableSpecular && false) {
+            vec3.sub(viewDir, viewPos, c)
+            vec3.normalize(viewDir, viewDir)
+            const reflectDir = vec3.create()
+            const dotNI = vec3.create()
+            vec3.dot(dotNI, normal, lightDir)
+            vec3.scale(dotNI, dotNI, 2.0)
+            vec3.mul(dotNI, dotNI, normal)
+            vec3.sub(reflectDir,dotNI,lightDir)
+            // I - 2.0 * dot(N, I) * N.
+            vec3.sub(reflectDir, lightDir, normal)
+            vec3.normalize(reflectDir, reflectDir)
+            const spec = Math.pow(Math.max(vec3.dot(reflectDir, viewDir), 0.0), light.specularPower);
+            specular = light.specularAtt * spec; 
+        }
+        att = att / (1.0 * attConstant + distance * attLinear + distance * distance * attSquare);
+        att = att + specular
+        dot = dot * dot * att
+        vec4.add(colorSum, colorSum, [dot*color[0], dot*color[1], dot*color[2], dot*color[3]])
+    }
+    // Add ambient color to colorSum
+    vec4.add(colorSum, colorSum, ambientColor)
+    // Clamp color
+    colorSum[0] = colorSum[0] < 0.0 ? 0.0 : colorSum[0] > 1.0 ? 1.0 : colorSum[0]
+    colorSum[1] = colorSum[1] < 0.0 ? 0.0 : colorSum[1] > 1.0 ? 1.0 : colorSum[1]
+    colorSum[2] = colorSum[2] < 0.0 ? 0.0 : colorSum[2] > 1.0 ? 1.0 : colorSum[2]
+    colorSum[3] = colorSum[3] < 0.0 ? 0.0 : colorSum[3] > 1.0 ? 1.0 : colorSum[3]
+
+    return colorSum
 }
 
-function updateLight(editorData, lightData)
+function updateLight(editorData)
 {
+    // @ts-ignore
     const vec3 = glMatrix.vec3;
+    // @ts-ignore
+    const vec4 = glMatrix.vec4;
+    // @ts-ignore
     const mat4 = glMatrix.mat4;
+    // @ts-ignore
     const quat = glMatrix.quat;
  
-    const lightPos = lightData.lightPos
-    const spotDir = lightData.spotDir
-    const spotEnable = lightData.spotEnable
-    const cutoff = lightData.cutoff
-    const edge = lightData.edge
-    const cannonBody = null
-    const cannonSetRotation = null 
+    const cannonBody = {quaternion: quat.create()}
+    const cannonSetRotation = false
 
     const xScale = editorData.xScale;
     const yScale = editorData.yScale;        
@@ -649,93 +696,109 @@ function updateLight(editorData, lightData)
     const y = editorData.y
     const z = editorData.z
 
+    const viewPos = editorData.viewPos
+    const ambientColor = editorData.ambientColor
+    const lights = editorData.lights
+
     const modelRotate = mat4.create();
     const rotate = quat.create();
 
-    if (cannonBody && cannonSetRotation) {
+    typedVertsToDrawVerts()
+
+    // XXX Handle cannonBody and cannonSetRotation for light
+    if (cannonSetRotation && cannonBody) {
         quat.set(rotate, cannonBody.quaternion.x, cannonBody.quaternion.y, cannonBody.quaternion.z, cannonBody.quaternion.w);
     } else {
         quat.fromEuler(rotate, xAngle, yAngle, zAngle);
     }
+
+    // Need to manually create for lighting, since usually done in shader
     mat4.fromRotationTranslationScale(modelRotate, rotate, [x,y,z], [xScale,-yScale,zScale]);
 
-    let spotDirN = vec3.clone(lightData.spotDir)
-    vec3.normalize(spotDirN, spotDirN)
-
-    const length = drawMeshes.length
-    for (let j=0; j<= length; j++)
+    const length = drawVerts.length;
+    // Calculate for each triangle
+    let lightIndex = 0
+    drawLightsBufferViews.length = 0
+    const v0 = vec3.create()
+    const v1 = vec3.create()
+    const v2 = vec3.create()
+    const normal = vec3.create()
+    const viewDir = vec3.create()
+    const colorSumCalc = vec4.create()
+    const c = vec4.create()
+    for (let j=0; j < drawMeshes.length; j++)
     {
-        const drawVerts = drawMeshes[j].drawVerts;
+        // XXX Skip lighting if disabled
+        const drawLightsBufferStart = lightIndex
+        const drawMeshVerts = drawMeshes[j].drawVerts;
         const drawIndices = drawMeshes[j].drawIndices;
-        const drawLights = drawMeshes[j].drawLights;
-        const drawLight = []
-        drawLights.length = 0
 
-        // Create const for mat2
-        const mat2 = glMatrix.mat2;
-        const vec2 = glMatrix.vec2;
-
-        drawLights.length = 0
-
-        for (let ii=0; ii<drawVerts.length; ii++)
+        for (let ii=0; ii<drawMeshVerts.length; ii++)
         {
-            let v = drawVerts[ii];
+            let v = drawMeshVerts[ii];
             let ind = drawIndices[ii];
 
             let triangleCount = ind.length/3;
             for(let i = 0; i<triangleCount; i++)
             {
-                
-                let i3 = i*3;
-                let x0, y0, z0, x1, y1, z1, x2, y2, z2;
+              let i3 = i*3;
+              let x0, y0, z0, x1, y1, z1, x2, y2, z2;
 
-                x0 = (v[ind[i3+0]*3+0]);
-                y0 = (v[ind[i3+0]*3+1]);
-                z0 = (v[ind[i3+0]*3+2]);
-                x1 = (v[ind[i3+1]*3+0]);
-                y1 = (v[ind[i3+1]*3+1]);
-                z1 = (v[ind[i3+1]*3+2]);
-                x2 = (v[ind[i3+2]*3+0]);
-                y2 = (v[ind[i3+2]*3+1]);
-                z2 = (v[ind[i3+2]*3+2]);
+              x0 = (v[ind[i3+0]*3+0]);
+              y0 = (v[ind[i3+0]*3+1]);
+              z0 = (v[ind[i3+0]*3+2]);
+              x1 = (v[ind[i3+1]*3+0]);
+              y1 = (v[ind[i3+1]*3+1]);
+              z1 = (v[ind[i3+1]*3+2]);
+              x2 = (v[ind[i3+2]*3+0]);
+              y2 = (v[ind[i3+2]*3+1]);
+              z2 = (v[ind[i3+2]*3+2]);
 
-                const normal = vec3.create()
-                const l = lightPos
-                const v0 = vec3.fromValues(x0,y0,z0)
-                const v1 = vec3.fromValues(x1,y1,z1)
-                const v2 = vec3.fromValues(x2,y2,z2)
+              vec3.set(v0 ,x0, y0, z0)
+              vec3.set(v1 ,x1, y1, z1)
+              vec3.set(v2 ,x2, y2, z2)
 
-                vec3.transformMat4(v0, v0, modelRotate);
-                vec3.transformMat4(v1, v1, modelRotate);
-                vec3.transformMat4(v2, v2, modelRotate);
-
-                vec3.cross(normal, [v1[0]-v0[0], v1[1]-v0[1], v1[2]-v0[2]], [v2[0]-v0[0], v2[1]-v0[1], v2[2]-v0[2]])
-                vec3.normalize(normal, normal)
-                const lighDir = vec3.fromValues(v0[0]-l[0], l[1]-v0[1], v0[2]-l[2])
-                const distance = vec3.length(lighDir)
-                vec3.normalize(lighDir, lighDir)
-                // let dot = (vec3.dot(normal, lighDir)*0.5+0.5)*2
-                let dot = vec3.dot(normal, lighDir) * 0.5 + 0.5
-                let att = 1.0;
-                if (spotEnable) {
-                    att = vec3.dot(spotDirN, lighDir);
-                    // console.log (att, spotDirN)
-                    if (att < cutoff) 
-                    {
-                        att = smoothstep(cutoff-edge,cutoff, att);
-                    } else {
-                        att = 1.0;
-                    }
-                }
-                dot = dot * dot * att
-                drawLights.push(dot)
+              // Vertex transformed by calculatLight
+              const colorSum = calculateLight(v0, v1, v2, normal, viewDir, colorSumCalc, c, modelRotate, lights, viewPos, ambientColor)
+              drawLights[lightIndex] = colorSum[0]
+              drawLights[lightIndex+1] = colorSum[1]
+              drawLights[lightIndex+2] = colorSum[2]
+              drawLights[lightIndex+3] = colorSum[3]
+              lightIndex += 4
             }
-        }
+          }
+          drawLightsBufferViews.push({start:drawLightsBufferStart, length:lightIndex-drawLightsBufferStart})
     }
 }
 
+function typedVertsToDrawVerts() {
+  for (let j=0; j< drawMeshes.length; j++) {
+      const drawMeshVerts = drawMeshes[j].drawVerts;
+      const bufferViews = drawMeshes[j].bufferViews;
+      drawMeshVerts.length = 0
+      // XXX Slip inactive meshes if possible
+      for (let ii=0; ii<bufferViews.length; ii++)
+      {
+          const bufferView = bufferViews[ii];
+          let buffStart = bufferView.start;
+          
+          // Convert typed array to regular array
+          // to speed access to data, net win is 10-20%
+          const v = new Array(bufferView.length);
+          for (let a=0; a<bufferView.length; a++) {
+              v[a] = drawVerts[buffStart+a];
+          }
+          drawMeshVerts.push(v);
+      }
+  }
+}
 
-// @ts-check
+function smoothstep (min, max, value) {
+  var x = Math.max(0, Math.min(1, (value-min)/(max-min)));
+  return x*x*(3 - 2*x);
+};
+
+
 /*!
 @fileoverview gl-matrix - High performance matrix and vector operations
 @author Brandon Jones

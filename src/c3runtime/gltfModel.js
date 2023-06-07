@@ -605,7 +605,7 @@ class GltfModel
 
             const x = this.inst.isEditor ? this.inst._inst.GetX() : this.inst.GetWorldInfo().GetX() ;
             const y = this.inst.isEditor ? this.inst._inst.GetY() : this.inst.GetWorldInfo().GetY() ;
-            const z = this.inst.isEditor ? this.inst.zElevation : this.inst.GetWorldInfo().GetZElevation();
+            const z = this.inst.isEditor ? this.inst._inst.GetZElevation() : this.inst.GetWorldInfo().GetZElevation();
 
             const rotate = quat.create();
             quat.fromEuler(rotate, xAngle, yAngle, zAngle);

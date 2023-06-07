@@ -27,6 +27,10 @@ class GltfModelW
         this.verts = new Float32Array(0);
         this.updateDrawVerts = false;
         this.activeNodes = [];
+        this.drawLights = new Float32Array(0);
+        this.drawLightsBufferViews = null
+        this.drawLightsEnable = false
+        this.workerReady = true
     }
 
     release() {
@@ -172,10 +176,14 @@ class GltfModelW
                 this.buff = e.data.buff;
                 this.activeNodes = e.data.activeNodes;
                 this.verts = new Float32Array(this.buff);
+                this.buffLights = e.data.buffLights;
+                this.drawLights = new Float32Array(this.buffLights);
+                this.drawLightsBufferViews = e.data.drawLightsBufferViews;
+                this.drawLightsEnable = e.data.drawLightsEnable;
                 this.setBBFromVerts(this.verts, this.inst.minBB, this.inst.maxBB);
                 this.inst.updateBbox = true;
                 this.updateDrawVerts = true;
-                
+                this.workerReady = true;
                 // if (this.inst.debug) console.log('onMsg t:',runtime.GetTickCount(), this.verts[this.verts.length-1], typeof e.data)
             } else
             {
@@ -186,9 +194,6 @@ class GltfModelW
         const bufferViews = this.drawMeshes[this.drawMeshes.length-1].bufferViews;
         const buffLength = bufferViews[bufferViews.length-1].start + bufferViews[bufferViews.length-1].length;
         this.msgPort.postMessage({type: 'gltf', gltf: this.gltfData, buffLength: buffLength, drawMeshes: this.drawMeshes});
-        // Now messages can be posted to the worker with:
-        // messagePort.postMessage(...);
-        // this.msgPort.postMessage({type: 'init'});
         return { msgPort: this.msgPort }
     }
 
@@ -225,7 +230,6 @@ class GltfModelW
 
     render(renderer, x, y, z, tempQuad, whiteTexture, instanceC3Color, textures, instanceTexture)
     {
-        let totalTriangles = 0;
         let currentColor = [-1,-1,-1,-1];
         let currentTexture = null;
 
@@ -234,6 +238,7 @@ class GltfModelW
         const mat2 = globalThis.glMatrix3D.mat2;
         const mat4 = globalThis.glMatrix3D.mat4;
         const quat = globalThis.glMatrix3D.quat;
+        let totalTriangles = 0;
 
         let xWireframeWidth, yWireframeWidth, zWireframeWidth;
 
@@ -276,7 +281,9 @@ class GltfModelW
         }
 
         // Default color
-        renderer.SetColor(instanceC3Color);
+        vec4.copy(currentColor, instanceColor);
+        let baseColorChanged = false;
+        if (!vec4.equals(currentColor, [1,1,1,1])) baseColorChanged = true;
 
         // if (this.inst.debug) console.log('draw t:',this._runtime.GetTickCount(), this.verts[this.verts.length-1])
 
@@ -287,6 +294,12 @@ class GltfModelW
 
         for (let j=0; j<= this.drawMeshesIndex; j++)
         {
+            let lightIndex, drawLightsBufferView;
+            if (this.drawLightsEnable) {
+                drawLightsBufferView = this.drawLightsBufferViews[j];
+                lightIndex = drawLightsBufferView.start
+            }
+
             // Skip render if disabled
             if (this.drawMeshes[j].disabled) continue;
 
@@ -312,6 +325,7 @@ class GltfModelW
                 if (vec4.equals(finalColor, currentColor) == false) {
                     vec4.copy(currentColor, finalColor);
                     renderer.SetColorRgba(finalColor[0], finalColor[1], finalColor[2], finalColor[3]);
+                    baseColorChanged = true
                 }
             }
 
@@ -438,6 +452,14 @@ class GltfModelW
                     if (this.inst.wireframe) {
                         this.drawWireFrame(renderer, whiteTexture, tempQuad, x0, y0, z0, x1, y1, z1, x2, y2, z2, xWireframeWidth, yWireframeWidth, zWireframeWidth);
                     } else {
+                        if (this.drawLightsEnable) {
+                            const l = this.drawLights
+                            const c = [l[lightIndex], l[lightIndex+1], l[lightIndex+2], l[lightIndex+3]]
+                            if (baseColorChanged) vec4.mul(c, c, currentColor)
+                            renderer.SetColorRgba(c[0], c[1], c[2], 1)
+                            // renderer.SetColorRgba((i%2)/2, 1, 1, 1)
+                            lightIndex += 4
+                        }
                         renderer.Quad3D2(
                             x0, y0, z0,
                             x1, y1, z1,
@@ -509,8 +531,10 @@ class GltfModelW
     }
 
     getPolygons() {
+        if (!this.workerReady) return;
         const editorData = this.getPolygonsPrep();
         const data = {editorData}
+        this.workerReady = false
         this.msgPort.postMessage({type: "getPolygons", data: data});
     }
 
@@ -525,7 +549,7 @@ class GltfModelW
 
             const x = this.inst._inst.GetX();
             const y = this.inst._inst.GetY();
-            const z = this.inst.zElevation;
+            const z = this.inst._inst.GetZElevation();
 
             const xScale = this.inst.scale/(this.inst.xScale == 0 ? 1 : this.inst.xScale);
             const yScale = this.inst.scale/(this.inst.yScale == 0 ? 1 : this.inst.yScale);        
@@ -544,6 +568,7 @@ class GltfModelW
                 z,
                 tick,
                 isEditor,
+                lightEnable: false
             }
         }
 
@@ -556,11 +581,15 @@ class GltfModelW
 
             const x = wi.GetX();
             const y = wi.GetY();
-            const z = this.inst.zElevation;
+            const z = wi.GetZElevation();
 
             const xScale = this.inst.scale/(this.inst.xScale == 0 ? 1 : this.inst.xScale);
             const yScale = this.inst.scale/(this.inst.yScale == 0 ? 1 : this.inst.yScale);        
             const zScale = this.inst.scale/(this.inst.zScale == 0 ? 1 : this.inst.zScale);
+
+            const lights = this.inst.lights;
+            const ambientColor = this.inst.ambientColor;
+            const viewPos = this.inst.viewPos;
     
             // Send to worker with postMessage in case in editor
             editorData = {
@@ -575,6 +604,10 @@ class GltfModelW
                 z,
                 tick,
                 isEditor,
+                lights,
+                ambientColor,
+                viewPos,
+                lightEnable: true
             }
         }
         return editorData
@@ -657,20 +690,12 @@ class GltfModelW
     }
 
     getLightData() {
-        const lightData = {
-            lightPos : this.inst.lightDir,
-            lightEnable: this.inst.lightEnable,
-            lightUpdate: this.inst.lightUpdate,
-            lightColoir: this.inst.lightColor,
-            spotEnable: this.inst.spotEnable,
-            spotDir: this.inst.spotDir,
-            spotCutoff: this.inst.spotCutoff,
-            spotEdge: this.inst.spotEdge
-        }
-        return lightData
+        return this.inst.lights
     }
 
     updateAnimationPolygons(index, time, onScreen, deltaTime) {
+        if (!this.workerReady) return;
+        this.workerReady = false
         this.updateAnimation(index, time, onScreen, deltaTime);
         const animationBlend = this.inst.animationBlend;
         const animationLoop = this.inst.animationLoop;
@@ -680,11 +705,10 @@ class GltfModelW
         if (onScreen)
         {
             editorData = this.getPolygonsPrep();
-            lightData = this.getLightData()
             this.inst.runtime.UpdateRender();
             this.inst.updateBbox = true
         }
-        const data = {animationData, editorData, lightData};
+        const data = {animationData, editorData};
         this.msgPort.postMessage({type: "updateAnimationPolygons", data: data});
         // if (this.inst.debug) console.log('postMsg t:',this.inst.runtime.GetTickCount())
     }

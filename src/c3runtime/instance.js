@@ -198,7 +198,7 @@
                         this.drawIndices = [];
                         this.gltf.updateAnimationPolygons(this.animationIndex, this.animationTime, onScreen, deltaTime);
                     }
-                } else if (this.renderOnce)
+                } else if (this.renderOnce || (this.workerAnimation))
                 {
                     this.renderOnce = false;
                     this.drawVerts = [];
