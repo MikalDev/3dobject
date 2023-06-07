@@ -27,7 +27,7 @@ class GltfModelW
         this.verts = new Float32Array(0);
         this.updateDrawVerts = false;
         this.activeNodes = [];
-        this.drawLights = new Float32Array(0);
+        this.drawLights = new Uint32Array(0);
         this.drawLightsBufferViews = null
         this.drawLightsEnable = false
         this.workerReady = true
@@ -177,7 +177,7 @@ class GltfModelW
                 this.activeNodes = e.data.activeNodes;
                 this.verts = new Float32Array(this.buff);
                 this.buffLights = e.data.buffLights;
-                this.drawLights = new Float32Array(this.buffLights);
+                this.drawLights = new Uint32Array(this.buffLights);
                 this.drawLightsBufferViews = e.data.drawLightsBufferViews;
                 this.drawLightsEnable = e.data.drawLightsEnable;
                 this.setBBFromVerts(this.verts, this.inst.minBB, this.inst.maxBB);
@@ -453,12 +453,10 @@ class GltfModelW
                         this.drawWireFrame(renderer, whiteTexture, tempQuad, x0, y0, z0, x1, y1, z1, x2, y2, z2, xWireframeWidth, yWireframeWidth, zWireframeWidth);
                     } else {
                         if (this.drawLightsEnable) {
-                            const l = this.drawLights
-                            const c = [l[lightIndex], l[lightIndex+1], l[lightIndex+2], l[lightIndex+3]]
+                            const c = this.unpackRGBA(this.drawLights[lightIndex])
                             if (baseColorChanged) vec4.mul(c, c, currentColor)
                             renderer.SetColorRgba(c[0], c[1], c[2], 1)
-                            // renderer.SetColorRgba((i%2)/2, 1, 1, 1)
-                            lightIndex += 4
+                            lightIndex ++
                         }
                         renderer.Quad3D2(
                             x0, y0, z0,
@@ -500,6 +498,17 @@ class GltfModelW
                 drawVerts.push(v);
             }
         }
+    }
+
+    unpackRGBA(packedRGBA) {
+        // Extract individual RGBA components from the packed value
+        var red = (packedRGBA & 0xff) / 255
+        var green = ((packedRGBA >> 8) & 0xff) / 255
+        var blue = ((packedRGBA >> 16) & 0xff) / 255
+        var alpha = ((packedRGBA >> 24) & 0xff) / 255
+        const color = [red, green, blue, alpha]
+      
+        return color
     }
 
     /*

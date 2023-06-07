@@ -40,10 +40,8 @@ function OnMessage(e)
           break;
       case 'gltf':
           gltf = e.data.gltf
-          console.log('gltf',gltf)
           buffLength = e.data.buffLength
           drawMeshes = e.data.drawMeshes
-          console.log('drawMeshes',drawMeshes)
           break
       case 'updateAnimationPolygons':
           updateAnimationPolygons(e.data.data)
@@ -81,6 +79,19 @@ function OnMessage(e)
       default:
           console.warn('unknown message type:', e.data.type)
   }
+}
+
+function packRGBA(r, g, b, a) {
+  // Convert floats to 8-bit integers
+  var red = Math.floor(r * 255);
+  var green = Math.floor(g * 255);
+  var blue = Math.floor(b * 255);
+  var alpha = Math.floor(a * 255);
+
+  // Pack RGBA values into a 32-bit integer
+  var packedRGBA = (alpha << 24) | (blue << 16) | (green << 8) | red;
+
+  return packedRGBA;
 }
 
 function release() {
@@ -352,8 +363,8 @@ function getPolygonsPrep(editorData)
     buff = new ArrayBuffer((buffLength+7)*4)
     drawVerts = new Float32Array(buff);
     // One light per triangle
-    buffLights = new ArrayBuffer((buffLength/2)*4*4)
-    drawLights = new Float32Array(buffLights)
+    buffLights = new ArrayBuffer((buffLength)*4)
+    drawLights = new Uint32Array(buffLights)
     // drawVerts index
     index = 0;
     const isEditor = editorData.isEditor
@@ -760,11 +771,9 @@ function updateLight(editorData)
 
               // Vertex transformed by calculatLight
               const colorSum = calculateLight(v0, v1, v2, normal, viewDir, colorSumCalc, c, modelRotate, lights, viewPos, ambientColor)
-              drawLights[lightIndex] = colorSum[0]
-              drawLights[lightIndex+1] = colorSum[1]
-              drawLights[lightIndex+2] = colorSum[2]
-              drawLights[lightIndex+3] = colorSum[3]
-              lightIndex += 4
+
+              drawLights[lightIndex] = packRGBA(colorSum[0], colorSum[1], colorSum[2], colorSum[3])
+              lightIndex += 1
             }
           }
           drawLightsBufferViews.push({start:drawLightsBufferStart, length:lightIndex-drawLightsBufferStart})
