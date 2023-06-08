@@ -1139,7 +1139,25 @@
           "highlight": false,
           "params": [
           ]  
-        }                                        
+        },
+        {
+          "id": "total-triangles",
+          "scriptName": "TotalTriangles",
+          "expressionName": "TotalTriangles",
+          "returnType": "number",
+          "highlight": false,
+          "params": [
+          ]  
+        },
+        {
+          "id": "total-triangles-culled",
+          "scriptName": "TotalTrianglesCulled",
+          "expressionName": "TotalTrianglesCulled",
+          "returnType": "number",
+          "highlight": false,
+          "params": [
+          ]  
+        }                                               
       ]
     }
   }

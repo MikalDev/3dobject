@@ -69,6 +69,8 @@
             this.ambientColor = [0,0,0,0]
             this.animationNameFinished = ''
             this.cpuXform = false
+            this.totalTriangles = 0
+            this.totalTrianglesCulled = 0
 
             if (properties)
             {
@@ -90,7 +92,7 @@
                 this.zScale = properties[13];
                 this.wireframe = properties[14];
                 this.workerAnimation = properties[15];
-                // this.cpuXform = properties[16];
+                this.backFaceCull = properties[16];
             }
 
             this.localCenter = [0,0,0]
@@ -198,8 +200,9 @@
                         this.drawIndices = [];
                         this.gltf.updateAnimationPolygons(this.animationIndex, this.animationTime, onScreen, deltaTime);
                     }
-                } else if (this.renderOnce || (this.workerAnimation))
-                {
+                // } else if (this.renderOnce || (this.workerAnimation))
+                } else if (this.renderOnce || this.lightEnable)
+            {
                     this.renderOnce = false;
                     this.drawVerts = [];
                     this.drawUVs = [];

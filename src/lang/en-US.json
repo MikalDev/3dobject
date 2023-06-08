@@ -94,8 +94,8 @@
             "desc": "Offload animation to worker useful for larger animated models."
           },
           "cpu-xform": {
-            "name": "TBD",
-            "desc": "TBD"
+            "name": "Worker BFC",
+            "desc": "Enable worker back face culling."
           }
         },
         "aceCategories": {
@@ -1010,6 +1010,18 @@
           "animation-speed": {
             "description": "Animation speed.",
             "translated-name": "AnimationSpeed",
+            "params": {
+            }
+          },
+          "total-triangles": {
+            "description": "Total triangles to be rendered.",
+            "translated-name": "TotalTriangles",
+            "params": {
+            }
+          },
+          "total-triangles-culled": {
+            "description": "Total triangles culled.",
+            "translated-name": "TotalTrianglesCulled",
             "params": {
             }
           }

@@ -356,6 +356,7 @@
         },        
         EnableLight (enable, color) {
             this.lightEnable = enable
+            this.renderOnce = true
         },
         UpdateLight (enable) {
             this.lightUpdate = enable

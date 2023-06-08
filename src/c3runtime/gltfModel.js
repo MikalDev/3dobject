@@ -415,6 +415,7 @@ class GltfModel
         if (!(this.inst.isEditor || this.inst.cpuXform)) {
             renderer.SetModelViewMatrix(tmpModelView);
         }
+        this.inst.totalTriangles = totalTriangles;
     }
 
     /*

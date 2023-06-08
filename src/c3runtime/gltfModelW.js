@@ -239,6 +239,7 @@ class GltfModelW
         const mat4 = globalThis.glMatrix3D.mat4;
         const quat = globalThis.glMatrix3D.quat;
         let totalTriangles = 0;
+        let totalTrianglesCulled = 0
 
         let xWireframeWidth, yWireframeWidth, zWireframeWidth;
 
@@ -372,6 +373,15 @@ class GltfModelW
                 totalTriangles += triangleCount;
                 for(let i = 0; i<triangleCount; i++)
                 {
+                    if (this.drawLightsEnable && this.inst.backFaceCull) {
+                        const c = this.unpackRGBA(this.drawLights[lightIndex])
+                        if (c[3] == 0) {
+                            lightIndex ++
+                            totalTrianglesCulled++
+                            continue
+                        }
+                    }
+
                     if (hasTexture)
                     {
                         if (offsetMaterial || rotateMaterial) {
@@ -454,9 +464,9 @@ class GltfModelW
                     } else {
                         if (this.drawLightsEnable) {
                             const c = this.unpackRGBA(this.drawLights[lightIndex])
+                            lightIndex ++
                             if (baseColorChanged) vec4.mul(c, c, currentColor)
                             renderer.SetColorRgba(c[0], c[1], c[2], 1)
-                            lightIndex ++
                         }
                         renderer.Quad3D2(
                             x0, y0, z0,
@@ -473,6 +483,9 @@ class GltfModelW
         if (!(this.inst.isEditor || this.inst.cpuXform)) {
             renderer.SetModelViewMatrix(tmpModelView);
         }
+        console.info("totalTriangles/totalTrianglesCulled: " + totalTriangles + "/" + totalTrianglesCulled)
+        this.inst.totalTriangles = totalTriangles
+        this.inst.totalTrianglesCulled = totalTrianglesCulled
     }
 
     typedVertsToDrawVerts() {

@@ -618,7 +618,12 @@ function calculateLight(v0, v1, v2, normal, viewDir, colorSum, c, modelRotate, l
     vec3.add(c,c,v2)
     vec3.div(c,c,[3,3,3])
 
+    // const cull = backfaceCulling(normal, viewPos, c)
+    const cull = backfaceCullCCW(v0, v1, v2)
+    if (cull) return [0,0,0,0]
+
     vec3.cross(normal, [v1[0]-v0[0], v1[1]-v0[1], v1[2]-v0[2]], [v2[0]-v0[0], v2[1]-v0[1], v2[2]-v0[2]])
+
     vec3.normalize(normal, normal)
     vec4.set(colorSum,0,0,0,0)
     for (const light of Object.values(lights)) {
@@ -676,9 +681,15 @@ function calculateLight(v0, v1, v2, normal, viewDir, colorSum, c, modelRotate, l
     colorSum[0] = colorSum[0] < 0.0 ? 0.0 : colorSum[0] > 1.0 ? 1.0 : colorSum[0]
     colorSum[1] = colorSum[1] < 0.0 ? 0.0 : colorSum[1] > 1.0 ? 1.0 : colorSum[1]
     colorSum[2] = colorSum[2] < 0.0 ? 0.0 : colorSum[2] > 1.0 ? 1.0 : colorSum[2]
-    colorSum[3] = colorSum[3] < 0.0 ? 0.0 : colorSum[3] > 1.0 ? 1.0 : colorSum[3]
+    // colorSum[3] = colorSum[3] < 0.0 ? 0.0 : colorSum[3] > 1.0 ? 1.0 : colorSum[3]
+    colorSum[3] = 1
 
     return colorSum
+}
+
+function backfaceCullCCW(v0, v1, v2) {
+  if (((v1[0]-v0[0])*(v2[1]-v1[1]))-((v1[1]-v0[1])*(v2[0]-v1[0]))<0) return false
+  return true
 }
 
 function updateLight(editorData)

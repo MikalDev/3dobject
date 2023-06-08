@@ -184,6 +184,12 @@
             },
             AnimationSpeed(speed) {
                 return this.animationSpeed
-            },            
+            },
+            TotalTriangles() {
+                return this.totalTriangles
+            },             
+            TotalTrianglesCulled() {
+                return this.totalTrianglesCulled
+            },             
         };
 }
