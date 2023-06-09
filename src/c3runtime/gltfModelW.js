@@ -483,7 +483,7 @@ class GltfModelW
         if (!(this.inst.isEditor || this.inst.cpuXform)) {
             renderer.SetModelViewMatrix(tmpModelView);
         }
-        console.info("totalTriangles/totalTrianglesCulled: " + totalTriangles + "/" + totalTrianglesCulled)
+        // console.info("totalTriangles/totalTrianglesCulled: " + totalTriangles + "/" + totalTrianglesCulled)
         this.inst.totalTriangles = totalTriangles
         this.inst.totalTrianglesCulled = totalTrianglesCulled
     }
