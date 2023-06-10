@@ -185,6 +185,10 @@ class GltfModelW
                 this.updateDrawVerts = true;
                 this.workerReady = true;
                 // if (this.inst.debug) console.log('onMsg t:',runtime.GetTickCount(), this.verts[this.verts.length-1], typeof e.data)
+            } else if (e.data.type === "status") {
+                if (e.data?.status?.workerReady) {
+                    this.workerReady = true;
+                }
             } else
             {
                 if (this.inst.debug) console.log('onMsg t:',runtime.GetTickCount(), e.data.type)
@@ -575,7 +579,9 @@ class GltfModelW
 
             const xScale = this.inst.scale/(this.inst.xScale == 0 ? 1 : this.inst.xScale);
             const yScale = this.inst.scale/(this.inst.yScale == 0 ? 1 : this.inst.yScale);        
-            const zScale = this.inst.scale/(this.inst.zScale == 0 ? 1 : this.inst.zScale);    
+            const zScale = this.inst.scale/(this.inst.zScale == 0 ? 1 : this.inst.zScale);
+
+            const cullEnable = this.inst.backFaceCull
 
             // Send to worker with postMessage in case in editor
             editorData = {
@@ -590,7 +596,8 @@ class GltfModelW
                 z,
                 tick,
                 isEditor,
-                lightEnable: false
+                lightEnable: false,
+                cullEnable
             }
         }
 
@@ -612,7 +619,9 @@ class GltfModelW
             const lights = this.inst.lights;
             const ambientColor = this.inst.ambientColor;
             const viewPos = this.inst.viewPos;
-    
+
+            const cullEnable = this.inst.backFaceCull
+
             // Send to worker with postMessage in case in editor
             editorData = {
                 xScale,
@@ -629,7 +638,8 @@ class GltfModelW
                 lights,
                 ambientColor,
                 viewPos,
-                lightEnable: true
+                lightEnable: true,
+                cullEnable
             }
         }
         return editorData

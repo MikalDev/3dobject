@@ -156,7 +156,11 @@ function updateAnimationPolygons(data) {
       if (lightEnable) updateLight(editorData)
       const msg = {buff, activeNodes, buffLights, drawLightsBufferViews, drawLightsEnable: lightEnable}
       msgPort.postMessage(msg, [msg.buff, msg.buffLights])
-      }
+    } else {
+      // No need to transfer data, worker us ready for next request
+      const msg = {type: 'status', status : { workerReady: true}}
+      msgPort.postMessage(msg)
+    }
 }
 
 function getPolygons(data) {
@@ -604,7 +608,7 @@ function morphTargetsXform(vin, index, weights, targets) {
   return vout;
 }
 
-function calculateLight(v0, v1, v2, normal, viewDir, colorSum, c, modelRotate, lights, viewPos, ambientColor) {
+function calculateLight(v0, v1, v2, normal, viewDir, colorSum, c, modelRotate, lights, viewPos, ambientColor, cullEnable) {
     // @ts-ignore
     const vec3 = glMatrix.vec3;
     // @ts-ignore
@@ -618,9 +622,10 @@ function calculateLight(v0, v1, v2, normal, viewDir, colorSum, c, modelRotate, l
     vec3.add(c,c,v2)
     vec3.div(c,c,[3,3,3])
 
-    // const cull = backfaceCulling(normal, viewPos, c)
-    const cull = backfaceCullCCW(v0, v1, v2)
-    if (cull) return [0,0,0,0]
+    if (cullEnable) {
+      const cull = backfaceCullCCW(v0, v1, v2)
+      if (cull) return [0,0,0,0]
+    }
 
     vec3.cross(normal, [v1[0]-v0[0], v1[1]-v0[1], v1[2]-v0[2]], [v2[0]-v0[0], v2[1]-v0[1], v2[2]-v0[2]])
 
@@ -722,6 +727,8 @@ function updateLight(editorData)
     const ambientColor = editorData.ambientColor
     const lights = editorData.lights
 
+    const cullEnable = editorData.cullEnable
+
     const modelRotate = mat4.create();
     const rotate = quat.create();
 
@@ -781,7 +788,7 @@ function updateLight(editorData)
               vec3.set(v2 ,x2, y2, z2)
 
               // Vertex transformed by calculatLight
-              const colorSum = calculateLight(v0, v1, v2, normal, viewDir, colorSumCalc, c, modelRotate, lights, viewPos, ambientColor)
+              const colorSum = calculateLight(v0, v1, v2, normal, viewDir, colorSumCalc, c, modelRotate, lights, viewPos, ambientColor, cullEnable)
 
               drawLights[lightIndex] = packRGBA(colorSum[0], colorSum[1], colorSum[2], colorSum[3])
               lightIndex += 1
