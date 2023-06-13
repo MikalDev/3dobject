@@ -141,6 +141,7 @@ function updateAnimationPolygons(data) {
     const animationData = data.animationData
     const editorData = data.editorData
     const lightEnable = editorData.lightEnable
+    const lightUpdate = editorData.lightUpdate
 
     updateAnimation(animationData);
     if (animationData.onScreen)
@@ -153,8 +154,8 @@ function updateAnimationPolygons(data) {
     {
       drawVerts[drawVerts.length-1] = editorData.tick;
       setBBInVerts(drawVerts, minBB, maxBB)
-      if (lightEnable) updateLight(editorData)
-      const msg = {buff, activeNodes, buffLights, drawLightsBufferViews, drawLightsEnable: lightEnable}
+      if (lightEnable && lightUpdate) updateLight(editorData)
+      const msg = {buff, activeNodes, buffLights, drawLightsBufferViews, drawLightsEnable: lightEnable, lightUpdate}
       msgPort.postMessage(msg, [msg.buff, msg.buffLights])
     } else {
       // No need to transfer data, worker us ready for next request
@@ -166,13 +167,14 @@ function updateAnimationPolygons(data) {
 function getPolygons(data) {
     const editorData = data.editorData
     const lightEnable = editorData.lightEnable
+    const lightUpdate = editorData.lightUpdate
     getPolygonsPrep(editorData);
     // Post buffer to messagePort
     // Last float in array will be tick that requested the update
     drawVerts[drawVerts.length-1] = editorData.tick;
     setBBInVerts(drawVerts, minBB, maxBB)
-    if (lightEnable) updateLight(editorData)
-    const msg = {buff, activeNodes, buffLights, drawLightsBufferViews, drawLightsEnable: lightEnable}
+    if (lightEnable && lightUpdate) updateLight(editorData)
+    const msg = {buff, activeNodes, buffLights, drawLightsBufferViews, drawLightsEnable: lightEnable, lightUpdate}
     msgPort.postMessage(msg, [msg.buff, msg.buffLights])
 }
 
@@ -693,7 +695,7 @@ function calculateLight(v0, v1, v2, normal, viewDir, colorSum, c, modelRotate, l
 }
 
 function backfaceCullCCW(v0, v1, v2) {
-  if (((v1[0]-v0[0])*(v2[1]-v1[1]))-((v1[1]-v0[1])*(v2[0]-v1[0]))<0) return false
+  if (((v1[0]-v0[0])*(v2[1]-v1[1]))-((v1[1]-v0[1])*(v2[0]-v1[0]))<=0) return false
   return true
 }
 

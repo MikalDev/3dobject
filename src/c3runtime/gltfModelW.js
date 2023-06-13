@@ -31,6 +31,7 @@ class GltfModelW
         this.drawLightsBufferViews = null
         this.drawLightsEnable = false
         this.workerReady = true
+        this.boundingBoxInit = false
     }
 
     release() {
@@ -99,6 +100,7 @@ class GltfModelW
         this.initDrawMeshes();
         this.drawMeshesMin = this.drawMeshes
         await this.createWorker(this._runtime)
+        this.getPolygons()
     }
 
     initDrawMeshes() {
@@ -176,14 +178,20 @@ class GltfModelW
                 this.buff = e.data.buff;
                 this.activeNodes = e.data.activeNodes;
                 this.verts = new Float32Array(this.buff);
-                this.buffLights = e.data.buffLights;
-                this.drawLights = new Uint32Array(this.buffLights);
-                this.drawLightsBufferViews = e.data.drawLightsBufferViews;
+                if (e.data.lightUpdate) {
+                    this.buffLights = e.data.buffLights;
+                    this.drawLights = new Uint32Array(this.buffLights);
+                    this.drawLightsBufferViews = e.data.drawLightsBufferViews;
+                }
                 this.drawLightsEnable = e.data.drawLightsEnable;
                 this.setBBFromVerts(this.verts, this.inst.minBB, this.inst.maxBB);
                 this.inst.updateBbox = true;
                 this.updateDrawVerts = true;
                 this.workerReady = true;
+                if (!this.boundingBoxInit) {
+                    this.inst.initBoundingBox()
+                    this.boundingBoxInit = true;
+                }
                 // if (this.inst.debug) console.log('onMsg t:',runtime.GetTickCount(), this.verts[this.verts.length-1], typeof e.data)
             } else if (e.data.type === "status") {
                 if (e.data?.status?.workerReady) {
@@ -564,7 +572,7 @@ class GltfModelW
         this.msgPort.postMessage({type: "getPolygons", data: data});
     }
 
-    getEditorData(isEditor, lightEnable)
+    getEditorData(isEditor, lightEnable, lightUpdate)
     {
         const tick = this._runtime.GetTickCount();
         let editorData = {tick: tick, isEditor: isEditor}        
@@ -639,7 +647,8 @@ class GltfModelW
                 ambientColor,
                 viewPos,
                 lightEnable: true,
-                cullEnable
+                cullEnable,
+                lightUpdate
             }
         }
         return editorData
@@ -652,7 +661,7 @@ class GltfModelW
 
         this.drawMeshesIndex = -1;
 
-        const editorData = this.getEditorData(this.inst.isEditor, this.inst.lightEnable)
+        const editorData = this.getEditorData(this.inst.isEditor, this.inst.lightEnable, this.inst.lightUpdate)
 
         // update all scene matrixes.
         // only update drawMesh meta data, vertex data will be updated in the worker

@@ -298,6 +298,18 @@
             wi.SetOriginY(-(this.minBB[1]-y)/(height));
         }
 
+        initBoundingBox() {
+            const wi = this.GetWorldInfo();
+            const x = wi.GetX();
+            const y = wi.GetY();
+            // z elevation handles offset on draw
+            const z = wi.GetZElevation();
+            this._updateBoundingBox(x,y,z);
+            wi.SetBboxChanged()
+            this.boundingBoxInit = true
+        }
+
+
         _updateBoundingBox(x, y, z) {
             const maxBB = this.maxBB
             const minBB = this.minBB

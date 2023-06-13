@@ -45,6 +45,7 @@ class GltfModel
             this.nodeMeshMap[node.name] = node.mesh.name;
         }
         this.getPolygons();
+        if (!this.inst.isEditor) this.inst.initBoundingBox()
     }
 
     release() {
