@@ -190,7 +190,7 @@ class GltfData
 
             if ('byteStride' in bufview) {
                 const stride = bufview.byteStride;
-                const offset = a.byteOffset;
+                const offset = a.byteOffset || 0;
                 const view = new DataView(gltf.buffers[bufview.buffer]);
                 // @ts-ignore
                 a.data = new buftype(compcount*a.count);                
@@ -201,7 +201,7 @@ class GltfData
                 }
             } else {
                 // @ts-ignore
-                a.data = new buftype(gltf.buffers[bufview.buffer], bufview.byteOffset, compcount*a.count);                    
+                a.data = new buftype(gltf.buffers[bufview.buffer], bufview.byteOffset, compcount*a.count);
             }
         }
         
