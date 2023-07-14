@@ -42,11 +42,14 @@ function OnMessage(e)
           gltf = e.data.gltf
           buffLength = e.data.buffLength
           drawMeshes = e.data.drawMeshes
+          console.log('gltf, drawMeshes loaded')
           break
       case 'updateAnimationPolygons':
+          buff = e.data.buff
           updateAnimationPolygons(e.data.data)
           break
       case 'getPolygons':
+        buff = e.data.buff
           getPolygons(e.data.data)
           break
       case 'release':
@@ -100,10 +103,8 @@ function release() {
       msgPort.close();
       msgPort = null;
   }
-  buff = null
   buffLights = null
   drawLights = null
-  drawVerts = null
   // @ts-ignore
   index = null
   gltf = null
@@ -155,12 +156,20 @@ function updateAnimationPolygons(data) {
       drawVerts[drawVerts.length-1] = editorData.tick;
       setBBInVerts(drawVerts, minBB, maxBB)
       if (lightEnable && lightUpdate) updateLight(editorData)
-      const msg = {buff, activeNodes, buffLights, drawLightsBufferViews, drawLightsEnable: lightEnable, lightUpdate}
+      let msg = {buff, activeNodes, buffLights, drawLightsBufferViews, drawLightsEnable: lightEnable, lightUpdate}
       msgPort.postMessage(msg, [msg.buff, msg.buffLights])
+      drawVerts = null
+      buffLights = null
+      drawLightsBufferViews = []
+      drawLights = null
     } else {
       // No need to transfer data, worker us ready for next request
       const msg = {type: 'status', status : { workerReady: true}}
       msgPort.postMessage(msg)
+      drawVerts = null
+      buffLights = null
+      drawLightsBufferViews = []
+      drawLights = null
     }
 }
 
@@ -174,8 +183,11 @@ function getPolygons(data) {
     drawVerts[drawVerts.length-1] = editorData.tick;
     setBBInVerts(drawVerts, minBB, maxBB)
     if (lightEnable && lightUpdate) updateLight(editorData)
-    const msg = {buff, activeNodes, buffLights, drawLightsBufferViews, drawLightsEnable: lightEnable, lightUpdate}
+    let msg = {buff, activeNodes, buffLights, drawLightsBufferViews, drawLightsEnable: lightEnable, lightUpdate}
     msgPort.postMessage(msg, [msg.buff, msg.buffLights])
+    buffLights = null
+    drawLightsBufferViews = []
+    drawLights = null
 }
 
 function setBBInVerts(verts, minBBox, maxBBox) {
@@ -366,18 +378,17 @@ function getPolygonsPrep(editorData)
     const quat = glMatrix.quat;
     // New array buffer for each frame
     // Extra data: minBB, maxBB, tick
-    buff = new ArrayBuffer((buffLength+7)*4)
+    // buff = new ArrayBuffer((buffLength+7)*4)
     drawVerts = new Float32Array(buff);
     // One light per triangle
-    buffLights = new ArrayBuffer((buffLength)*4)
+    // buffLights = new ArrayBuffer((buffLength)*4)
+    buffLights = new ArrayBuffer(4)
     drawLights = new Uint32Array(buffLights)
     // drawVerts index
     index = 0;
     const isEditor = editorData.isEditor
     activeNodes = [];
     nodeIndex = 0;
-
-    const modelScaleRotate = mat4.create();
 
     if (isEditor) {
         const xScale = editorData.xScale;
@@ -392,14 +403,10 @@ function getPolygonsPrep(editorData)
         const y = editorData.y
         const z = editorData.z
 
-        const rotate = quat.create();
         quat.fromEuler(rotate, xAngle, yAngle, zAngle);
         mat4.fromRotationTranslationScale(modelScaleRotate, rotate, [x,y,z], [xScale,-yScale,zScale]);
     }
     
-    let rotationQuat = quat.create();
-    let parentMatrix = mat4.create();       
-
     quat.fromEuler(rotationQuat, 0, 0, 0);
 
     mat4.fromRotationTranslation(parentMatrix, rotationQuat, [0,0,0])
@@ -514,7 +521,6 @@ function transformNode(node, parentMat, modelScaleRotate, isEditor)
     const quat = glMatrix.quat;
     // @ts-ignore
     const vec3 = glMatrix.vec3;
-    let dummyMat4Out = mat4.create();
 
     if(parentMat != undefined)
         mat4.copy(node.matrix, parentMat);
@@ -599,7 +605,6 @@ function transformNode(node, parentMat, modelScaleRotate, isEditor)
 function morphTargetsXform(vin, index, weights, targets) {
   // @ts-ignore
   const vec3 = glMatrix.vec3;
-  const vout = vec3.create();
   vec3.copy(vout, vin);
   for (let i = 0; i < targets.length; i++) {
       const w = weights[i];
@@ -731,9 +736,6 @@ function updateLight(editorData)
 
     const cullEnable = editorData.cullEnable
 
-    const modelRotate = mat4.create();
-    const rotate = quat.create();
-
     typedVertsToDrawVerts()
 
     // XXX Handle cannonBody and cannonSetRotation for light
@@ -750,13 +752,6 @@ function updateLight(editorData)
     // Calculate for each triangle
     let lightIndex = 0
     drawLightsBufferViews.length = 0
-    const v0 = vec3.create()
-    const v1 = vec3.create()
-    const v2 = vec3.create()
-    const normal = vec3.create()
-    const viewDir = vec3.create()
-    const colorSumCalc = vec4.create()
-    const c = vec4.create()
     for (let j=0; j < drawMeshes.length; j++)
     {
         // XXX Skip lighting if disabled
@@ -801,6 +796,7 @@ function updateLight(editorData)
 }
 
 function typedVertsToDrawVerts() {
+  console.log("typedVertsToDrawVerts")
   for (let j=0; j< drawMeshes.length; j++) {
       const drawMeshVerts = drawMeshes[j].drawVerts;
       const bufferViews = drawMeshes[j].bufferViews;
@@ -11500,3 +11496,25 @@ THE SOFTWARE.
 glMatrix.glMatrix.setMatrixArrayType(Array)
   
   
+// @ts-ignore
+const mat4 = glMatrix.mat4;
+// @ts-ignore
+const vec3 = glMatrix.vec3;
+// @ts-ignore
+const vec4 = glMatrix.vec4;
+// @ts-ignore
+const quat = glMatrix.quat;
+const modelScaleRotate = mat4.create();
+const rotate = quat.create();
+let rotationQuat = quat.create();
+let parentMatrix = mat4.create();       
+let dummyMat4Out = mat4.create();
+const vout = vec3.create();
+const modelRotate = mat4.create();
+const v0 = vec3.create()
+const v1 = vec3.create()
+const v2 = vec3.create()
+const normal = vec3.create()
+const viewDir = vec3.create()
+const colorSumCalc = vec4.create()
+const c = vec4.create()

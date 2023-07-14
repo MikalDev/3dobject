@@ -187,6 +187,7 @@ class GltfModelW
                 this.setBBFromVerts(this.verts, this.inst.minBB, this.inst.maxBB);
                 this.inst.updateBbox = true;
                 this.updateDrawVerts = true;
+                this.typedVertsToDrawVerts()
                 this.workerReady = true;
                 if (!this.boundingBoxInit) {
                     this.inst.initBoundingBox()
@@ -205,6 +206,7 @@ class GltfModelW
         // Send the gltfModel to the worker
         const bufferViews = this.drawMeshes[this.drawMeshes.length-1].bufferViews;
         const buffLength = bufferViews[bufferViews.length-1].start + bufferViews[bufferViews.length-1].length;
+        this.buff = new ArrayBuffer((buffLength+7)*4)
         this.msgPort.postMessage({type: 'gltf', gltf: this.gltfData, buffLength: buffLength, drawMeshes: this.drawMeshes});
         return { msgPort: this.msgPort }
     }
@@ -289,8 +291,6 @@ class GltfModelW
             mat4.copy(this.modelRotate, modelRotate);
             mat4.multiply(modelRotate, tmpModelView, modelRotate);
             renderer.SetModelViewMatrix(modelRotate);
-        } else {
-            z = 0;
         }
 
         // Default color
@@ -302,7 +302,7 @@ class GltfModelW
 
         if (this.updateDrawVerts) {
             this.updateDrawVerts = false;
-            this.typedVertsToDrawVerts()
+            // this.typedVertsToDrawVerts()
         }
 
         for (let j=0; j<= this.drawMeshesIndex; j++)
@@ -569,7 +569,7 @@ class GltfModelW
         const editorData = this.getPolygonsPrep();
         const data = {editorData}
         this.workerReady = false
-        this.msgPort.postMessage({type: "getPolygons", data: data});
+        this.msgPort.postMessage({type: "getPolygons", data: data, buff: this.buff}, [this.buff]);
     }
 
     getEditorData(isEditor, lightEnable, lightUpdate)
@@ -750,7 +750,7 @@ class GltfModelW
             this.inst.updateBbox = true
         }
         const data = {animationData, editorData};
-        this.msgPort.postMessage({type: "updateAnimationPolygons", data: data});
+        this.msgPort.postMessage({type: "updateAnimationPolygons", data: data, buff: this.buff}, [this.buff]);
         // if (this.inst.debug) console.log('postMsg t:',this.inst.runtime.GetTickCount())
     }
 

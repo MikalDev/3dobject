@@ -30,8 +30,8 @@
             "link-text": "Edit image"
           },
           "z-elevation": {
-            "name": "Z elevation",
-            "desc": "Z elevation"
+            "name": "Obsolete, use zElevation",
+            "desc": "Obsolete, use zElevation"
           },
           "angle-x": {
             "name": "Angle x",
@@ -171,7 +171,7 @@
               }
             }
           },
-          "set-z-elevation": {
+          "set-z-elevation-0": {
             "list-name": "Set z elevation",
             "display-text": "Set z elevation to {0}",
             "description": "Set z elevation (world z axis, depth component).",
@@ -777,9 +777,9 @@
             "translated-name": "AnimationNames",
             "params": {}
           },
-          "z-elevation": {
-            "description": "Get z elevation.",
-            "translated-name": "ZElevation",
+          "z-elevation-0": {
+            "description": "Get z elevation.-0",
+            "translated-name": "ZElevation-0",
             "params": {}
           },
           "current-animation": {

@@ -124,7 +124,7 @@ class GltfModel
 
         const tmpModelView = mat4.create();
         const modelRotate = mat4.create();
-        if (!(this.inst.isEditor || this.inst.cpuXform)) {
+        if (!this.inst.isEditor) {
             mat4.copy(tmpModelView, renderer._matMV);
             const xAngle = this.inst.xAngle;
             const yAngle = this.inst.yAngle;
@@ -142,8 +142,6 @@ class GltfModel
             mat4.copy(this.modelRotate, modelRotate);
             mat4.multiply(modelRotate, tmpModelView, modelRotate);
             renderer.SetModelViewMatrix(modelRotate);
-        } else {
-            z = 0;
         }
 
         // Default color

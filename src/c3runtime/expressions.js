@@ -4,7 +4,7 @@
             AnimationNames() {
                 return JSON.stringify(this.gltf.getAnimationNames());
             },
-            ZElevation() {
+            ZElevation0() {
                 return this.GetWorldInfo().GetZElevation();
             },
             CurrentAnimation() {

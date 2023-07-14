@@ -76,8 +76,8 @@
             {
                 this.scale = properties[0];
                 const wi = inst.GetWorldInfo();
-                wi.SetZElevation(properties[1]);
-                wi._UpdateZElevation();
+                // wi.SetZElevation(properties[1]);
+                // wi._UpdateZElevation();
                 this.xAngle = properties[2];
                 this.yAngle = properties[3];
                 this.zAngle = properties[4];

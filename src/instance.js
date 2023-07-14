@@ -43,7 +43,8 @@
             this.zAngle = this._inst.GetPropertyValue('angle-z');
             this.rotationOrder = this._inst.GetPropertyValue('rotation-order');
             this.scale = this._inst.GetPropertyValue('scale');
-            this.zElevation =  this._inst.GetPropertyValue('z-elevation');
+            // this._inst.SetZElevation(this._inst.GetPropertyValue('z-elevation'));
+            // this._inst._UpdateZElevation();
             this.debug = this._inst.GetPropertyValue('debug');
             this.instanceModel = this._inst.GetPropertyValue('instance-model');
             this.instanceTexture = this._inst.GetPropertyValue('image-texture');
@@ -165,7 +166,7 @@
                     // 3D Model 
                     const x = this._inst.GetX();
                     const y = this._inst.GetY();
-                    const z = this.zElevation;
+                    const z = this._inst.GetZElevation();
 
                     const tempQuad = new SDK.Quad();
 
@@ -256,8 +257,9 @@
                     if (this.layoutView) this.layoutView.Refresh();
                     break;
                 case 'z-elevation':
-                    this.zElevation = value;
-                    if (this.layoutView) this.layoutView.Refresh();
+                    // this._inst.SetZElevation(value);
+                    // this._inst.UpdateZElevation();
+                    // if (this.layoutView) this.layoutView.Refresh();
                     break;   
                 case 'angle-x':
                 case 'angle-y':

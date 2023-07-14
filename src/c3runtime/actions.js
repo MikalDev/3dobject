@@ -8,7 +8,7 @@
             this.model3D.rotate(angle, axis, false);
         },
 
-        SetZElevation(z) {
+        SetZElevation0(z) {
             const wi = this.GetWorldInfo();
             wi.SetZElevation(z);
             wi._UpdateZElevation();

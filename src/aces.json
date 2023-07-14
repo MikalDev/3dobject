@@ -105,8 +105,8 @@
         ]
         },
         {
-            "id": "set-z-elevation",
-            "scriptName": "SetZElevation",
+            "id": "set-z-elevation-0",
+            "scriptName": "SetZElevation0",
             "highlight": false,
             "params": [
                 {
@@ -779,9 +779,9 @@
           ]  
         },
         {
-          "id": "z-elevation",
-          "scriptName": "ZElevation",
-          "expressionName": "ZElevation",
+          "id": "z-elevation-0",
+          "scriptName": "ZElevation0",
+          "expressionName": "ZElevation0",
           "returnType": "number",
           "highlight": false,
           "params": [
