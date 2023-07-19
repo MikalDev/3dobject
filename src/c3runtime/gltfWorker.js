@@ -42,7 +42,6 @@ function OnMessage(e)
           gltf = e.data.gltf
           buffLength = e.data.buffLength
           drawMeshes = e.data.drawMeshes
-          console.log('gltf, drawMeshes loaded')
           break
       case 'updateAnimationPolygons':
           buff = e.data.buff
@@ -164,8 +163,8 @@ function updateAnimationPolygons(data) {
       drawLights = null
     } else {
       // No need to transfer data, worker us ready for next request
-      const msg = {type: 'status', status : { workerReady: true}}
-      msgPort.postMessage(msg)
+      const msg = {type: 'status', status : { workerReady: true}, buff}
+      msgPort.postMessage(msg, [msg.buff])
       drawVerts = null
       buffLights = null
       drawLightsBufferViews = []
@@ -381,8 +380,7 @@ function getPolygonsPrep(editorData)
     // buff = new ArrayBuffer((buffLength+7)*4)
     drawVerts = new Float32Array(buff);
     // One light per triangle
-    // buffLights = new ArrayBuffer((buffLength)*4)
-    buffLights = new ArrayBuffer(4)
+    buffLights = new ArrayBuffer((buffLength)*4)
     drawLights = new Uint32Array(buffLights)
     // drawVerts index
     index = 0;
@@ -796,7 +794,6 @@ function updateLight(editorData)
 }
 
 function typedVertsToDrawVerts() {
-  console.log("typedVertsToDrawVerts")
   for (let j=0; j< drawMeshes.length; j++) {
       const drawMeshVerts = drawMeshes[j].drawVerts;
       const bufferViews = drawMeshes[j].bufferViews;

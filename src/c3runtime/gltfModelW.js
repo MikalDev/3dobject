@@ -30,7 +30,7 @@ class GltfModelW
         this.drawLights = new Uint32Array(0);
         this.drawLightsBufferViews = null
         this.drawLightsEnable = false
-        this.workerReady = true
+        this.workerReady = false
         this.boundingBoxInit = false
     }
 
@@ -100,6 +100,7 @@ class GltfModelW
         this.initDrawMeshes();
         this.drawMeshesMin = this.drawMeshes
         await this.createWorker(this._runtime)
+        this.workerReady = true
         this.getPolygons()
     }
 
@@ -193,14 +194,14 @@ class GltfModelW
                     this.inst.initBoundingBox()
                     this.boundingBoxInit = true;
                 }
-                // if (this.inst.debug) console.log('onMsg t:',runtime.GetTickCount(), this.verts[this.verts.length-1], typeof e.data)
             } else if (e.data.type === "status") {
+                this.buff = e.data.buff;
                 if (e.data?.status?.workerReady) {
                     this.workerReady = true;
                 }
             } else
             {
-                if (this.inst.debug) console.log('onMsg t:',runtime.GetTickCount(), e.data.type)
+                if (this.inst.debug) console.debug('onMsg t:',runtime.GetTickCount(), e.data.type)
             }
         });
         // Send the gltfModel to the worker
@@ -298,11 +299,9 @@ class GltfModelW
         let baseColorChanged = false;
         if (!vec4.equals(currentColor, [1,1,1,1])) baseColorChanged = true;
 
-        // if (this.inst.debug) console.log('draw t:',this._runtime.GetTickCount(), this.verts[this.verts.length-1])
 
         if (this.updateDrawVerts) {
             this.updateDrawVerts = false;
-            // this.typedVertsToDrawVerts()
         }
 
         for (let j=0; j<= this.drawMeshesIndex; j++)
@@ -751,7 +750,6 @@ class GltfModelW
         }
         const data = {animationData, editorData};
         this.msgPort.postMessage({type: "updateAnimationPolygons", data: data, buff: this.buff}, [this.buff]);
-        // if (this.inst.debug) console.log('postMsg t:',this.inst.runtime.GetTickCount())
     }
 
     updateModelRotate(x,y,z)
