@@ -1024,6 +1024,16 @@
             "translated-name": "TotalTrianglesCulled",
             "params": {
             }
+          },
+          "node-bounding-box": {
+            "description": "Node bounding box.",
+            "translated-name": "NodeBoundingBox",
+            "params": {
+              "node-name": {
+                "name": "Node name",
+                "desc": "Node name."
+              }
+            }
           }
         }
       }

@@ -420,6 +420,19 @@ function getPolygonsPrep(editorData)
     
     quat.fromEuler(rotationQuat, 0, 0, 0);
 
+    // Check if the gltf scene root node has a rotation, translation or scale
+    const rootNode = gltf?.scene?.nodes[0]
+    let rootNodeXform = false
+    
+    if (rootNode && (rootNode.rotation || rootNode.translation || rootNode.scale)) {
+        if (!rootNode.rotation) rootNode.rotation = quat.create();
+        if (!rootNode.translation) rootNode.translation = vec3.create();
+        if (!rootNode.scale) rootNode.scale = vec3.fromValues(1,1,1);
+
+        mat4.fromRotationTranslationScale(parentMatrix, rootNode.rotation, rootNode.translation, rootNode.scale)
+        rootNodeXform = true
+    }
+
     for(let ii = 0; ii < gltf.skinnedNodes.length; ii++)
     {
         let node = gltf.skinnedNodes[ii];
@@ -484,6 +497,14 @@ function getPolygonsPrep(editorData)
                     vec3.scale(v, v, w[i]);
                     vec3.add(vsum, vsum, v);
                 }
+
+                if (rootNodeXform) {
+                  // vec3.mul(vsum, vsum, rootNode.scale);
+                  vec3.transformMat4(vsum, vsum, parentMatrix);
+                  if (j==0) {
+                  }
+                }
+
                 if (isEditor) {
                     vec3.transformMat4(vsum, vsum, modelScaleRotate );
                 }

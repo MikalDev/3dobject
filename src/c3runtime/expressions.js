@@ -190,6 +190,28 @@
             },             
             TotalTrianglesCulled() {
                 return this.totalTrianglesCulled
-            },             
+            },
+            NodeBoundingBox(nodeName) {
+                if (!this.gltf) return JSON.stringify([0,0,0,0,0,0]);
+                if (!this.gltf.gltfData) return JSON.stringify([0,0,0,0,0,0]);
+                const meshIndex = this.gltf.meshNames.get(nodeName)
+                if (!this.gltf.drawMeshes[meshIndex]) return JSON.stringify([0,0,0,0,0,0]);
+                const drawVerts = this.gltf.drawMeshes[meshIndex].drawVerts
+                const vec3 = globalThis.glMatrix3D.vec3
+                const boundingBoxMin = vec3.fromValues(Infinity, Infinity, Infinity)
+                const boundingBoxMax = vec3.fromValues(-Infinity, -Infinity, -Infinity)
+                // calculate bounding box of all drawVerts in mesh and return it
+                for (let i = 0; i < drawVerts.length; i++) {
+                    const drawVert = drawVerts[i]
+                    for (let j = 0; j < drawVert.length; j+=3) {
+                        const point = vec3.fromValues(drawVert[j], drawVert[j+1], drawVert[j+2])
+                        vec3.max(boundingBoxMax, boundingBoxMax, point)
+                        vec3.min(boundingBoxMin, boundingBoxMin, point)
+                    }
+                }
+                vec3.transformMat4(boundingBoxMax, boundingBoxMax, this.gltf.modelRotate);
+                vec3.transformMat4(boundingBoxMin, boundingBoxMin, this.gltf.modelRotate);
+                return JSON.stringify([boundingBoxMax[0], boundingBoxMax[1], boundingBoxMax[2], boundingBoxMin[0], boundingBoxMin[1], boundingBoxMin[2]])
+            }
         };
 }

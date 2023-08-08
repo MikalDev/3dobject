@@ -1157,6 +1157,20 @@
           "highlight": false,
           "params": [
           ]  
+        },
+        {
+          "id": "node-bounding-box",
+          "scriptName": "NodeBoundingBox",
+          "expressionName": "NodeBoundingBox",
+          "returnType": "string",
+          "highlight": false,
+          "params": [
+            {
+              "id": "node-name",
+              "type": "string",
+              "initialValue": ""
+            }
+          ]  
         }                                               
       ]
     }
