@@ -766,6 +766,18 @@
                 "initialValue": 0
               }
             ]
+          },
+          {
+            "id": "set-vertex-rounding",
+            "scriptName": "SetVertexRounding",
+            "highlight": false,
+            "params": [
+              {
+                "id": "round",
+                "type": "number",
+                "initialValue": 0
+              }
+            ]
           }
       ],
       "expressions": [

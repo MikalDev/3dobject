@@ -166,8 +166,7 @@ class GltfModel
             const offsetMaterial = materialsModify.has(material?.name) && materialsModify.get(material?.name)?.offsetUV;
             const rotateMaterial = materialsModify.has(material?.name) && materialsModify.get(material?.name)?.rotateUV;
             const lightUpdate = this.inst.lightUpdate || (drawLights.length == 0)
-
-
+            const vertexScale = this.inst.vertexScale
 
             // Check if the map this.inst.materialsModify contains the key material.name
             // If it does, then we need to offset the UVs
@@ -397,6 +396,20 @@ class GltfModel
                             const c = drawLights[i]
                             if (baseColorChanged) vec4.mul(c, c, currentColor)
                             renderer.SetColorRgba(c[0], c[1], c[2], 1)
+                        }
+                        if (vertexScale != 0) {
+                            const xScale = this.inst.scale/(this.inst.xScale == 0 ? 1 : this.inst.xScale)*vertexScale;
+                            const yScale = this.inst.scale/(this.inst.yScale == 0 ? 1 : this.inst.yScale)*vertexScale;        
+                            const zScale = this.inst.scale/(this.inst.zScale == 0 ? 1 : this.inst.zScale)*vertexScale;
+                            x0 = Math.round(x0*xScale)/xScale
+                            y0 = Math.round(y0*xScale)/yScale
+                            z0 = Math.round(z0*xScale)/zScale
+                            x1 = Math.round(x1*xScale)/xScale
+                            y1 = Math.round(y1*xScale)/yScale
+                            z1 = Math.round(z1*xScale)/zScale
+                            x2 = Math.round(x2*xScale)/xScale
+                            y2 = Math.round(y2*xScale)/yScale
+                            z2 = Math.round(z2*xScale)/zScale
                         }
                         renderer.Quad3D2(
                             x0, y0, z0,

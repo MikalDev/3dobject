@@ -71,6 +71,7 @@
             this.cpuXform = false
             this.totalTriangles = 0
             this.totalTrianglesCulled = 0
+            this.vertexScale = 0
 
             if (properties)
             {

@@ -31,6 +31,7 @@
             this.spotDir = [0,0,0]
             this.spotCutoff = 0
             this.spotEdge = 0
+            this.vertexScale = 0
         }
 
         Release()

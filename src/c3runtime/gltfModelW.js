@@ -253,6 +253,7 @@ class GltfModelW
         const mat2 = globalThis.glMatrix3D.mat2;
         const mat4 = globalThis.glMatrix3D.mat4;
         const quat = globalThis.glMatrix3D.quat;
+        const vertexScale = this.inst.vertexScale
         let totalTriangles = 0;
         let totalTrianglesCulled = 0
 
@@ -469,6 +470,21 @@ class GltfModelW
                     x2 = (v[ind[i3+2]*3+0]);
                     y2 = (v[ind[i3+2]*3+1]);
                     z2 = (v[ind[i3+2]*3+2])-z;
+
+                    if (vertexScale != 0) {
+                        const xScale = this.inst.scale/(this.inst.xScale == 0 ? 1 : this.inst.xScale)*vertexScale;
+                        const yScale = this.inst.scale/(this.inst.yScale == 0 ? 1 : this.inst.yScale)*vertexScale;        
+                        const zScale = this.inst.scale/(this.inst.zScale == 0 ? 1 : this.inst.zScale)*vertexScale;
+                        x0 = Math.round(x0*xScale)/xScale
+                        y0 = Math.round(y0*xScale)/yScale
+                        z0 = Math.round(z0*xScale)/zScale
+                        x1 = Math.round(x1*xScale)/xScale
+                        y1 = Math.round(y1*xScale)/yScale
+                        z1 = Math.round(z1*xScale)/zScale
+                        x2 = Math.round(x2*xScale)/xScale
+                        y2 = Math.round(y2*xScale)/yScale
+                        z2 = Math.round(z2*xScale)/zScale
+                    }
 
                     if (this.inst.wireframe) {
                         this.drawWireFrame(renderer, whiteTexture, tempQuad, x0, y0, z0, x1, y1, z1, x2, y2, z2, xWireframeWidth, yWireframeWidth, zWireframeWidth);

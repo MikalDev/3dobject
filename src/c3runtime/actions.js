@@ -409,5 +409,8 @@
             const color = [r,g,b,a]
             this.ambientColor = color
         },
+        SetVertexRounding(round){
+            this.vertexScale = round == 0 ? 0 : 1/round
+        },
     }
 }

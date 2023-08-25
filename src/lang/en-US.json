@@ -769,6 +769,17 @@
                 "desc": "Target index."
               }
             }
+          },
+          "set-vertex-rounding": {
+            "list-name": "Set vertex rounding",
+            "display-text": "Set vertex rounding to {0}",
+            "description": "Set vertex rounding (typically 1,2,3, etc.)",
+            "params": {
+              "round": {
+                "name": "Round",
+                "desc": "Round value, typically an integer."
+              }
+            }
           }
         },
         "expressions": {
