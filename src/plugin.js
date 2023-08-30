@@ -3,7 +3,7 @@
     const SDK = self.SDK;
 
     const PLUGIN_ID = "Mikal_3DObject";
-    const PLUGIN_VERSION = "2.52.0";
+    const PLUGIN_VERSION = "2.53.0";
     const PLUGIN_CATEGORY = "3d";
 
     const PLUGIN_CLASS = SDK.Plugins.Mikal_3DObject = class Object3DPlugin extends SDK.IPluginBase
@@ -42,25 +42,26 @@
             SDK.Lang.PushContext(".properties");
 
             this._info.SetProperties([
-                new SDK.PluginProperty("text", "scale", "1",
+                new SDK.PluginProperty("text", "scale", "1"),
+            new SDK.PluginProperty("float", "z-elevation",
             {
-                "interpolatable": false
+                interpolatable: false,
+                initialValue: 0
             }),
-            new SDK.PluginProperty("float", "z-elevation", 0,
+            new SDK.PluginProperty("float", "angle-x",
             {
-                "interpolatable": false
+                interpolatable: true,
+                initialValue: 0
             }),
-            new SDK.PluginProperty("float", "angle-x", 0,
+            new SDK.PluginProperty("float", "angle-y",
             {
-                "interpolatable": false
+                interpolatable: true,
+                initialValue: 0
             }),
-            new SDK.PluginProperty("float", "angle-y", 0,
+            new SDK.PluginProperty("float", "angle-z",
             {
-                "interpolatable": false
-            }),
-            new SDK.PluginProperty("float", "angle-z", 0,
-            {
-                "interpolatable": false
+                interpolatable: true,
+                initialValue: 0
             }),
             new SDK.PluginProperty("combo", "rotation-order",
             {
@@ -78,46 +79,49 @@
             }),
             new SDK.PluginProperty("text", "gtlf-path", "",
             {
-                "interpolatable": false
+                interpolatable: false
             }),
             new SDK.PluginProperty("check", "debug", false,
             {
-                "interpolatable": false
+                interpolatable: false
             }),
             new SDK.PluginProperty("float", "animation-blend", 0,
             {
-                "interpolatable": false
+                interpolatable: false
             }),
             new SDK.PluginProperty("check", "instance-model", false,
             {
-                "interpolatable": false
+                interpolatable: false
             }),
             new SDK.PluginProperty("check", "image-texture", false, {
-                "interpolatable": false
+                interpolatable: false
             }),
-            new SDK.PluginProperty("float", "x-scale", 1,
+            new SDK.PluginProperty("float", "x-scale",
             {
-                "interpolatable": true
+                interpolatable: true,
+                initialValue: 1
             }),
-            new SDK.PluginProperty("float", "y-scale", 1,
+            new SDK.PluginProperty("float", "y-scale",
             {
-                "interpolatable": true
+                interpolatable: true,
+                initialValue: 1
             }),
-            new SDK.PluginProperty("float", "z-scale", 1,
+            new SDK.PluginProperty("float", "z-scale",
             {
-                "interpolatable": true
+                interpolatable: true,
+                initialValue: 1
             }),
             new SDK.PluginProperty("check", "wireframe", false,
             {
-                "interpolatable": false
+                interpolatable: false
             }),
             new SDK.PluginProperty("check", "worker-animation", false,
             {
-                "interpolatable": false
+                interpolatable: false
             }),
             new SDK.PluginProperty("check", "cpu-xform", false,
             {
-                "interpolatable": false
+                interpolatable: false
             }),
             ]);
 

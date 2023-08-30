@@ -315,6 +315,58 @@
             }
         }
 
+        GetPropertyValueByIndex(index) {
+            console.log('GetPropertyValueByIndex', index)
+            switch (index) {
+                case 0:
+                    return this.scale;
+                case 2: // x angle
+                    return this.xAngle;
+                case 3: // y angle
+                    return this.yAngle;
+                case 4: // z angle
+                    return this.zAngle;
+                case 11: // x scale
+                    return this.xScale;
+                case 12: // y scale
+                    return this.yScale;
+                case 13: // z scale
+                    return this.zScale;
+                default:
+                    return 0;
+            }
+        }
+
+        SetPropertyValueByIndex(index, value) {
+            console.log('SetPropertyValueByIndex', index, value)
+            switch (index) {
+                case 0:
+                    this.scale = value;
+                    break;
+                case 2: // x angle
+                    this.xAngle = value;
+                    break;
+                case 3: // y angle
+                    this.yAngle = value;
+                    break;
+                case 4: // z angle
+                    this.zAngle = value;
+                    break;
+                case 11: // x scale
+                    this.xScale = value;
+                    break;
+                case 12: // y scale
+                    this.yScale = value;
+                    break;
+                case 13: // z scale
+                    this.zScale = value;
+                    break;
+                default:
+                    break;
+            }
+            if (this.layoutView) this.layoutView.Refresh();
+        }
+
         LoadC2Property(name, valueString)
         {
             return false; // not handled
