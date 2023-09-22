@@ -17,21 +17,44 @@
             this.yScale = 1;
             this.zScale = 1;
             this.debug = false;
-            this.minBB = [0,0,0]
-            this.maxBB = [0,0,0]
+            this.minBB = [0,0,0];
+            this.maxBB = [0,0,0];
             this._runtime = sdkType._project;
             this.dataLoaded = false;
             this.texture = [];
             this.loadFailed = false;
             this.materialsModify = new Map();
-            this.lightEnable = false
-            this.lightUpdate = false
-            this.lightColor = 0
-            this.spotEnable = false
-            this.spotDir = [0,0,0]
-            this.spotCutoff = 0
-            this.spotEdge = 0
-            this.vertexScale = 0
+            this.lightEnable = false;
+            this.lightUpdate = false;
+            this.lightColor = 0;
+            this.spotEnable = false;
+            this.spotDir = [0,0,0];
+            this.spotCutoff = 0;
+            this.spotEdge = 0;
+            this.vertexScale = 0;
+
+            this.xAngle = 0;
+            this.yAngle = 0;
+            this.zAngle = 0;
+            this.rotationOrder = 'xyz';
+            this.scale = '1';
+            this.instanceModel = null;
+            this.instanceTexture = null;
+            this.gltfData = null;
+            this.wireframe = null;
+            this.isEditor = true;
+            this.xWireframeWidth = 1;
+            this.yWireframeWidth = 1;
+            this.zWireframeWidth = 1;
+            this.gltf = null;
+
+            this.drawVerts = null;
+            this.drawUVs = null;
+            this.drawIndices = null;
+            this.layoutView = null;
+            this.doingInit = false;
+            this.gltfPath = '';
+            this.gltfDataLoad = true;
         }
 
         Release()
@@ -315,55 +338,46 @@
             }
         }
 
-        GetPropertyValueByIndex(index) {
-            console.log('GetPropertyValueByIndex', index)
-            switch (index) {
-                case 0:
-                    return this.scale;
-                case 2: // x angle
-                    return this.xAngle;
-                case 3: // y angle
-                    return this.yAngle;
-                case 4: // z angle
-                    return this.zAngle;
-                case 11: // x scale
-                    return this.xScale;
-                case 12: // y scale
-                    return this.yScale;
-                case 13: // z scale
-                    return this.zScale;
-                default:
-                    return 0;
+        OnTimelinePropertyChanged(id, value, detail)
+        {
+            switch(id)
+            {
+                case 'angle-x':
+                    this.xAngle = this._inst.GetTimelinePropertyValue('angle-x');
+                    if (this.layoutView) this.layoutView.Refresh();
+                    break;
+                case 'angle-y':
+                    this.yAngle = this._inst.GetTimelinePropertyValue('angle-y');
+                    if (this.layoutView) this.layoutView.Refresh();
+                    break;
+                case 'angle-z':
+                    this.zAngle = this._inst.GetTimelinePropertyValue('angle-z');
+                    if (this.layoutView) this.layoutView.Refresh();
+                    break;
+                case 'x-scale':
+                    this.xScale = this._inst.GetTimelinePropertyValue('x-scale');
+                    if (this.layoutView) this.layoutView.Refresh();
+                    break;
+                case 'y-scale':
+                    this.yScale = this._inst.GetTimelinePropertyValue('y-scale');
+                    if (this.layoutView) this.layoutView.Refresh();
+                    break;
+                case 'z-scale':
+                    this.zScale = this._inst.GetTimelinePropertyValue('z-scale');
+                    if (this.layoutView) this.layoutView.Refresh();
+                    break;
             }
         }
 
-        SetPropertyValueByIndex(index, value) {
-            console.log('SetPropertyValueByIndex', index, value)
-            switch (index) {
-                case 0:
-                    this.scale = value;
-                    break;
-                case 2: // x angle
-                    this.xAngle = value;
-                    break;
-                case 3: // y angle
-                    this.yAngle = value;
-                    break;
-                case 4: // z angle
-                    this.zAngle = value;
-                    break;
-                case 11: // x scale
-                    this.xScale = value;
-                    break;
-                case 12: // y scale
-                    this.yScale = value;
-                    break;
-                case 13: // z scale
-                    this.zScale = value;
-                    break;
-                default:
-                    break;
-            }
+        OnExitTimelineEditMode()
+        {
+            this.xAngle = this._inst.GetPropertyValue('angle-x');
+            this.yAngle = this._inst.GetPropertyValue('angle-y');
+            this.zAngle = this._inst.GetPropertyValue('angle-z');
+            this.xScale = this._inst.GetPropertyValue('x-scale');
+            this.yScale = this._inst.GetPropertyValue('y-scale');
+            this.zScale = this._inst.GetPropertyValue('z-scale');
+            
             if (this.layoutView) this.layoutView.Refresh();
         }
 
