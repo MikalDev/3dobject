@@ -110,6 +110,7 @@
             if (this.instanceModel) {
                 //@ts-ignore
                 this.gltfData = new globalThis.GltfData(this.runtime, this);
+                console.log('gltfPath -ACE', gltfPath)
                 this.gltfData.load(gltfPath, true, this.debug);
                 this.gltfData.dynamicTexturesLoaded = false;
                 this.doingInit = false;
@@ -198,6 +199,14 @@
                 }
             }
             this.renderOnce = true;
+        },
+
+        SetBlendMode(blendMode) {
+            this.blendMode = blendMode;
+            if (!this.loaded) return;
+            const wi = this.GetWorldInfo();
+            // wi.SetBlendMode(blendMode);
+            // this.runtime.UpdateRender();
         },
 
         EnableNode(nodeName, enable) {

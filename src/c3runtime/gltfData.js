@@ -25,7 +25,9 @@ class GltfData
 		let gltfURI;
 		if (isRuntime)
 		{
+            console.log('glftPath', gltfPath)
 			gltfURI = await runtime.GetAssetManager().GetProjectFileUrl(gltfPath);
+            console.log('glftURI', gltfURI)
 		} else
 		{
             if (gltfPath.includes('http')) {
@@ -48,6 +50,8 @@ class GltfData
 
         let resultgltf
 
+        resultgltf = await this.loadGLTF(gltfURI, isRuntime, debug, isBinary);
+/*
         try {
 		    resultgltf = await this.loadGLTF(gltfURI, isRuntime, debug, isBinary);
         } catch( err ) {
@@ -55,7 +59,7 @@ class GltfData
             console.error('Error loading GLTF:',err)
             return false
         }
-
+*/
         if (resultgltf)
 		{
 			if (debug) console.info('[3DObject] modelData:', resultgltf);
@@ -87,7 +91,9 @@ class GltfData
 		if (isRuntime)
 		{
             if (isBinary) {
+                console.log('fetching binary gltf', uri)
                 let response = await fetch(uri, {mode:'cors'});
+                console.log('response - fetched')
                 let buffer = await response.arrayBuffer()
                 const magic = new DataView(buffer.slice(0, 4)).getUint32(0, true);
                 const version = new DataView(buffer.slice(4, 8)).getUint32(0, true);
@@ -95,7 +101,7 @@ class GltfData
 
                 let utf8decoder = new TextDecoder()
                 let jsonString = utf8decoder.decode(buffer.slice(20, 20 + jsonBufSize));
-            
+                console.log(uri, jsonString.slice(0, 100))
                 gltf = JSON.parse(jsonString);
                 binBuffer = buffer.slice(jsonBufSize + 28);
             } else {
@@ -310,7 +316,13 @@ class GltfData
                     }
                     blob = await new Blob( [ imageBuffer ] );
                 } else {
-                    blob = await (await fetch(image.uri)).blob(); 
+                    let uri = image.uri;
+                    if (!uri.includes('data:') && !isRuntime) {
+                        uri = this._runtime.GetProjectFileByExportPath(uri)
+                        blob = await uri.GetBlob();
+                    } else {
+                        blob = await (await fetch(uri)).blob();
+                    }
                 }
                 let imageBitmap;
                 // @ts-ignore

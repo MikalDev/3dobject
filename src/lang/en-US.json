@@ -780,6 +780,29 @@
                 "desc": "Round value, typically an integer."
               }
             }
+          },
+          "set-blend-mode": {
+            "list-name": "Set blend mode",
+            "display-text": "Set blend mode to {0}",
+            "description": "Set blend mode.)",
+            "params": {
+              "blend-mode": {
+                "name": "Blend mode",
+                "desc": "Blend mode.",
+                "items" :{
+                  "normal": "Normal",
+                  "additive": "Additive",
+                  "copy": "Copy",
+                  "destination-over": "Destination over",
+                  "source-in": "Source in",
+                  "destination-in": "Destination in",
+                  "source-out": "Source out",
+                  "destination-out": "Destination out",
+                  "source-atop": "Source atop",
+                  "destination-atop": "Destination atop"
+                }
+              }
+            }
           }
         },
         "expressions": {
