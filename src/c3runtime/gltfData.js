@@ -51,7 +51,8 @@ class GltfData
         let resultgltf
 
         resultgltf = await this.loadGLTF(gltfURI, isRuntime, debug, isBinary);
-/*
+        
+        // Don't crash on loading error
         try {
 		    resultgltf = await this.loadGLTF(gltfURI, isRuntime, debug, isBinary);
         } catch( err ) {
@@ -59,7 +60,7 @@ class GltfData
             console.error('Error loading GLTF:',err)
             return false
         }
-*/
+
         if (resultgltf)
 		{
 			if (debug) console.info('[3DObject] modelData:', resultgltf);
@@ -306,6 +307,7 @@ class GltfData
                 if (!('name' in gltf.images[i])) gltf.images[i].name = 'image-index-' + i;
                 const image = gltf.images[i]
                 let blob;
+                try {
                 if ('bufferView' in image) {
                     const bufview = gltf.bufferViews[image.bufferView]
                     let imageBuffer;
@@ -324,6 +326,12 @@ class GltfData
                         blob = await (await fetch(uri)).blob();
                     }
                 }
+            } catch(err) {
+                console.error('Error loading image:', err)
+                alert('Error loading image: ' + err)
+                blob = null
+                return
+            }
                 let imageBitmap;
                 // @ts-ignore
                 if (globalThis.createImageBitmap) {
