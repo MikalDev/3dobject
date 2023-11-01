@@ -803,7 +803,32 @@
                 "initialValue": 0
               }
             ]
+          },
+          {
+            "id": "set-quaternion",
+            "scriptName": "SetQuaternion",
+            "highlight": false,
+            "params": [
+              {
+                "id": "quaternion",
+                "type": "string",
+                "initialValue": ""
+              }
+            ]
+          },
+          {
+            "id": "enable-quaternion",
+            "scriptName": "EnableQuaternion",
+            "highlight": false,
+            "params": [
+              {
+                "id": "enable",
+                "type": "boolean",
+                "initialValue": "false"
+              }
+            ]
           }
+
       ],
       "expressions": [
         {

@@ -803,6 +803,28 @@
                 }
               }
             }
+          },
+          "set-quaternion": {
+            "list-name": "Set quaternion",
+            "display-text": "Set quaternion to {0}",
+            "description": "Set quaternion for rotation (JSON array string).",
+            "params": {
+              "quaternion": {
+                "name": "Quaternion",
+                "desc": "Quaternion (JSON array string)."
+              }
+            }
+          },
+          "enable-quaternion": {
+            "list-name": "Enable quaternion",
+            "display-text": "Enable quaternion {0}",
+            "description": "Enable quaternion for rotation.",
+            "params": {
+              "enable": {
+                "name": "Enable",
+                "desc": "Enable quaternion for rotation."
+              }
+            }
           }
         },
         "expressions": {

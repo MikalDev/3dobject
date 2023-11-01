@@ -73,6 +73,8 @@
             this.totalTrianglesCulled = 0
             this.vertexScale = 0
             this.blendMode = 0
+            this.quaternion = [0,0,0,1]
+            this.enableQuaternion = false
 
             if (properties)
             {
@@ -80,6 +82,7 @@
                 const wi = inst.GetWorldInfo();
                 // wi.SetZElevation(properties[1]);
                 // wi._UpdateZElevation();
+                this.cpuXform = properties[1];
                 this.xAngle = properties[2];
                 this.yAngle = properties[3];
                 this.zAngle = properties[4];
@@ -483,6 +486,7 @@
             this.spotCutoff = null
             this.spotEdge = null
             this.ambientColor = null
+            this.quaternion = null
             super.Release();
         }
 
@@ -564,7 +568,6 @@
         };
 
         GetPropertyValueByIndex(index) {
-            console.log('GetPropertyValueByIndex', index)
             switch (index) {
                 case 0:
                     return this.scale;
@@ -586,7 +589,6 @@
         }
 
         SetPropertyValueByIndex(index, value) {
-            console.log('SetPropertyValueByIndex', index, value)
             switch (index) {
                 case 0:
                     this.scale = value;
@@ -671,6 +673,27 @@
 
         _setAnimationBlend(time) {
             this.animationBlend = time
+        }
+
+        _enableQuaternion(enable) {
+            this.enableQuaternion= enable
+            this.renderOnce = true;
+        }
+
+        _setQuaternion(quaternion) {
+            // try catch JSON parse string quaternion, if not a string, ignore, if not a valid quaternion, ignore with warning
+            try {
+                const newQuaternion = JSON.parse(quaternion)
+                if (newQuaternion instanceof Array && newQuaternion.length == 4) {
+                    this.quaternion = newQuaternion
+                    this.renderOnce = true;
+                } else {
+                    console.warn('Set Quaternion - Invalid quaternion', quaternion)
+                }
+            }
+            catch(err) {
+                console.warn('Set Quaternion - Invalid quaternion', quaternion)
+            }
         }
 
         GetScriptInterfaceClass()

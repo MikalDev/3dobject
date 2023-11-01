@@ -135,6 +135,8 @@ class GltfModel
             const rotate = quat.create();
             if (this.inst.cannonBody && this.inst.cannonSetRotation) {
                 quat.set(rotate, this.inst.cannonBody.quaternion.x, this.inst.cannonBody.quaternion.y, this.inst.cannonBody.quaternion.z, this.inst.cannonBody.quaternion.w);
+            } else if (this.inst.enableQuaternion) {
+                quat.copy(rotate, this.inst.quaternion);
             } else {
                 quat.fromEuler(rotate, xAngle, yAngle, zAngle);
             }

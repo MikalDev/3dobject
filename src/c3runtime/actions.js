@@ -421,5 +421,13 @@
         SetVertexRounding(round){
             this.vertexScale = round == 0 ? 0 : 1/round
         },
+
+        SetQuaternion(quaternion) {
+            this._setQuaternion(quaternion);
+        },
+
+        EnableQuaternion(enable) {
+            this._enableQuaternion(enable);
+        }
     }
 }
