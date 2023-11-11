@@ -680,7 +680,7 @@
             this.renderOnce = true;
         }
 
-        _setQuaternion(quaternion) {
+        _setQuaternion(quaternion,x,y,z) {
             // try catch JSON parse string quaternion, if not a string, ignore, if not a valid quaternion, ignore with warning
             try {
                 const newQuaternion = JSON.parse(quaternion)
@@ -693,6 +693,13 @@
             }
             catch(err) {
                 console.warn('Set Quaternion - Invalid quaternion', quaternion)
+            }
+            if (x !== 0 || y !== 0 || z !== 0) {
+                const glMatrix3D = globalThis.glMatrix3D
+                const quat = glMatrix3D.quat
+                const rotateQuat = quat.create()
+                quat.fromEuler(rotateQuat, x, y, z)
+                quat.mul(this.quaternion, this.quaternion, rotateQuat)
             }
         }
 

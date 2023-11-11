@@ -813,6 +813,21 @@
                 "id": "quaternion",
                 "type": "string",
                 "initialValue": ""
+              },
+              {
+                "id": "offset-x",
+                "type": "number",
+                "initialValue": 0
+              },
+              {
+                "id": "offset-y",
+                "type": "number",
+                "initialValue": 0
+              },
+              {
+                "id": "offset-z",
+                "type": "number",
+                "initialValue": 0
               }
             ]
           },

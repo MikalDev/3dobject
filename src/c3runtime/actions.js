@@ -422,8 +422,8 @@
             this.vertexScale = round == 0 ? 0 : 1/round
         },
 
-        SetQuaternion(quaternion) {
-            this._setQuaternion(quaternion);
+        SetQuaternion(quaternion,x,y,z) {
+            this._setQuaternion(quaternion,x,y,z);
         },
 
         EnableQuaternion(enable) {

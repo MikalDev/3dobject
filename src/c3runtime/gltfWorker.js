@@ -733,7 +733,7 @@ function updateLight(editorData)
     const mat4 = glMatrix.mat4;
     // @ts-ignore
     const quat = glMatrix.quat;
- 
+
     const cannonBody = {quaternion: quat.create()}
     const cannonSetRotation = false
 

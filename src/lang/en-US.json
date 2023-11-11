@@ -806,12 +806,24 @@
           },
           "set-quaternion": {
             "list-name": "Set quaternion",
-            "display-text": "Set quaternion to {0}",
+            "display-text": "Set quaternion to {0}, offset {1}, {2}, {3}",
             "description": "Set quaternion for rotation (JSON array string).",
             "params": {
               "quaternion": {
                 "name": "Quaternion",
                 "desc": "Quaternion (JSON array string)."
+              },
+              "offset-x": {
+                "name": "Offsey X",
+                "desc": "Offset X - beware gimbal lock of offsets!."
+              },
+              "offset-y": {
+                "name": "Offsey Y",
+                "desc": "Offset Y - beware gimbal lock of offsets!."
+              },
+              "offset-z": {
+                "name": "Offsey Z",
+                "desc": "Offset Z - beware gimbal lock of offsets!."
               }
             }
           },
