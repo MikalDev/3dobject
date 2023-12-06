@@ -13,12 +13,10 @@
             wi.SetZElevation(z);
             wi._UpdateZElevation();
             this.updateBbox = true
+            this.updateBbox = true
         },
 
         SetLocalCenter(x,y,z) {
-            const wi = this.GetWorldInfo();
-            wi.SetOriginX(x);
-            wi.SetOriginY(y);
             this.localCenter[0] = x;
             this.localCenter[1] = y;
             this.localCenter[2] = z;

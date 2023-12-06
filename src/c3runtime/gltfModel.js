@@ -140,7 +140,9 @@ class GltfModel
             } else {
                 quat.fromEuler(rotate, xAngle, yAngle, zAngle);
             }
-            mat4.fromRotationTranslationScale(modelRotate, rotate, [x,y,z], [xScale,-yScale,zScale]);
+            // XXX mat4.fromRotationTranslationScale(modelRotate, rotate, [x,y,z], [xScale,-yScale,zScale]);
+            mat4.fromRotationTranslationScaleOrigin(modelRotate, rotate, [x,y,z], [xScale,-yScale,zScale], this.inst.localCenter)
+            // from rotationtranslationscaleorigin
             mat4.copy(this.modelRotate, modelRotate);
             mat4.multiply(modelRotate, tmpModelView, modelRotate);
             renderer.SetModelViewMatrix(modelRotate);
@@ -625,6 +627,10 @@ class GltfModel
             const rotate = quat.create();
             quat.fromEuler(rotate, xAngle, yAngle, zAngle);
             mat4.fromRotationTranslationScale(modelScaleRotate, rotate, [x,y,z], [xScale,-yScale,zScale]);
+            if (globalThis.mikal3deditor?.enable) {
+                const viewRotate = globalThis.mikal3deditor.viewRotate
+                mat4.multiply(modelScaleRotate, viewRotate, modelScaleRotate);
+            }
         }
         
         let rotationQuat = quat.create();
