@@ -277,6 +277,10 @@ class GltfData
                 let t = gltf.textures[ii];
                 t.wrapS = 'repeat';
                 t.wrapT = 'repeat';
+                // webp support
+                if (t?.extensions?.EXT_texture_webp?.source != undefined) {
+                    t.source = t.extensions.EXT_texture_webp.source;
+                }
                 if (t.source != undefined && gltf.samplers != undefined && t.sampler != undefined) {
                     const sampler = gltf.samplers[t.sampler];
                     const wrapS = sampler.wrapS;
