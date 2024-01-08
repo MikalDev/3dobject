@@ -53,7 +53,6 @@ function OnMessage(e)
           break
       case 'release':
           release();
-          console.info('w release', id)
           self.close();
           break;
       case 'enableNode':
