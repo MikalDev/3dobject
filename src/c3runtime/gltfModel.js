@@ -292,7 +292,33 @@ class GltfModel
                                 uv[ind[i*3+2]*2+0], uv[ind[i*3+2]*2+1],
                                 uv[ind[i*3+2]*2+0], uv[ind[i*3+2]*2+1]
                                 );
-                        }    
+                        }
+                        if (this.inst.instanceTexture) {
+                            const textureRect = this.inst.GetTexRect();
+                            const rWidth = textureRect.width;
+                            const rHeight = textureRect.height;
+                            const rOffsetX = textureRect.left;
+                            const rOffsetY = textureRect.top;
+                            tempQuad.setTlx(tempQuad.getTlx() * rWidth + rOffsetX);
+                            tempQuad.setTly(tempQuad.getTly() * rHeight + rOffsetY);
+                            tempQuad.setTrx(tempQuad.getTrx() * rWidth + rOffsetX);
+                            tempQuad.setTry(tempQuad.getTry() * rHeight + rOffsetY);
+                            tempQuad.setBlx(tempQuad.getBlx() * rWidth + rOffsetX);
+                            tempQuad.setBly(tempQuad.getBly() * rHeight + rOffsetY);
+                            tempQuad.setBrx(tempQuad.getBrx() * rWidth + rOffsetX);
+                            tempQuad.setBry(tempQuad.getBry() * rHeight + rOffsetY);
+                            /*
+                            		const imageInfo = this._objectClass.GetImageInfo();
+		const texture = imageInfo.GetTexture();
+		
+		if (!texture)
+			return;			// dynamic texture load which hasn't completed yet; can't draw anything
+		
+		const wi = this.GetWorldInfo();
+		const quad = wi.GetBoundingQuad();
+		const rcTex = imageInfo.GetTexRect();
+        */
+                        }
                     } else
                     {
                         // Set face to color if possible
