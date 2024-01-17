@@ -9,6 +9,8 @@ See: https://www.construct.net/en/make-games/manuals/addon-sdk/guide/configuring
 
 To create a 'release' (zipped version), on mac or linux you can use the release script: ./release.sh 2-58-1
 
+PRs are welcome, especially examples, docs, notes on usage, etc. please add under docs
+
 Copyright 2024 Kind Eye Games, LLC
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
