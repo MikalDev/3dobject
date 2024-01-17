@@ -319,6 +319,37 @@
             ]
           },
           {
+            "id": "load-material-from-sprite",
+            "isAsync": false,
+            "scriptName": "LoadMaterialFromSprite",
+            "highlight": false,
+            "params": [
+              {
+                "id": "sprite-uid",
+                "type": "number",
+                "initialValue": ""
+              },
+              {
+                "id": "material-name",
+                "type": "string",
+                "initialValue": ""
+              }
+            ]
+          },
+          {
+            "id": "unload-material-from-sprite",
+            "isAsync": false,
+            "scriptName": "UnloadMaterialFromSprite",
+            "highlight": false,
+            "params": [
+              {
+                "id": "material-name",
+                "type": "string",
+                "initialValue": ""
+              }
+            ]
+          },
+          {
             "id": "set-mesh-material",
             "scriptName": "SetMeshMaterial",
             "highlight": false,

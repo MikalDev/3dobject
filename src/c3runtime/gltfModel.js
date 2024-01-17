@@ -171,12 +171,19 @@ class GltfModel
             const rotateMaterial = materialsModify.has(material?.name) && materialsModify.get(material?.name)?.rotateUV;
             const lightUpdate = this.inst.lightUpdate || (drawLights.length == 0)
             const vertexScale = this.inst.vertexScale
-            const imageInfo = !this.inst.instanceTexture || this.inst.isEditor ? null : this.inst._objectClass.GetImageInfo();
+            let isSpriteTexture = false
+            let rWidth = null
+            let rHeight = null
+            let rOffsetX = null
+            let rOffsetY = null
+            const imageInfo = !this.inst.instanceTexture ? null : this.inst.isEditor ? null : this.inst._objectClass.GetImageInfo();
             const textureRect = !this.inst.instanceTexture ? null : this.inst.isEditor ? this.inst.GetTexRect() : imageInfo.GetTexRect();
-            const rWidth = !this.inst.instanceTexture ? null : textureRect.width();
-            const rHeight = !this.inst.instanceTexture ? null : textureRect.height();
-            const rOffsetX = !this.inst.instanceTexture ? null : textureRect.getLeft();
-            const rOffsetY = !this.inst.instanceTexture ? null :textureRect.getTop();
+            if (this.inst.instanceTexture) {
+                rWidth = textureRect.width();
+                rHeight = textureRect.height();
+                rOffsetX = textureRect.getLeft();
+                rOffsetY = textureRect.getTop();
+            }
 
             // Check if the map this.inst.materialsModify contains the key material.name
             // If it does, then we need to offset the UVs
@@ -205,7 +212,22 @@ class GltfModel
                         currentTexture = whiteTexture;
                     }
                 } else {
-                    const texture = textures[material.name];
+                    let texture = textures[material.name];
+                    if (this.inst.spriteTextures.has(material.name)) {
+                        const uid = this.inst.spriteTextures.get(material.name)
+                        const spriteInst = this._runtime.GetInstanceByUID(uid)
+                        if (spriteInst) {
+                            isSpriteTexture = true
+                            texture = spriteInst.GetSdkInstance().GetTexture();
+                            const texQuad = spriteInst.GetSdkInstance().GetTexQuad();
+                            rOffsetX = texQuad.getTlx();
+                            rOffsetY = texQuad.getTly();
+                            rWidth = texQuad.getTrx() - texQuad.getTlx();
+                            rHeight = texQuad.getBly() - texQuad.getTly();
+                        } else {
+                            console.warn("Sprite texture not found from uid, for 3Dobject uid", uid, this.inst.uid)
+                        }
+                    }
                     // If texture is not loaded, skip rendering
                     if (!texture) continue;
                     if (texture != currentTexture) {
@@ -299,7 +321,7 @@ class GltfModel
                                 uv[ind[i*3+2]*2+0], uv[ind[i*3+2]*2+1]
                                 );
                         }
-                        if (this.inst.instanceTexture) {
+                        if (this.inst.instanceTexture || isSpriteTexture) {
                             tempQuad.setTlx(tempQuad.getTlx() * rWidth + rOffsetX);
                             tempQuad.setTly(tempQuad.getTly() * rHeight + rOffsetY);
                             tempQuad.setTrx(tempQuad.getTrx() * rWidth + rOffsetX);

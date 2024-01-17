@@ -55,6 +55,7 @@
             this.doingInit = false;
             this.gltfPath = '';
             this.gltfDataLoad = true;
+            this.spriteTextures = new Map();
         }
 
         Release()

@@ -373,6 +373,32 @@
               }
             }
           },
+          "load-material-from-sprite": {
+            "list-name": "Load material from sprite",
+            "display-text": "Load material {1} from sprite uid {0}",
+            "description": "Load material from sprite.",
+            "params": {
+              "sprite-uid": {
+                  "name": "Sprite UID",
+                  "desc": "Sprite instance UID."
+              },
+              "material-name": {
+                "name": "Material name",
+                "desc": "Material name."
+              }
+            }
+          },
+          "unload-material-from-sprite": {
+            "list-name": "Unload material from sprite",
+            "display-text": "Unload material {0} from sprite",
+            "description": "Unload material from sprite.",
+            "params": {
+              "material-name": {
+                "name": "Material name",
+                "desc": "Material name."
+              }
+            }
+          },
           "set-mesh-material": {
             "list-name": "Set node material",
             "display-text": "Set node {0} to material {1}",

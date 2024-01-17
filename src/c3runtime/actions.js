@@ -156,6 +156,18 @@
             if (typeof imageBitmap.close === "function") imageBitmap.close();
         },
 
+        async LoadMaterialFromSprite(materialUID, materialName) {
+            if (!this.loaded) return;
+            if (!materialName || !materialUID) return;
+            this.spriteTextures.set(materialName, materialUID)
+        },
+
+        async UnloadMaterialFromSprite(materialName) {
+            if (!this.loaded) return;
+            if (!materialName) return;
+            this.spriteTextures.delete(materialName)
+        },
+
         SetMeshMaterial(nodeName, materialName) {
             const meshName = this.gltf.nodeMeshMap[nodeName];
             if (!meshName) {

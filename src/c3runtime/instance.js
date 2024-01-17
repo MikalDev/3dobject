@@ -75,6 +75,7 @@
             this.blendMode = 0
             this.quaternion = [0,0,0,1]
             this.enableQuaternion = false
+            this.spriteTextures = new Map()
 
             if (properties)
             {
