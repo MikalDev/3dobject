@@ -873,6 +873,18 @@
                 "initialValue": "false"
               }
             ]
+          },
+          {
+            "id": "enable-frag-light",
+            "scriptName": "EnableFragLight",
+            "highlight": false,
+            "params": [
+              {
+                "id": "enable",
+                "type": "boolean",
+                "initialValue": "false"
+              }
+            ]
           }
 
       ],

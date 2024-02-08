@@ -863,7 +863,19 @@
                 "desc": "Enable quaternion for rotation."
               }
             }
+          },
+          "enable-frag-light": {
+            "list-name": "Enable fragment light mode",
+            "display-text": "Enable frag light mode {0}",
+            "description": "Enable fragment light mode for fragment light effect.",
+            "params": {
+              "enable": {
+                "name": "Enable",
+                "desc": "Enable fragment light mode."
+              }
+            }
           }
+
         },
         "expressions": {
           "animation-names": {

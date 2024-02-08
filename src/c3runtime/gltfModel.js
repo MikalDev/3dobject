@@ -123,9 +123,11 @@ class GltfModel
         const finalColor = vec4.create();
 
         const tmpModelView = mat4.create();
+        const tmpProjection = mat4.create();
         const modelRotate = mat4.create();
         if (!this.inst.isEditor) {
             mat4.copy(tmpModelView, renderer._matMV);
+            if (this.inst.fragLight) mat4.copy(tmpProjection, renderer._matP);
             const xAngle = this.inst.xAngle;
             const yAngle = this.inst.yAngle;
             const zAngle = this.inst.zAngle;
@@ -145,7 +147,9 @@ class GltfModel
             // from rotationtranslationscaleorigin
             mat4.copy(this.modelRotate, modelRotate);
             mat4.multiply(modelRotate, tmpModelView, modelRotate);
+            if (this.inst.fragLight) mat4.multiply(modelRotate, renderer._matP, modelRotate);
             renderer.SetModelViewMatrix(modelRotate);
+            if (this.inst.fragLight) renderer.SetProjectionMatrix(this.modelRotate);
         }
 
         // Default color
@@ -471,6 +475,7 @@ class GltfModel
         // Restore modelview matrix
         if (!(this.inst.isEditor || this.inst.cpuXform)) {
             renderer.SetModelViewMatrix(tmpModelView);
+            if (this.inst.fragLight) renderer.SetProjectionMatrix(tmpProjection);
         }
         this.inst.totalTriangles = totalTriangles;
     }

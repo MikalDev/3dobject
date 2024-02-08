@@ -76,6 +76,7 @@
             this.quaternion = [0,0,0,1]
             this.enableQuaternion = false
             this.spriteTextures = new Map()
+            this.fragLight = false
 
             if (properties)
             {
@@ -680,6 +681,11 @@
             this.enableQuaternion= enable
             this.renderOnce = true;
         }
+
+        _enableFragLight(enable) {
+            this.fragLight= enable
+        }
+
 
         _setQuaternion(quaternion,x,y,z) {
             // try catch JSON parse string quaternion, if not a string, ignore, if not a valid quaternion, ignore with warning

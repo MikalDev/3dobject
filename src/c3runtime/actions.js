@@ -438,6 +438,10 @@
 
         EnableQuaternion(enable) {
             this._enableQuaternion(enable);
+        },
+        EnableFragLight(enable) {
+            this._enableFragLight(enable);
         }
+
     }
 }
