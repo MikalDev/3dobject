@@ -149,7 +149,11 @@ class GltfModel
             mat4.multiply(modelRotate, tmpModelView, modelRotate);
             if (this.inst.fragLight) mat4.multiply(modelRotate, renderer._matP, modelRotate);
             renderer.SetModelViewMatrix(modelRotate);
-            if (this.inst.fragLight) renderer.SetProjectionMatrix(this.modelRotate);
+            if (this.inst.fragLight) {
+                const encodedModelRotate = mat4.clone(this.modelRotate);
+                encodedModelRotate[3] = encodedModelRotate[12] + 11000000
+                renderer.SetProjectionMatrix(encodedModelRotate);
+            }
         }
 
         // Default color
