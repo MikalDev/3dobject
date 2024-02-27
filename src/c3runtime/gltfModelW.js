@@ -274,9 +274,11 @@ class GltfModelW
         const finalColor = vec4.create();
 
         const tmpModelView = mat4.create();
+        const tmpProjection = mat4.create();
         const modelRotate = mat4.create();
         if (!(this.inst.isEditor || this.inst.cpuXform)) {
             mat4.copy(tmpModelView, renderer._matMV);
+            if (this.inst.fragLight) mat4.copy(tmpProjection, renderer._matP);
             const xAngle = this.inst.xAngle;
             const yAngle = this.inst.yAngle;
             const zAngle = this.inst.zAngle;
@@ -294,7 +296,13 @@ class GltfModelW
             mat4.fromRotationTranslationScale(modelRotate, rotate, [x,y,z], [xScale,-yScale,zScale]);
             mat4.copy(this.modelRotate, modelRotate);
             mat4.multiply(modelRotate, tmpModelView, modelRotate);
+            if (this.inst.fragLight) mat4.multiply(modelRotate, renderer._matP, modelRotate);            
             renderer.SetModelViewMatrix(modelRotate);
+            if (this.inst.fragLight) {
+                const encodedModelRotate = mat4.clone(this.modelRotate);
+                encodedModelRotate[3] = encodedModelRotate[12] + 11000000
+                renderer.SetProjectionMatrix(encodedModelRotate);
+            }
         }
 
         // Default color
@@ -511,6 +519,7 @@ class GltfModelW
         // Restore modelview matrix
         if (!(this.inst.isEditor || this.inst.cpuXform)) {
             renderer.SetModelViewMatrix(tmpModelView);
+            if (this.inst.fragLight) renderer.SetProjectionMatrix(tmpProjection);
         }
         // console.info("totalTriangles/totalTrianglesCulled: " + totalTriangles + "/" + totalTrianglesCulled)
         this.inst.totalTriangles = totalTriangles
