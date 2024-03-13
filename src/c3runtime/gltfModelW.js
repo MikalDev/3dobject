@@ -118,6 +118,32 @@ class GltfModelW
         }
     }
 
+    transformDrawVerts(drawVerts, modelScaleRotate) {
+        console.log('transformDrawVerts')
+        const vec3 = globalThis.glMatrix3D.vec3;
+        // Transform drawVerts in place
+        const xformVerts = [];
+        const vOut = vec3.create();
+        for (let i = 0; i < drawVerts.length; i++) {
+            const v = drawVerts[i];
+            const xform = [];
+            for (let j = 0; j < v.length; j += 3) {
+                const x = v[j];
+                const y = v[j + 1];
+                const z = v[j + 2];
+                vec3.set(vOut, x, y, z);
+                
+                vec3.transformMat4(vOut, vOut, modelScaleRotate);
+                // v[j] = vOut[0];
+                // v[j + 1] = vOut[1];
+                // v[j + 2] = vOut[2];
+                xform.push(vOut[0], vOut[1], vOut[2]);
+            }
+            xformVerts.push(xform);
+        }
+        return xformVerts;
+    }
+
     scanNode(node, scanSkin) {
         if(node.mesh != undefined && node.skin == undefined || scanSkin)  
         {
@@ -278,7 +304,7 @@ class GltfModelW
         const modelRotate = mat4.create();
         if (!(this.inst.isEditor || this.inst.cpuXform)) {
             mat4.copy(tmpModelView, renderer._matMV);
-            if (this.inst.fragLight) mat4.copy(tmpProjection, renderer._matP);
+            if (this.inst.fragLight && !this.inst.isWebGPU) mat4.copy(tmpProjection, renderer._matP);
             const xAngle = this.inst.xAngle;
             const yAngle = this.inst.yAngle;
             const zAngle = this.inst.zAngle;
@@ -297,8 +323,8 @@ class GltfModelW
             mat4.copy(this.modelRotate, modelRotate);
             mat4.multiply(modelRotate, tmpModelView, modelRotate);
             if (this.inst.fragLight) mat4.multiply(modelRotate, renderer._matP, modelRotate);            
-            renderer.SetModelViewMatrix(modelRotate);
-            if (this.inst.fragLight) {
+            if (!(this.inst.fragLight && this.inst.isWebGPU)) renderer.SetModelViewMatrix(modelRotate);
+            if (this.inst.fragLight && !this.inst.isWebGPU) {
                 const encodedModelRotate = mat4.clone(this.modelRotate);
                 encodedModelRotate[3] = encodedModelRotate[12] + 11000000
                 renderer.SetProjectionMatrix(encodedModelRotate);
@@ -378,6 +404,13 @@ class GltfModelW
                 mat2.fromRotation(rotateMatrix, rotateUV.angle);
             }
 
+            let xVerts
+            if (this.inst.fragLight && this.inst.isWebGPU) {
+                xVerts = this.transformDrawVerts(drawVerts, this.modelRotate)
+            } else {
+                xVerts = drawVerts
+            }
+
             for (let ii=0; ii<drawVerts.length; ii++)
             {
                 // Convert typed array to regular array
@@ -386,7 +419,7 @@ class GltfModelW
                 // for (let a=0; a<bufferView.length; a++) {
                 //    v[a] = this.verts[buffStart+a];
                 // }
-                let v = drawVerts[ii];
+                let v = xVerts[ii];
                 let uv = drawUVs[ii];
                 let ind = drawIndices[ii];
 
@@ -517,9 +550,9 @@ class GltfModelW
             }
         }
         // Restore modelview matrix
-        if (!(this.inst.isEditor || this.inst.cpuXform)) {
+        if (!(this.inst.isEditor || this.inst.cpuXform) && !(this.inst.fragLight && this.inst.isWebGPU))  {
             renderer.SetModelViewMatrix(tmpModelView);
-            if (this.inst.fragLight) renderer.SetProjectionMatrix(tmpProjection);
+            if (this.inst.fragLight && !this.inst.isWebGPU) renderer.SetProjectionMatrix(tmpProjection);
         }
         // console.info("totalTriangles/totalTrianglesCulled: " + totalTriangles + "/" + totalTrianglesCulled)
         this.inst.totalTriangles = totalTriangles

@@ -11,6 +11,7 @@
             this.sdkType = this.GetSdkType();
             this.runtime = inst.GetRuntime();
             this.renderer = this.runtime.GetCanvasManager().GetRenderer();
+            this.isWebGPU = this.renderer.IsWebGPU();
             this.uid = this.GetInstance().GetUID();
             this.loaded = false;
             this.animationTime = 0;
@@ -275,7 +276,6 @@
             }
 
             const tempQuad = C3.New(C3.Quad);
-
             if (this.loaded && this.gltfPath != 'path')
             {
                 this.gltf.render(renderer, x, y, z, tempQuad, whiteTextureOwner.whiteTexture, wi.GetPremultipliedColor(), textures, this.instanceTexture);
