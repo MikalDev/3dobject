@@ -10,44 +10,44 @@
         "properties": {
           "obj-path": {
             "name": "obj path",
-            "desc": "obj file path"
+            "desc": "obj file path."
           },
           "mtl-path": {
             "name": "mtl path",
-            "desc": "mtl file path"
+            "desc": "mtl file path."
           },
           "gtlf-path": {
             "name": "gtlf path",
-            "desc": "gtlf file path"
+            "desc": "gtlf file path."
           },
           "scale": {
             "name": "Scale",
-            "desc": "Scale object"
+            "desc": "Scale object."
           },
           "edit-image": {
             "name": "Edit image",
-            "desc": "Edit image",
+            "desc": "Edit image.",
             "link-text": "Edit image"
           },
           "z-elevation": {
             "name": "Obsolete, use zElevation",
-            "desc": "Obsolete, use zElevation"
+            "desc": "Obsolete, use zElevation."
           },
           "angle-x": {
             "name": "Angle x",
-            "desc": "Angle x"
+            "desc": "Angle x."
           },
           "angle-y": {
             "name": "Angle y",
-            "desc": "Angle y"
+            "desc": "Angle y."
           },
           "angle-z": {
             "name": "Angle z",
-            "desc": "Angle z"
+            "desc": "Angle z."
           },
           "rotation-order": {
             "name": "Rotation order",
-            "desc": "Axis euler angle rotation order",
+            "desc": "Axis euler angle rotation order.",
             "items": {
               "xyz": "xyz",
               "xzy": "xzy",
@@ -63,11 +63,11 @@
           },
           "animation-blend": {
             "name": "Animation blend",
-            "desc": "Animation blend time in seconds"
+            "desc": "Animation blend time in seconds."
           },
           "instance-model": {
             "name": "Instance model data",
-            "desc": "Model data per instance"
+            "desc": "Model data per instance."
           },
           "image-texture": {
             "name": "Image texture",
@@ -75,19 +75,19 @@
           },
           "x-scale": {
             "name": "X scale",
-            "desc": "X scale (divisor, larger value makes model smaller)"
+            "desc": "X scale (divisor, larger value makes model smaller)."
           },
           "y-scale": {
             "name": "Y scale",
-            "desc": "Y scale (divisor, larger value makes model smaller)"
+            "desc": "Y scale (divisor, larger value makes model smaller)."
           },
           "z-scale": {
             "name": "Z scale",
-            "desc": "Z scale (divisor, larger value makes model smaller)"
+            "desc": "Z scale (divisor, larger value makes model smaller)."
           },
           "wireframe": {
             "name": "Wireframe",
-            "desc": "Render as wireframe"
+            "desc": "Render as wireframe."
           },
           "worker-animation": {
             "name": "Worker animation",
@@ -119,12 +119,12 @@
           },
           "on-animation-finished": {
             "list-name": "On animation finished",
-            "display-text": "On animation finished ",
+            "display-text": "On animation finished",
             "description": "Triggers when the animation has finished (only triggered if not looping)."
           },
           "on-animation-name-finished": {
             "list-name": "On animation name finished",
-            "display-text": "On animation {0} finished ",
+            "display-text": "On animation {0} finished",
             "description": "Triggers when the named animation has finished (only triggered if not looping).",
             "params": {
               "name": {
@@ -154,7 +154,7 @@
           "rotate": {
             "list-name": "Rotate",
             "display-text": "Rotate {0} degrees around {1} axis",
-            "description": "Rotate object around a specific axis",
+            "description": "Rotate object around a specific axis.",
             "params": {
               "angle": {
                 "name": "Angle",
@@ -215,7 +215,7 @@
           "set-z-height": {
             "list-name": "Set z height",
             "display-text": "Set z height to {0}",
-            "description": "Set z height, used for viewport clipping",
+            "description": "Set z height, used for viewport clipping.",
             "params": {
                   "z-height": {
                       "name": "Z height",
@@ -226,19 +226,19 @@
           "set-rotation": {
             "list-name": "Set x,y,z rotation",
             "display-text": "Set rotation to {0}, {1}, {2}, {3} order",
-            "description": "Set rotation of object from original position, with rotation order",
+            "description": "Set rotation of object from the original position, with rotation order.",
             "params": {
               "x": {
                 "name": "X",
-                "desc": "X angle of rotation"
+                "desc": "X angle of rotation."
               },
               "y": {
                 "name": "Y",
-                "desc": "Y angle of rotation"
+                "desc": "Y angle of rotation."
               },
               "z": {
                 "name": "Z",
-                "desc": "Z angle of rotation"
+                "desc": "Z angle of rotation."
               },
               "rotation-order": {
                 "name": "Rotation order",
@@ -271,7 +271,7 @@
           },
           "stop-animation": {
             "list-name": "Pause animation",
-            "display-text": "Pause animation.",
+            "display-text": "Pause animation",
             "description": "Pause playing animation.",
             "params": {
             }
@@ -279,7 +279,7 @@
           },
           "unpause-animation": {
             "list-name": "Unpause animation",
-            "display-text": "Unpause animation.",
+            "display-text": "Unpause animation",
             "description": "Unpause playing animation.",
             "params": {
             }
@@ -288,11 +288,11 @@
           "set-animation-rate": {
             "list-name": "Set animation rate",
             "display-text": "Set animation rate to {0}",
-            "description": "Set animation rate (FPS), .",
+            "description": "Set animation rate (FPS).",
             "params": {
                   "rate": {
                       "name": "Rate",
-                      "desc": "Rate (FPS)"
+                      "desc": "Rate (FPS)."
                   }
               }
           },
@@ -354,7 +354,7 @@
             "params": {
                   "gltf-path": {
                       "name": "Gltf path",
-                      "desc": "Gltf/glb projet file name or URL to Gltf/glb file (with URL, it will not show in editor.)"
+                      "desc": "Gltf/glb project file name or URL to Gltf/glb file (with URL, it will not show in the editor)."
                   }
               }
           },
@@ -410,7 +410,7 @@
               },
               "material-name": {
                 "name": "Material name",
-                "desc": "Material name (exisitng or the material name used when loading."
+                "desc": "Material name (existing or the material name used when loading)."
               }
             }
           },
@@ -432,33 +432,33 @@
           "delete-material": {
             "list-name": "Delete material",
             "display-text": "Delete material {0}",
-            "description": "Delete material (remove from GPU memory.)",
+            "description": "Delete material (remove from GPU memory).",
             "params": {
               "material-name": {
                 "name": "Material name",
-                "desc": "Material name (exisitng or the material name used when loading."
+                "desc": "Material name (existing or the material name used when loading)."
               }
             }
           },
           "set-origin-x": {
             "list-name": "Set origin x",
             "display-text": "Set origin x to {0}",
-            "description": "Set origin x. (Normalized value, 0.5 is center.)",
+            "description": "Set origin x (Normalized value, 0.5 is center).",
             "params": {
                   "origin-x": {
                       "name": "X origin",
-                      "desc": "X origin (Normalized value, 0.5 is center.)"
+                      "desc": "X origin (Normalized value, 0.5 is center)."
                   }
               }
           },
           "set-origin-y": {
             "list-name": "Set origin y",
             "display-text": "Set origin y to {0}",
-            "description": "Set origin y. (Normalized value, 0.5 is center.)",
+            "description": "Set origin y (Normalized value, 0.5 is center).",
             "params": {
                   "origin-y": {
                       "name": "Y origin",
-                      "desc": "Y origin (Normalized value, 0.5 is center.)"
+                      "desc": "Y origin (Normalized value, 0.5 is center)."
                   }
               }
           },
@@ -638,7 +638,7 @@
           "update-light": {
             "list-name": "Update light",
             "display-text": "Update light {0}",
-            "description": "Update light",
+            "description": "Update light.",
             "params": {
                   "enable": {
                       "name": "Update",
@@ -697,38 +697,38 @@
                 },
                 "edge": {
                   "name": "Soft edge",
-                  "desc": "Soft edge (0-1)"
+                  "desc": "Soft edge (0-1)."
                 },
                 "att-constant": {
                   "name": "Attenuation constant",
-                  "desc": "Constant attenuation (1.0+)"
+                  "desc": "Constant attenuation (1.0+)."
                 },
                 "att-linear": {
                   "name": "Attenuation linear",
-                  "desc": "Linear distance attenuation"
+                  "desc": "Linear distance attenuation."
                 },
                 "att-square": {
                   "name": "Attenuation square",
-                  "desc": "Square distance attenuation"
+                  "desc": "Square distance attenuation."
                 },
                 "specular-enable": {
                   "name": "Specular enable",
-                  "desc": "Enable specular light"
+                  "desc": "Enable specular light."
                 },
                 "specular-att": {
                   "name": "Specular attenuation",
-                  "desc": "Attenuate specular light"
+                  "desc": "Attenuate specular light."
                 },
                 "specular-power": {
                   "name": "Specular shininess",
-                  "desc": "Shiniess of specular light (1-128)"
+                  "desc": "Shiniess of specular light (1-128)."
                 }                
             }
           },
           "enable-lights": {
             "list-name": "Enable light",
             "display-text": "Enable light {0} {1}",
-            "description": "Enable light",
+            "description": "Enable light.",
             "params": {
                   "name": {
                     "name": "Name",
@@ -736,7 +736,7 @@
                 },              
                   "enable": {
                       "name": "Enable",
-                      "desc": "Enable."
+                      "desc": "Enable light."
                   }
             }
           },
@@ -799,7 +799,7 @@
           "set-vertex-rounding": {
             "list-name": "Set vertex rounding",
             "display-text": "Set vertex rounding to {0}",
-            "description": "Set vertex rounding (typically 1,2,3, etc.)",
+            "description": "Set vertex rounding (typically 1,2,3, etc.).",
             "params": {
               "round": {
                 "name": "Round",
@@ -810,7 +810,7 @@
           "set-blend-mode": {
             "list-name": "Set blend mode",
             "display-text": "Set blend mode to {0}",
-            "description": "Set blend mode.)",
+            "description": "Set blend mode.",
             "params": {
               "blend-mode": {
                 "name": "Blend mode",
@@ -841,15 +841,15 @@
               },
               "offset-x": {
                 "name": "Offsey X",
-                "desc": "Offset X - beware gimbal lock of offsets!."
+                "desc": "Offset X - beware gimbal lock of offsets!"
               },
               "offset-y": {
                 "name": "Offsey Y",
-                "desc": "Offset Y - beware gimbal lock of offsets!."
+                "desc": "Offset Y - beware gimbal lock of offsets!"
               },
               "offset-z": {
                 "name": "Offsey Z",
-                "desc": "Offset Z - beware gimbal lock of offsets!."
+                "desc": "Offset Z - beware gimbal lock of offsets!"
               }
             }
           },
@@ -884,12 +884,12 @@
             "params": {}
           },
           "z-elevation-0": {
-            "description": "Get z elevation.-0",
+            "description": "Get z elevation-0.",
             "translated-name": "ZElevation-0",
             "params": {}
           },
           "current-animation": {
-            "description": "Get current animation name.",
+            "description": "Get the current animation name.",
             "translated-name": "CurrentAnimation",
             "params": {}
           },
@@ -899,7 +899,7 @@
             "params": {}
           },
           "current-animation-frame": {
-            "description": "Get current animation frame.",
+            "description": "Get the current animation frame.",
             "translated-name": "CurrentAnimationFrame",
             "params": {}
           },
