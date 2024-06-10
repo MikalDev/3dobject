@@ -78,6 +78,7 @@
             this.enableQuaternion = false
             this.spriteTextures = new Map()
             this.fragLight = false
+            this.staticGeometry = false
 
             if (properties)
             {

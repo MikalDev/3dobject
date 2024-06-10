@@ -807,6 +807,17 @@
               }
             }
           },
+          "set-static-geometry": {
+            "list-name": "Set static geometry",
+            "display-text": "Set static geometry {0}",
+            "description": "Set static geometry.",
+            "params": {
+              "enable": {
+                "name": "Enable",
+                "desc": "Enable static geometry."
+              }
+            }
+          },
           "set-blend-mode": {
             "list-name": "Set blend mode",
             "display-text": "Set blend mode to {0}",
