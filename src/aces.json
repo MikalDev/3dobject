@@ -836,6 +836,18 @@
             ]
           },
           {
+            "id": "set-static-geometry",
+            "scriptName": "SetStaticGeometry",
+            "highlight": false,
+            "params": [
+              {
+                "id": "enable",
+                "type": "boolean",
+                "initialValue": "false"
+              }
+            ]
+          },
+          {
             "id": "set-quaternion",
             "scriptName": "SetQuaternion",
             "highlight": false,

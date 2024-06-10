@@ -441,6 +441,12 @@
         },
         EnableFragLight(enable) {
             this._enableFragLight(enable);
+        },
+        SetStaticGeometry(enable) {
+            this.staticGeometry = enable
+            if (!enable) {
+                this.gltf.meshBatchCache = new Map()
+            }
         }
 
     }
