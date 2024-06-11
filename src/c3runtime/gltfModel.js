@@ -109,6 +109,14 @@ class GltfModel {
     }
   }
 
+  _OrphanBuffers(renderer) {
+    const gl = renderer._gl
+    gl.bindBuffer(gl.ARRAY_BUFFER, renderer._vertexBuffer)
+    gl.bufferData(gl.ARRAY_BUFFER, renderer._vertexData.byteLength, gl.DYNAMIC_DRAW)
+    gl.bindBuffer(gl.ARRAY_BUFFER, renderer._texcoordBuffer)
+    gl.bufferData(gl.ARRAY_BUFFER, renderer._texcoordData.byteLength, gl.DYNAMIC_DRAW)
+  }
+
   render(renderer, x, y, z, tempQuad, whiteTexture, instanceC3Color, textures, instanceTexture) {
     let totalTriangles = 0
     let currentColor = [-1, -1, -1, -1]
@@ -576,21 +584,23 @@ class GltfModel {
               const meshBatch = this.meshBatchCache.get(j)
               meshBatch.vertexData.push(vertexData)
               meshBatch.texData.push(texData)
-              meshBatch.vertexPtr.push(vertexPtr == 24 ? 23988 : vertexPtr)
-              meshBatch.texPtr.push(texPtr == 16 ? 16000 - 9 : texPtr)
+              meshBatch.vertexPtr.push(vertexPtr - 24)
+              meshBatch.texPtr.push(texPtr - 16)
+              renderer.EndBatch()
+              // meshBatch.vertexPtr.push(vertexPtr == 24 ? 23988 : vertexPtr)
+              // meshBatch.texPtr.push(texPtr == 16 ? 16000 - 9 : texPtr)
               // console.log("store batch", vertexData.length, texData.length, vertexPtr, texPtr)
             }
           } else {
             const meshBatch = this.meshBatchCache.get(j)
             // console.log("use meshBatch", subBatchIndex, meshBatch)
-            const numQuads = meshBatch.vertexData[subBatchIndex].length / 4
+            const numQuads = meshBatch.vertexData[subBatchIndex].length / 4 - 1
             this._ExtendQuadsBatch(renderer, numQuads)
             renderer._vertexData = meshBatch.vertexData[subBatchIndex]
             renderer._texcoordData = meshBatch.texData[subBatchIndex]
-            // renderer._vertexData.set(meshBatch.vertexData[subBatchIndex])
-            // renderer._texcoordData.set(meshBatch.texData[subBatchIndex])
             renderer._vertexPtr = meshBatch.vertexPtr[subBatchIndex]
             renderer._texPtr = meshBatch.texPtr[subBatchIndex]
+            this._OrphanBuffers(renderer)
             renderer.EndBatch()
           }
         }
