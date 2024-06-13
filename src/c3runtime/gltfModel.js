@@ -347,12 +347,12 @@ class GltfModel {
             texPtr: [],
           })
         }
+        if (this.inst.staticGeometry) {
+          renderer.EndBatch()
+          renderer._vertexPtr = 0
+          renderer._texPtr = 0
+        }
         for (let subBatchIndex = 0; subBatchIndex < triangleCounts.length - 1; subBatchIndex++) {
-          if (this.inst.staticGeometry) {
-            renderer.EndBatch()
-            renderer._vertexPtr = 0
-            renderer._texPtr = 0
-          }
           if (
             !this.inst.staticGeometry ||
             this.inst.isEditor ||
