@@ -96,16 +96,20 @@ class GltfModel {
 
   _ExtendQuadsBatch(renderer, numQuads) {
     let v = renderer._vertexPtr
-    if (v + numQuads * 4 > renderer._lastVertexPtr) {
+    if (v + numQuads * 4 * 3 > renderer._lastVertexPtr) {
+      // console.log("ExtendQuadsBatch", v, numQuads * 4 * 3, renderer._lastVertexPtr)
       renderer.EndBatch()
       v = 0
     }
+    const totalIndices = numQuads * 6 // Each quad requires 6 indices
     if (renderer._topOfBatch === 1) {
-      renderer._batch[renderer._batchPtr - 1]._indexCount += numQuads * 6
+      renderer._batch[renderer._batchPtr - 1]._indexCount += totalIndices
+      // console.log("topOfBatch", renderer._batch[renderer._batchPtr - 1]._indexCount)
     } else {
       const b = renderer.PushBatch()
-      b.InitQuad(v, numQuads * 2)
+      b.InitQuad(v, numQuads * 6)
       renderer._topOfBatch = 1
+      // console.log("totalIndices", totalIndices)
     }
   }
 
@@ -122,6 +126,8 @@ class GltfModel {
     let currentColor = [-1, -1, -1, -1]
     let currentTexture = null
     const lightEnable = this.inst.lightEnable
+    const rendererVertexData = renderer._vertexData
+    const rendererTexcoordData = renderer._texcoordData
 
     const vec4 = globalThis.glMatrix3D.vec4
     const vec3 = globalThis.glMatrix3D.vec3
@@ -325,16 +331,14 @@ class GltfModel {
         totalTriangles += triangleCount
         // Create array of values based on trianglecount < 1000, divided values, e.g. 3500 becomes: [0,1000,2000,3000,3500]
         const triangleCounts = []
-        const MAX_TRIANGLES_PER_BATCH = 1600
+        const MAX_TRIANGLES_PER_BATCH = 1000
         for (let i = 0; i < triangleCount; i += MAX_TRIANGLES_PER_BATCH) {
           triangleCounts.push(i)
         }
         if (triangleCount % MAX_TRIANGLES_PER_BATCH !== 0) {
           triangleCounts.push(triangleCount)
         }
-        // console.log(triangleCounts)
         if (this.inst.staticGeometry && !this.meshBatchCache.get(j)) {
-          // console.log("set meshBatchCache")
           this.meshBatchCache.set(j, {
             vertexData: [],
             texData: [],
@@ -342,15 +346,17 @@ class GltfModel {
             texPtr: [],
           })
         }
-        // console.log(triangleCounts)
         for (let subBatchIndex = 0; subBatchIndex < triangleCounts.length - 1; subBatchIndex++) {
-          if (this.inst.staticGeometry) renderer.EndBatch()
+          if (this.inst.staticGeometry) {
+            renderer.EndBatch()
+            renderer._vertexPtr = 0
+            renderer._texPtr = 0
+          }
           if (
             !this.inst.staticGeometry ||
             this.inst.isEditor ||
             (this.inst.staticGeometry && !this.meshBatchCacheComplete)
           ) {
-            // console.log("tc:", triangleCounts[subBatchIndex], triangleCounts[subBatchIndex + 1])
             for (let i = triangleCounts[subBatchIndex]; i < triangleCounts[subBatchIndex + 1]; i++) {
               if (hasTexture) {
                 if (offsetMaterial || rotateMaterial) {
@@ -577,6 +583,10 @@ class GltfModel {
               }
             }
             if (this.inst.staticGeometry) {
+              // console.log("static capture:")
+              // for (let jjj = 0; jjj < 16; jjj++) {
+              //   console.log(renderer._vertexData[jjj])
+              // }
               const vertexData = new Float32Array(renderer._vertexData)
               const texData = new Float32Array(renderer._texcoordData)
               const vertexPtr = renderer._vertexPtr
@@ -584,24 +594,23 @@ class GltfModel {
               const meshBatch = this.meshBatchCache.get(j)
               meshBatch.vertexData.push(vertexData)
               meshBatch.texData.push(texData)
-              meshBatch.vertexPtr.push(vertexPtr - 24)
-              meshBatch.texPtr.push(texPtr - 16)
+              meshBatch.vertexPtr.push(vertexPtr)
+              meshBatch.texPtr.push(texPtr)
               renderer.EndBatch()
-              // meshBatch.vertexPtr.push(vertexPtr == 24 ? 23988 : vertexPtr)
-              // meshBatch.texPtr.push(texPtr == 16 ? 16000 - 9 : texPtr)
-              // console.log("store batch", vertexData.length, texData.length, vertexPtr, texPtr)
             }
           } else {
+            // console.log(this.meshBatchCache)
             const meshBatch = this.meshBatchCache.get(j)
-            // console.log("use meshBatch", subBatchIndex, meshBatch)
-            const numQuads = meshBatch.vertexData[subBatchIndex].length / 4 - 1
+            const numQuads = meshBatch.vertexPtr[subBatchIndex] / 6
             this._ExtendQuadsBatch(renderer, numQuads)
             renderer._vertexData = meshBatch.vertexData[subBatchIndex]
             renderer._texcoordData = meshBatch.texData[subBatchIndex]
+            // renderer._vertexData.set(meshBatch.vertexData[subBatchIndex])
+            // renderer._texcoordData.set(meshBatch.texData[subBatchIndex])
             renderer._vertexPtr = meshBatch.vertexPtr[subBatchIndex]
             renderer._texPtr = meshBatch.texPtr[subBatchIndex]
-            this._OrphanBuffers(renderer)
             renderer.EndBatch()
+            this._OrphanBuffers(renderer)
           }
         }
       }
@@ -619,6 +628,9 @@ class GltfModel {
       if (this.inst.fragLight && !this.inst.isWebGPU) renderer.SetProjectionMatrix(tmpProjection)
     }
     this.inst.totalTriangles = totalTriangles
+    // Restore renderer buffers
+    renderer._vertexData = rendererVertexData
+    renderer._texcoordData = rendererTexcoordData
   }
 
   /*
