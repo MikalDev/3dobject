@@ -114,6 +114,7 @@ class GltfModel {
   }
 
   _OrphanBuffers(renderer) {
+    if (!renderer._vertexData || !renderer._texcoordData) return
     const gl = renderer._gl
     gl.bindBuffer(gl.ARRAY_BUFFER, renderer._vertexBuffer)
     gl.bufferData(gl.ARRAY_BUFFER, renderer._vertexData.byteLength, gl.DYNAMIC_DRAW)
