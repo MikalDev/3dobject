@@ -369,7 +369,11 @@ class GltfModelW {
     if (this.updateDrawVerts) {
       this.updateDrawVerts = false
     }
-
+    if (this.inst.staticGeometry) {
+      renderer.EndBatch()
+      renderer._vertexPtr = 0
+      renderer._texPtr = 0
+    }
     for (let j = 0; j <= this.drawMeshesIndex; j++) {
       let lightIndex, drawLightsBufferView
       if (this.drawLightsEnable) {
@@ -472,11 +476,6 @@ class GltfModelW {
           })
         }
         for (let subBatchIndex = 0; subBatchIndex < triangleCounts.length - 1; subBatchIndex++) {
-          if (this.inst.staticGeometry) {
-            renderer.EndBatch()
-            renderer._vertexPtr = 0
-            renderer._texPtr = 0
-          }
           if (
             !this.inst.staticGeometry ||
             this.inst.isEditor ||

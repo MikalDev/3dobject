@@ -210,6 +210,12 @@ class GltfModel {
     let baseColorChanged = false
     if (!vec4.equals(currentColor, [1, 1, 1, 1])) baseColorChanged = true
 
+    if (this.inst.staticGeometry) {
+      renderer.EndBatch()
+      renderer._vertexPtr = 0
+      renderer._texPtr = 0
+    }
+
     for (let j = 0; j <= this.drawMeshesIndex; j++) {
       // Skip render if disabled
       if (this.drawMeshes[j].disabled) continue
@@ -346,11 +352,6 @@ class GltfModel {
             vertexPtr: [],
             texPtr: [],
           })
-        }
-        if (this.inst.staticGeometry) {
-          renderer.EndBatch()
-          renderer._vertexPtr = 0
-          renderer._texPtr = 0
         }
         for (let subBatchIndex = 0; subBatchIndex < triangleCounts.length - 1; subBatchIndex++) {
           if (
