@@ -76,6 +76,8 @@
       this.spriteTextures = new Map()
       this.fragLight = false
       this.staticGeometry = false
+      this.cameraVector = [0, 1, 0]
+      this.cameraPosition = [0, 0, 0]
 
       if (properties) {
         this.scale = properties[0]

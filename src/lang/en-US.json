@@ -503,6 +503,37 @@
               }
             }
           },
+          "set-camera-vector-pos": {
+            "list-name": "Set camera vector and position",
+            "display-text": "Set camera vector to {0}, {1}, {2} and position to {3}, {4}, {5}",
+            "description": "Set camera vector and position.",
+            "params": {
+              "x": {
+                  "name": "X vec",
+                  "desc": "X vector."
+              },
+              "y": {
+                "name": "Y vec",
+                "desc": "Y vector."
+              },
+              "z": {
+                "name": "Z vec",
+                "desc": "Z vector."
+              },
+              "x-pos": {
+                "name": "X position",
+                "desc": "X position."
+              },
+              "y-pos": {
+                "name": "Y position",
+                "desc": "Y position."
+              },
+              "z-pos": {
+                "name": "Z position",
+                "desc": "Z position."
+              }
+            }
+          },
           "offset-node-uv": {
             "list-name": "Offset node UV",
             "display-text": "Offset node {0} UV by {1}, {2}",

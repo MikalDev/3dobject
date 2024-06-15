@@ -470,6 +470,44 @@
             ]
           },
           {
+            "id": "set-camera-vector-pos",
+            "scriptName": "SetCameraVectorPos",
+            "highlight": false,
+            "isDeprecated": false,
+            "params": [
+              {
+                "id": "x",
+                "type": "number",
+                "initialValue": "0"
+                },
+                {
+                "id": "y",
+                "type": "number",
+                "initialValue": "1"
+                },
+                {
+                "id": "z",
+                "type": "number",
+                "initialValue": "0"
+              },
+              {
+                "id": "x-pos",
+                "type": "number",
+                "initialValue": "0"
+              },
+              {
+                "id": "y-pos",
+                "type": "number",
+                "initialValue": "0"
+              },
+              {
+                "id": "z-pos",
+                "type": "number",
+                "initialValue": "0"
+              }
+            ]
+          },
+          {
             "id": "offset-node-uv",
             "scriptName": "OffsetNodeUV",
             "highlight": false,

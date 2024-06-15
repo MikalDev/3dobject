@@ -25,6 +25,20 @@ class GltfModel {
     this.viewPos = [0, 0, 0]
     this.meshBatchCache = new Map()
     this.meshBatchCacheComplete = false
+    /*
+    const renderer = runtime.GetWebGLRenderer()
+    const gl = renderer?._gl
+    if (gl && !renderer._vertexDataNext) {
+      // Create swap buffers for vertex and texcoord data
+      renderer._vertexDataNext = gl.createBuffer()
+      renderer._texcoordDataNext = gl.createBuffer()
+      // Bind them
+      gl.bindBuffer(gl.ARRAY_BUFFER, renderer._vertexDataNext)
+      gl.bufferData(gl.ARRAY_BUFFER, renderer._vertexData.byteLength, gl.DYNAMIC_DRAW)
+      gl.bindBuffer(gl.ARRAY_BUFFER, renderer._texcoordDataNext)
+      gl.bufferData(gl.ARRAY_BUFFER, renderer._texcoordData.byteLength, gl.DYNAMIC_DRAW)
+    }
+    */
   }
 
   async init() {
@@ -94,22 +108,38 @@ class GltfModel {
     return x * x * (3 - 2 * x)
   }
 
+  _cullPoint(cameraPos, cameraDir, point) {
+    const vec3 = globalThis.glMatrix3D.vec3
+    const vec4 = globalThis.glMatrix3D.vec4
+    const mat4 = globalThis.glMatrix3D.mat4
+    const quat = globalThis.glMatrix3D.quat
+    // Find angle between vector of camera pos to point and camera dir
+    // Create a new vector for the result of the subtraction
+    let direction = vec3.create()
+    vec3.subtract(direction, point, cameraPos) // Subtract cameraPos from point, store in direction
+
+    // Calculate the angle between cameraDir and the new direction vector
+    const angle = vec3.angle(cameraDir, direction)
+    if (angle > 90) return false
+    // Find distance from camera pos to point
+    const distance = vec3.distance(cameraPos, point)
+    if (distance > 1000) return false
+    return true
+  }
+
   _ExtendQuadsBatch(renderer, numQuads) {
     let v = renderer._vertexPtr
     if (v + numQuads * 4 * 3 > renderer._lastVertexPtr) {
-      // console.log("ExtendQuadsBatch", v, numQuads * 4 * 3, renderer._lastVertexPtr)
       renderer.EndBatch()
       v = 0
     }
-    const totalIndices = numQuads * 6 // Each quad requires 6 indices
+    const totalIndices = numQuads * 6 // Each quad requires 6 indices (two tris)
     if (renderer._topOfBatch === 1) {
       renderer._batch[renderer._batchPtr - 1]._indexCount += totalIndices
-      // console.log("topOfBatch", renderer._batch[renderer._batchPtr - 1]._indexCount)
     } else {
       const b = renderer.PushBatch()
-      b.InitQuad(v, numQuads * 6)
+      b.InitQuad(v, totalIndices)
       renderer._topOfBatch = 1
-      // console.log("totalIndices", totalIndices)
     }
   }
 
@@ -122,7 +152,27 @@ class GltfModel {
     gl.bufferData(gl.ARRAY_BUFFER, renderer._texcoordData.byteLength, gl.DYNAMIC_DRAW)
   }
 
+  _SwapBuffers(renderer) {
+    let temp = renderer._vertexData
+    renderer._vertexData = renderer._vertexDataNext
+    renderer._vertexDataNext = temp
+    temp = renderer._texcoordData
+    renderer._texcoordData = renderer._texcoordDataNext
+    renderer._texcoordDataNext = temp
+  }
+
+  _EndBatchInitQuad(renderer) {
+    let v = renderer._vertexPtr
+    renderer.EndBatch()
+    v = 0
+    const b = renderer.PushBatch()
+    b.InitQuad(v, 6)
+    renderer._topOfBatch = 1
+  }
+
   render(renderer, x, y, z, tempQuad, whiteTexture, instanceC3Color, textures, instanceTexture) {
+    renderer.EndBatch()
+
     let totalTriangles = 0
     let currentColor = [-1, -1, -1, -1]
     let currentTexture = null
@@ -209,12 +259,6 @@ class GltfModel {
     vec4.copy(currentColor, instanceColor)
     let baseColorChanged = false
     if (!vec4.equals(currentColor, [1, 1, 1, 1])) baseColorChanged = true
-
-    if (this.inst.staticGeometry) {
-      renderer.EndBatch()
-      renderer._vertexPtr = 0
-      renderer._texPtr = 0
-    }
 
     for (let j = 0; j <= this.drawMeshesIndex; j++) {
       // Skip render if disabled
@@ -353,7 +397,7 @@ class GltfModel {
             texPtr: [],
           })
         }
-        for (let subBatchIndex = 0; subBatchIndex < triangleCounts.length - 1; subBatchIndex++) {
+        for (let subBatchIndex = 0; subBatchIndex < triangleCounts.length; subBatchIndex++) {
           if (
             !this.inst.staticGeometry ||
             this.inst.isEditor ||
@@ -581,14 +625,9 @@ class GltfModel {
                   z2 = Math.round(z2 * xScale) / zScale
                 }
                 renderer.Quad3D2(x0, y0, z0, x1, y1, z1, x2, y2, z2, x2, y2, z2, tempQuad, true)
-                // console.log(renderer._vertexPtr)
               }
             }
             if (this.inst.staticGeometry) {
-              // console.log("static capture:")
-              // for (let jjj = 0; jjj < 16; jjj++) {
-              //   console.log(renderer._vertexData[jjj])
-              // }
               const vertexData = new Float32Array(renderer._vertexData)
               const texData = new Float32Array(renderer._texcoordData)
               const vertexPtr = renderer._vertexPtr
@@ -601,7 +640,6 @@ class GltfModel {
               renderer.EndBatch()
             }
           } else {
-            // console.log(this.meshBatchCache)
             const meshBatch = this.meshBatchCache.get(j)
             const numQuads = meshBatch.vertexPtr[subBatchIndex] / 6
             this._ExtendQuadsBatch(renderer, numQuads)
@@ -611,8 +649,8 @@ class GltfModel {
             // renderer._texcoordData.set(meshBatch.texData[subBatchIndex])
             renderer._vertexPtr = meshBatch.vertexPtr[subBatchIndex]
             renderer._texPtr = meshBatch.texPtr[subBatchIndex]
-            renderer.EndBatch()
             this._OrphanBuffers(renderer)
+            renderer.EndBatch()
           }
         }
       }
@@ -972,7 +1010,6 @@ class GltfModel {
   }
 
   transformDrawVerts(drawVerts, modelScaleRotate) {
-    // console.log("transformDrawVerts")
     const vec3 = globalThis.glMatrix3D.vec3
     // Transform drawVerts in place
     const xformVerts = []
