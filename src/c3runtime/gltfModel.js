@@ -108,11 +108,8 @@ class GltfModel {
     return x * x * (3 - 2 * x)
   }
 
-  _cullPoint(cameraPos, cameraDir, point) {
+  _cullPoint(cameraPos, cameraDir, point, fov, cullDistance) {
     const vec3 = globalThis.glMatrix3D.vec3
-    const vec4 = globalThis.glMatrix3D.vec4
-    const mat4 = globalThis.glMatrix3D.mat4
-    const quat = globalThis.glMatrix3D.quat
     // Find angle between vector of camera pos to point and camera dir
     // Create a new vector for the result of the subtraction
     let direction = vec3.create()
@@ -120,10 +117,10 @@ class GltfModel {
 
     // Calculate the angle between cameraDir and the new direction vector
     const angle = vec3.angle(cameraDir, direction)
-    if (angle > 90) return false
+    if (angle > fov) return false
     // Find distance from camera pos to point
     const distance = vec3.distance(cameraPos, point)
-    if (distance > 1000) return false
+    if (distance > cullDistance) return false
     return true
   }
 
@@ -265,6 +262,13 @@ class GltfModel {
       if (this.drawMeshes[j].disabled) continue
 
       const drawVerts = this.drawMeshes[j].drawVerts
+      // Cull based on first vert, camera position and camera direction
+      if (this.inst.camera[0] != 0 || this.inst.camera[1] != 0 || this.inst.camera[2] != 0) {
+        const cullVert = drawVerts[0][0]
+        const cull = this._cullPoint(this.inst.cameraPos, this.inst.cameraDir, cullVert, 90 * (Math.PI / 180), 1000)
+        if (!cull) continue
+      }
+
       const drawUVs = this.drawMeshes[j].drawUVs
       const drawIndices = this.drawMeshes[j].drawIndices
       const drawLights = this.drawMeshes[j].drawLights
