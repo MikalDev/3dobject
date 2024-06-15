@@ -168,7 +168,7 @@ class GltfModel {
   }
 
   render(renderer, x, y, z, tempQuad, whiteTexture, instanceC3Color, textures, instanceTexture) {
-    renderer.EndBatch()
+    if (!this.inst.isEditor) renderer.EndBatch()
 
     let totalTriangles = 0
     let currentColor = [-1, -1, -1, -1]
@@ -263,9 +263,16 @@ class GltfModel {
 
       const drawVerts = this.drawMeshes[j].drawVerts
       // Cull based on first vert, camera position and camera direction
-      if (this.inst.camera[0] != 0 || this.inst.camera[1] != 0 || this.inst.camera[2] != 0) {
+      //      if (this.inst.cameraPosition[0] != 0 || this.inst.cameraPosition[1] != 0 || this.inst.cameraPosition[2] != 0) {
+      if (false) {
         const cullVert = drawVerts[0][0]
-        const cull = this._cullPoint(this.inst.cameraPos, this.inst.cameraDir, cullVert, 90 * (Math.PI / 180), 1000)
+        const cull = this._cullPoint(
+          this.inst.cameraPosition,
+          this.inst.cameraVector,
+          cullVert,
+          90 * (Math.PI / 180),
+          1000
+        )
         if (!cull) continue
       }
 
