@@ -25,11 +25,13 @@ class ObjectBuffer {
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer)
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.indexData, gl.STATIC_DRAW)
 
+    /*
     const batchState = renderer._batchState
     const shaderProgram = batchState.currentShader._shaderProgram
     this.locAPos = gl.getAttribLocation(shaderProgram, "aPos")
     this.locATex = gl.getAttribLocation(shaderProgram, "aTex")
-
+    */
+    /*
     this.vao = gl.createVertexArray() // Create a vertex array object (VAO)
     gl.bindVertexArray(this.vao) // Bind the VAO
     // Vertex data
@@ -44,7 +46,7 @@ class ObjectBuffer {
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer)
 
     gl.bindVertexArray(null) // Unbind the VAO
-
+*/
     // console.log("locAPos", this.locAPos, "locATex", this.locATex)
     // console.log("objectBuffer - captured")
     // console.log("this.vertexData", this.vertexData)
@@ -102,8 +104,9 @@ class GltfModel {
     this.modelRotate = mat4.create()
     this.meshNames = new Map()
     this.viewPos = [0, 0, 0]
-    this.meshBatchCache = new Map()
-    this.meshBatchCacheComplete = false
+    if (!this._sdkType.meshBatchCacheComplete) {
+      this._sdkType.meshBatchCache = new Map()
+    }
     /*
     const renderer = runtime.GetWebGLRenderer()
     const gl = renderer?._gl
@@ -479,8 +482,8 @@ class GltfModel {
         if (triangleCount % MAX_TRIANGLES_PER_BATCH !== 0) {
           triangleCounts.push(triangleCount)
         }
-        if (this.inst.staticGeometry && !this.meshBatchCache.get(j)) {
-          this.meshBatchCache.set(j, {
+        if (this.inst.staticGeometry && !this._sdkType.meshBatchCache.has(j)) {
+          this._sdkType.meshBatchCache.set(j, {
             vertexData: [],
             texData: [],
             vertexPtr: [],
@@ -492,7 +495,7 @@ class GltfModel {
           if (
             !this.inst.staticGeometry ||
             this.inst.isEditor ||
-            (this.inst.staticGeometry && !this.meshBatchCacheComplete)
+            (this.inst.staticGeometry && !this._sdkType.meshBatchCacheComplete)
           ) {
             for (let i = triangleCounts[subBatchIndex]; i < triangleCounts[subBatchIndex + 1]; i++) {
               if (hasTexture) {
@@ -719,36 +722,35 @@ class GltfModel {
               }
             }
             if (this.inst.staticGeometry) {
-              const vertexData = new Float32Array(renderer._vertexData)
-              const texData = new Float32Array(renderer._texcoordData)
               const vertexPtr = renderer._vertexPtr
               const texPtr = renderer._texPtr
-              const meshBatch = this.meshBatchCache.get(j)
-              meshBatch.vertexData.push(vertexData)
-              meshBatch.texData.push(texData)
+              const meshBatch = this._sdkType.meshBatchCache.get(j)
+              // meshBatch.vertexData.push(vertexData)
+              // meshBatch.texData.push(texData)
               const objectBuffer = new ObjectBuffer(
                 renderer,
                 renderer._vertexData,
                 renderer._texcoordData,
                 renderer._indexData,
-                vertexPtr,
-                texPtr
+                renderer._vertexPtr,
+                renderer._texPtr
               )
               meshBatch.objectBuffer.push(objectBuffer)
               meshBatch.vertexPtr.push(vertexPtr)
               meshBatch.texPtr.push(texPtr)
               renderer.EndBatch()
+              console.log("cached mesh batch", j, subBatchIndex, vertexPtr)
             }
           } else {
-            const meshBatch = this.meshBatchCache.get(j)
+            const meshBatch = this._sdkType.meshBatchCache.get(j)
             const numQuads = meshBatch.vertexPtr[subBatchIndex] / 6
             this._ExtendQuadsBatch(renderer, numQuads)
             // renderer._vertexData = meshBatch.vertexData[subBatchIndex]
             // renderer._texcoordData = meshBatch.texData[subBatchIndex]
             // renderer._vertexData.set(meshBatch.vertexData[subBatchIndex])
             // renderer._texcoordData.set(meshBatch.texData[subBatchIndex])
-            renderer._vertexPtr = meshBatch.vertexPtr[subBatchIndex]
-            renderer._texPtr = meshBatch.texPtr[subBatchIndex]
+            // renderer._vertexPtr = meshBatch.vertexPtr[subBatchIndex]
+            // renderer._texPtr = meshBatch.texPtr[subBatchIndex]
             // this._OrphanBuffers(renderer)
             // renderer.EndBatch()
             renderer._vertexPtr = 0
@@ -769,7 +771,7 @@ class GltfModel {
             gl.enableVertexAttribArray(locATex)
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, meshBatch.objectBuffer[subBatchIndex].indexBuffer)
             // console.log("rendering cached mesh batch", j, subBatchIndex, numQuads)
-            this._OrphanBuffers(renderer)
+            // this._OrphanBuffers(renderer)
             // renderer.EndBatch()
             // gl.drawElements(gl.TRIANGLES, numQuads * 6, gl.UNSIGNED_SHORT, 0)
           }
@@ -777,10 +779,8 @@ class GltfModel {
       }
     }
 
-    if (this.inst.staticGeometry) {
-      this.meshBatchCacheComplete = true
-    } else {
-      this.meshBatchCacheComplete = false
+    if (this.inst.staticGeometry && !this._sdkType.meshBatchCacheComplete) {
+      this._sdkType.meshBatchCacheComplete = true
     }
 
     // Restore modelview matrix
@@ -794,23 +794,22 @@ class GltfModel {
     renderer._texcoordData = rendererTexcoordData
     // Restore attrib
     if (this.inst.staticGeometry) {
-      /*
+      // Restore for other C3 objects
       const gl = renderer._gl
       const batchState = renderer._batchState
       const shaderProgram = batchState.currentShader._shaderProgram
       const locAPos = gl.getAttribLocation(shaderProgram, "aPos")
       const locATex = gl.getAttribLocation(shaderProgram, "aTex")
       gl.bindBuffer(gl.ARRAY_BUFFER, renderer._vertexBuffer)
-      gl.bufferSubData(gl.ARRAY_BUFFER, 0, renderer._vertexData)
       gl.vertexAttribPointer(locAPos, 3, gl.FLOAT, false, 0, 0)
       gl.enableVertexAttribArray(locAPos)
+      // gl.bufferSubData(gl.ARRAY_BUFFER, 0, renderer._vertexData)
       gl.bindBuffer(gl.ARRAY_BUFFER, renderer._texcoordBuffer)
-      gl.bufferSubData(gl.ARRAY_BUFFER, 0, renderer._texcoordData)
       gl.vertexAttribPointer(locATex, 2, gl.FLOAT, false, 0, 0)
       gl.enableVertexAttribArray(locATex)
-      */
-      // this._OrphanBuffers(renderer)
-      // renderer.EndBatch()
+      renderer._vertexPtr = 0
+      renderer._texPtr = 0
+      // gl.bufferSubData(gl.ARRAY_BUFFER, 0, renderer._texcoordData)
     }
 
     this._OrphanBuffers(renderer)
