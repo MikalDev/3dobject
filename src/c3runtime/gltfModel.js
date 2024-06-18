@@ -1,5 +1,84 @@
 // @ts-check
 "use strict"
+
+class ObjectBuffer {
+  constructor(renderer, vertexData, texcoordData, indexData, vertexPtr, texPtr) {
+    this.gl = renderer._gl
+    const gl = this.gl
+    this.vertexPtr = vertexPtr
+    this.texPtr = texPtr
+    // Create new array for vertexData and texCoordData
+    this.vertexData = new Float32Array(vertexData)
+    this.texcoordData = new Float32Array(texcoordData)
+    this.indexData = new Uint16Array(indexData)
+    // Create gl buffer and bind data and load data using subData
+    this.vertexBuffer = gl.createBuffer()
+    this.texcoordBuffer = gl.createBuffer()
+    this.indexBuffer = gl.createBuffer()
+    // Fill all buffers
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer)
+    gl.bufferData(gl.ARRAY_BUFFER, this.vertexData, gl.STATIC_DRAW)
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.texcoordBuffer)
+    gl.bufferData(gl.ARRAY_BUFFER, this.texcoordData, gl.STATIC_DRAW)
+
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer)
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.indexData, gl.STATIC_DRAW)
+
+    const batchState = renderer._batchState
+    const shaderProgram = batchState.currentShader._shaderProgram
+    this.locAPos = gl.getAttribLocation(shaderProgram, "aPos")
+    this.locATex = gl.getAttribLocation(shaderProgram, "aTex")
+
+    this.vao = gl.createVertexArray() // Create a vertex array object (VAO)
+    gl.bindVertexArray(this.vao) // Bind the VAO
+    // Vertex data
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer)
+    gl.vertexAttribPointer(this.locAPos, 3, gl.FLOAT, false, 0, 0)
+    gl.enableVertexAttribArray(this.locAPos)
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.texcoordBuffer)
+    gl.vertexAttribPointer(this.locATex, 2, gl.FLOAT, false, 0, 0)
+    gl.enableVertexAttribArray(this.locATex)
+
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer)
+
+    gl.bindVertexArray(null) // Unbind the VAO
+
+    // console.log("locAPos", this.locAPos, "locATex", this.locATex)
+    // console.log("objectBuffer - captured")
+    // console.log("this.vertexData", this.vertexData)
+    // console.log("this.texcoordData", this.texcoordData)
+    //console.log("this.indexData", this.indexData)
+  }
+
+  release() {
+    const gl = this.gl
+    if (this.vertexBuffer) {
+      gl.deleteBuffer(this.vertexBuffer)
+      this.vertexBuffer = null
+    }
+    if (this.texcoordBuffer) {
+      gl.deleteBuffer(this.texcoordBuffer)
+      this.texcoordBuffer = null
+    }
+    if (this.vao) {
+      gl.deleteVertexArray(this.vao)
+      this.vao = null
+    }
+    this.gl = null
+    this.vertexPtr = null
+    this.texPtr = null
+  }
+
+  draw(renderer) {
+    const gl = renderer._gl
+    gl.bindVertexArray(this.vao) // Ensure VAO is bound
+    gl.drawElements(gl.TRIANGLES, 36, gl.UNSIGNED_SHORT, 0)
+    gl.bindVertexArray(null) // Unbind the VAO
+  }
+}
+
 class GltfModel {
   constructor(runtime, sdkType, inst) {
     const mat4 = globalThis.glMatrix3D.mat4
@@ -406,9 +485,10 @@ class GltfModel {
             texData: [],
             vertexPtr: [],
             texPtr: [],
+            objectBuffer: [],
           })
         }
-        for (let subBatchIndex = 0; subBatchIndex < triangleCounts.length; subBatchIndex++) {
+        for (let subBatchIndex = 0; subBatchIndex < triangleCounts.length - 1; subBatchIndex++) {
           if (
             !this.inst.staticGeometry ||
             this.inst.isEditor ||
@@ -646,6 +726,15 @@ class GltfModel {
               const meshBatch = this.meshBatchCache.get(j)
               meshBatch.vertexData.push(vertexData)
               meshBatch.texData.push(texData)
+              const objectBuffer = new ObjectBuffer(
+                renderer,
+                renderer._vertexData,
+                renderer._texcoordData,
+                renderer._indexData,
+                vertexPtr,
+                texPtr
+              )
+              meshBatch.objectBuffer.push(objectBuffer)
               meshBatch.vertexPtr.push(vertexPtr)
               meshBatch.texPtr.push(texPtr)
               renderer.EndBatch()
@@ -654,14 +743,35 @@ class GltfModel {
             const meshBatch = this.meshBatchCache.get(j)
             const numQuads = meshBatch.vertexPtr[subBatchIndex] / 6
             this._ExtendQuadsBatch(renderer, numQuads)
-            renderer._vertexData = meshBatch.vertexData[subBatchIndex]
-            renderer._texcoordData = meshBatch.texData[subBatchIndex]
+            // renderer._vertexData = meshBatch.vertexData[subBatchIndex]
+            // renderer._texcoordData = meshBatch.texData[subBatchIndex]
             // renderer._vertexData.set(meshBatch.vertexData[subBatchIndex])
             // renderer._texcoordData.set(meshBatch.texData[subBatchIndex])
             renderer._vertexPtr = meshBatch.vertexPtr[subBatchIndex]
             renderer._texPtr = meshBatch.texPtr[subBatchIndex]
+            // this._OrphanBuffers(renderer)
+            // renderer.EndBatch()
+            renderer._vertexPtr = 0
+            renderer._texPtr = 0
+
+            const gl = renderer._gl
+            const batchState = renderer._batchState
+            const shaderProgram = batchState.currentShader._shaderProgram
+            const locAPos = gl.getAttribLocation(shaderProgram, "aPos")
+            const locATex = gl.getAttribLocation(shaderProgram, "aTex")
+            const vB = meshBatch.objectBuffer[subBatchIndex].vertexBuffer
+            const tB = meshBatch.objectBuffer[subBatchIndex].texcoordBuffer
+            gl.bindBuffer(gl.ARRAY_BUFFER, vB)
+            gl.vertexAttribPointer(locAPos, 3, gl.FLOAT, false, 0, 0)
+            gl.enableVertexAttribArray(locAPos)
+            gl.bindBuffer(gl.ARRAY_BUFFER, tB)
+            gl.vertexAttribPointer(locATex, 2, gl.FLOAT, false, 0, 0)
+            gl.enableVertexAttribArray(locATex)
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, meshBatch.objectBuffer[subBatchIndex].indexBuffer)
+            // console.log("rendering cached mesh batch", j, subBatchIndex, numQuads)
             this._OrphanBuffers(renderer)
-            renderer.EndBatch()
+            // renderer.EndBatch()
+            // gl.drawElements(gl.TRIANGLES, numQuads * 6, gl.UNSIGNED_SHORT, 0)
           }
         }
       }
@@ -682,6 +792,29 @@ class GltfModel {
     // Restore renderer buffers
     renderer._vertexData = rendererVertexData
     renderer._texcoordData = rendererTexcoordData
+    // Restore attrib
+    if (this.inst.staticGeometry) {
+      /*
+      const gl = renderer._gl
+      const batchState = renderer._batchState
+      const shaderProgram = batchState.currentShader._shaderProgram
+      const locAPos = gl.getAttribLocation(shaderProgram, "aPos")
+      const locATex = gl.getAttribLocation(shaderProgram, "aTex")
+      gl.bindBuffer(gl.ARRAY_BUFFER, renderer._vertexBuffer)
+      gl.bufferSubData(gl.ARRAY_BUFFER, 0, renderer._vertexData)
+      gl.vertexAttribPointer(locAPos, 3, gl.FLOAT, false, 0, 0)
+      gl.enableVertexAttribArray(locAPos)
+      gl.bindBuffer(gl.ARRAY_BUFFER, renderer._texcoordBuffer)
+      gl.bufferSubData(gl.ARRAY_BUFFER, 0, renderer._texcoordData)
+      gl.vertexAttribPointer(locATex, 2, gl.FLOAT, false, 0, 0)
+      gl.enableVertexAttribArray(locATex)
+      */
+      // this._OrphanBuffers(renderer)
+      // renderer.EndBatch()
+    }
+
+    this._OrphanBuffers(renderer)
+    renderer.EndBatch()
   }
 
   /*
