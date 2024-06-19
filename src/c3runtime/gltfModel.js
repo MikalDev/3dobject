@@ -25,6 +25,16 @@ class ObjectBuffer {
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer)
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.indexData, gl.STATIC_DRAW)
 
+    const batchState = renderer._batchState
+    const shaderProgram = batchState.currentShader._shaderProgram
+    this.locAPos = gl.getAttribLocation(shaderProgram, "aPos")
+    this.locATex = gl.getAttribLocation(shaderProgram, "aTex")
+
+    // Release the typed arrays
+    this.vertexData = null
+    this.texcoordData = null
+    this.indexData = null
+
     /*
     const batchState = renderer._batchState
     const shaderProgram = batchState.currentShader._shaderProgram
@@ -71,6 +81,57 @@ class ObjectBuffer {
     this.gl = null
     this.vertexPtr = null
     this.texPtr = null
+  }
+
+  _ExtendQuadsBatchClean(renderer, numQuads, lastNumQuads) {
+    let v = renderer._vertexPtr
+    if (v + numQuads * 2 * 3 > renderer._lastVertexPtr) {
+      alert(`batch too large ${v} ${numQuads} ${renderer._lastVertexPtr}`)
+      renderer.EndBatch()
+      v = 0
+    }
+
+    if (renderer._topOfBatch === 1) renderer._batch[renderer._batchPtr - 1]._indexCount = lastNumQuads * 3
+    else {
+      const b = renderer.PushBatch()
+      b.InitQuad(v, numQuads * 3)
+      this._topOfBatch = 1
+    }
+  }
+
+  _ExecuteBatch(renderer) {
+    if (renderer._batchPtr === 0) {
+      console.log("no batch")
+      return
+    }
+    if (renderer.IsContextLost()) return
+    // renderer._WriteBuffers()
+    renderer._ExecuteBatch()
+    renderer._batchPtr = 0
+    renderer._vertexPtr = 0
+    renderer._texPtr = 0
+    renderer._pointPtr = 0
+    renderer._topOfBatch = 0
+  }
+
+  DrawGPUBuffer(renderer, lastNumQuads) {
+    const numQuads = this.vertexPtr / 6
+    this._ExtendQuadsBatchClean(renderer, numQuads, lastNumQuads)
+    renderer._vertexPtr = this.vertexPtr
+    renderer._texPtr = this.texPtr
+    const gl = renderer._gl
+    const locAPos = this.locAPos
+    const locATex = this.locATex
+    const vB = this.vertexBuffer
+    const tB = this.texcoordBuffer
+    gl.bindBuffer(gl.ARRAY_BUFFER, vB)
+    gl.vertexAttribPointer(locAPos, 3, gl.FLOAT, false, 0, 0)
+    gl.enableVertexAttribArray(locAPos)
+    gl.bindBuffer(gl.ARRAY_BUFFER, tB)
+    gl.vertexAttribPointer(locATex, 2, gl.FLOAT, false, 0, 0)
+    gl.enableVertexAttribArray(locATex)
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer)
+    this._ExecuteBatch(renderer)
   }
 }
 
@@ -776,42 +837,10 @@ class GltfModel {
             }
           } else {
             const meshBatch = this._sdkType.meshBatchCache.get(j)
-            const numQuads = meshBatch.vertexPtr[subBatchIndex] / 6
+            const objectBuffer = meshBatch.objectBuffer[subBatchIndex]
             let lastNumQuads = 0
             if (subBatchIndex > 0) lastNumQuads = this._sdkType.meshBatchCache.get(j).vertexPtr[subBatchIndex - 1] / 6
-            this._ExtendQuadsBatchClean(renderer, numQuads, lastNumQuads)
-            // console.log("extendQuads", renderer._batch[renderer._batchPtr], renderer._batchPtr)
-            //            this._ExtendQuadsBatchClean(renderer, numQuads)
-            // renderer._vertexData = meshBatch.vertexData[subBatchIndex]
-            // renderer._texcoordData = meshBatch.texData[subBatchIndex]
-            // renderer._vertexData.set(meshBatch.vertexData[subBatchIndex])
-            // renderer._texcoordData.set(meshBatch.texData[subBatchIndex])
-            renderer._vertexPtr = meshBatch.vertexPtr[subBatchIndex]
-            renderer._texPtr = meshBatch.texPtr[subBatchIndex]
-            // this._OrphanBuffers(renderer)
-            // renderer.EndBatch()
-            // renderer._vertexPtr = 0
-            // renderer._texPtr = 0
-
-            const gl = renderer._gl
-            const batchState = renderer._batchState
-            const shaderProgram = batchState.currentShader._shaderProgram
-            const locAPos = gl.getAttribLocation(shaderProgram, "aPos")
-            const locATex = gl.getAttribLocation(shaderProgram, "aTex")
-            const vB = meshBatch.objectBuffer[subBatchIndex].vertexBuffer
-            const tB = meshBatch.objectBuffer[subBatchIndex].texcoordBuffer
-            gl.bindBuffer(gl.ARRAY_BUFFER, vB)
-            gl.vertexAttribPointer(locAPos, 3, gl.FLOAT, false, 0, 0)
-            gl.enableVertexAttribArray(locAPos)
-            gl.bindBuffer(gl.ARRAY_BUFFER, tB)
-            gl.vertexAttribPointer(locATex, 2, gl.FLOAT, false, 0, 0)
-            gl.enableVertexAttribArray(locATex)
-            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, meshBatch.objectBuffer[subBatchIndex].indexBuffer)
-            // console.log("rendering cached mesh batch", j, subBatchIndex, numQuads)
-            // this._OrphanBuffers(renderer)
-            // renderer.EndBatch()
-            // gl.drawElements(gl.TRIANGLES, numQuads * 6, gl.UNSIGNED_SHORT, 0)
-            this._ExecuteBatch(renderer)
+            objectBuffer.DrawGPUBuffer(renderer, lastNumQuads)
           }
         }
       }
