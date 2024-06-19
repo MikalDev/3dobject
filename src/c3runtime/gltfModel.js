@@ -72,13 +72,6 @@ class ObjectBuffer {
     this.vertexPtr = null
     this.texPtr = null
   }
-
-  draw(renderer) {
-    const gl = renderer._gl
-    gl.bindVertexArray(this.vao) // Ensure VAO is bound
-    gl.drawElements(gl.TRIANGLES, 36, gl.UNSIGNED_SHORT, 0)
-    gl.bindVertexArray(null) // Unbind the VAO
-  }
 }
 
 class GltfModel {
@@ -219,6 +212,37 @@ class GltfModel {
       const b = renderer.PushBatch()
       b.InitQuad(v, totalIndices)
       renderer._topOfBatch = 1
+    }
+  }
+
+  _ExecuteBatch(renderer) {
+    if (renderer._batchPtr === 0) {
+      console.log("no batch")
+      return
+    }
+    if (renderer.IsContextLost()) return
+    // renderer._WriteBuffers()
+    renderer._ExecuteBatch()
+    renderer._batchPtr = 0
+    renderer._vertexPtr = 0
+    renderer._texPtr = 0
+    renderer._pointPtr = 0
+    renderer._topOfBatch = 0
+  }
+
+  _ExtendQuadsBatchClean(renderer, numQuads, lastNumQuads) {
+    let v = renderer._vertexPtr
+    if (v + numQuads * 2 * 3 > renderer._lastVertexPtr) {
+      alert(`batch too large ${v} ${numQuads} ${renderer._lastVertexPtr}`)
+      renderer.EndBatch()
+      v = 0
+    }
+
+    if (renderer._topOfBatch === 1) renderer._batch[renderer._batchPtr - 1]._indexCount = lastNumQuads * 3
+    else {
+      const b = renderer.PushBatch()
+      b.InitQuad(v, numQuads * 3)
+      this._topOfBatch = 1
     }
   }
 
@@ -438,11 +462,20 @@ class GltfModel {
           if (!texture) continue
           if (texture != currentTexture) {
             renderer.SetTexture(texture)
+            // console.log("texture changed", renderer._batch[renderer._batchPtr], renderer._batchPtr)
             currentTexture = texture
           }
         }
       }
-
+      /*
+      if (this.inst.staticGeometry && this._sdkType.meshBatchCacheComplete) {
+        const numQuads = this._sdkType.meshBatchCache.get(j).vertexPtr[0] / 6
+        let lastNumQuads = 0
+        if (j > 0) lastNumQuads = this._sdkType.meshBatchCache.get(j - 1).vertexPtr[0] / 6
+        this._ExtendQuadsBatchClean(renderer, numQuads, lastNumQuads)
+        // console.log("extendQuads", renderer._batch[renderer._batchPtr], renderer._batchPtr)
+      }
+      */
       // Create const for mat2
       const mat2 = globalThis.glMatrix3D.mat2
       const vec2 = globalThis.glMatrix3D.vec2
@@ -475,7 +508,7 @@ class GltfModel {
         totalTriangles += triangleCount
         // Create array of values based on trianglecount < 1000, divided values, e.g. 3500 becomes: [0,1000,2000,3000,3500]
         const triangleCounts = []
-        const MAX_TRIANGLES_PER_BATCH = 1000
+        const MAX_TRIANGLES_PER_BATCH = 900
         for (let i = 0; i < triangleCount; i += MAX_TRIANGLES_PER_BATCH) {
           triangleCounts.push(i)
         }
@@ -739,22 +772,26 @@ class GltfModel {
               meshBatch.vertexPtr.push(vertexPtr)
               meshBatch.texPtr.push(texPtr)
               renderer.EndBatch()
-              console.log("cached mesh batch", j, subBatchIndex, vertexPtr)
+              console.log("cached mesh batch", j, subBatchIndex, vertexPtr, renderer._vertexPtr)
             }
           } else {
             const meshBatch = this._sdkType.meshBatchCache.get(j)
             const numQuads = meshBatch.vertexPtr[subBatchIndex] / 6
-            this._ExtendQuadsBatch(renderer, numQuads)
+            let lastNumQuads = 0
+            if (subBatchIndex > 0) lastNumQuads = this._sdkType.meshBatchCache.get(j).vertexPtr[subBatchIndex - 1] / 6
+            this._ExtendQuadsBatchClean(renderer, numQuads, lastNumQuads)
+            // console.log("extendQuads", renderer._batch[renderer._batchPtr], renderer._batchPtr)
+            //            this._ExtendQuadsBatchClean(renderer, numQuads)
             // renderer._vertexData = meshBatch.vertexData[subBatchIndex]
             // renderer._texcoordData = meshBatch.texData[subBatchIndex]
             // renderer._vertexData.set(meshBatch.vertexData[subBatchIndex])
             // renderer._texcoordData.set(meshBatch.texData[subBatchIndex])
-            // renderer._vertexPtr = meshBatch.vertexPtr[subBatchIndex]
-            // renderer._texPtr = meshBatch.texPtr[subBatchIndex]
+            renderer._vertexPtr = meshBatch.vertexPtr[subBatchIndex]
+            renderer._texPtr = meshBatch.texPtr[subBatchIndex]
             // this._OrphanBuffers(renderer)
             // renderer.EndBatch()
-            renderer._vertexPtr = 0
-            renderer._texPtr = 0
+            // renderer._vertexPtr = 0
+            // renderer._texPtr = 0
 
             const gl = renderer._gl
             const batchState = renderer._batchState
@@ -774,6 +811,7 @@ class GltfModel {
             // this._OrphanBuffers(renderer)
             // renderer.EndBatch()
             // gl.drawElements(gl.TRIANGLES, numQuads * 6, gl.UNSIGNED_SHORT, 0)
+            this._ExecuteBatch(renderer)
           }
         }
       }
@@ -803,15 +841,12 @@ class GltfModel {
       gl.bindBuffer(gl.ARRAY_BUFFER, renderer._vertexBuffer)
       gl.vertexAttribPointer(locAPos, 3, gl.FLOAT, false, 0, 0)
       gl.enableVertexAttribArray(locAPos)
-      // gl.bufferSubData(gl.ARRAY_BUFFER, 0, renderer._vertexData)
       gl.bindBuffer(gl.ARRAY_BUFFER, renderer._texcoordBuffer)
       gl.vertexAttribPointer(locATex, 2, gl.FLOAT, false, 0, 0)
       gl.enableVertexAttribArray(locATex)
       renderer._vertexPtr = 0
       renderer._texPtr = 0
-      // gl.bufferSubData(gl.ARRAY_BUFFER, 0, renderer._texcoordData)
     }
-
     this._OrphanBuffers(renderer)
     renderer.EndBatch()
   }
