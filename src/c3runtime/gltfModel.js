@@ -876,8 +876,10 @@ class GltfModel {
       renderer._vertexPtr = 0
       renderer._texPtr = 0
     }
-    this._OrphanBuffers(renderer)
-    renderer.EndBatch()
+    if (!this.inst.isEditor) {
+      this._OrphanBuffers(renderer)
+      renderer.EndBatch()
+    }
   }
 
   /*
