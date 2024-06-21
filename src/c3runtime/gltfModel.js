@@ -11,7 +11,11 @@ class ObjectBuffer {
     this.vertexData = new Float32Array(vertexData)
     this.texcoordData = new Float32Array(texcoordData)
     this.indexData = new Uint16Array(indexData)
-    // Create gl buffer and bind data and load data using subData
+
+    // Create vao for object
+    this.vao = gl.createVertexArray()
+    gl.bindVertexArray(this.vao)
+
     this.vertexBuffer = gl.createBuffer()
     this.texcoordBuffer = gl.createBuffer()
     this.indexBuffer = gl.createBuffer()
@@ -30,38 +34,24 @@ class ObjectBuffer {
     this.locAPos = gl.getAttribLocation(shaderProgram, "aPos")
     this.locATex = gl.getAttribLocation(shaderProgram, "aTex")
 
+    const locAPos = this.locAPos
+    const locATex = this.locATex
+    const vB = this.vertexBuffer
+    const tB = this.texcoordBuffer
+    gl.bindBuffer(gl.ARRAY_BUFFER, vB)
+    gl.vertexAttribPointer(locAPos, 3, gl.FLOAT, false, 0, 0)
+    gl.enableVertexAttribArray(locAPos)
+    gl.bindBuffer(gl.ARRAY_BUFFER, tB)
+    gl.vertexAttribPointer(locATex, 2, gl.FLOAT, false, 0, 0)
+    gl.enableVertexAttribArray(locATex)
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer)
+
     // Release the typed arrays
     this.vertexData = null
     this.texcoordData = null
     this.indexData = null
 
-    /*
-    const batchState = renderer._batchState
-    const shaderProgram = batchState.currentShader._shaderProgram
-    this.locAPos = gl.getAttribLocation(shaderProgram, "aPos")
-    this.locATex = gl.getAttribLocation(shaderProgram, "aTex")
-    */
-    /*
-    this.vao = gl.createVertexArray() // Create a vertex array object (VAO)
-    gl.bindVertexArray(this.vao) // Bind the VAO
-    // Vertex data
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer)
-    gl.vertexAttribPointer(this.locAPos, 3, gl.FLOAT, false, 0, 0)
-    gl.enableVertexAttribArray(this.locAPos)
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.texcoordBuffer)
-    gl.vertexAttribPointer(this.locATex, 2, gl.FLOAT, false, 0, 0)
-    gl.enableVertexAttribArray(this.locATex)
-
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer)
-
-    gl.bindVertexArray(null) // Unbind the VAO
-*/
-    // console.log("locAPos", this.locAPos, "locATex", this.locATex)
-    // console.log("objectBuffer - captured")
-    // console.log("this.vertexData", this.vertexData)
-    // console.log("this.texcoordData", this.texcoordData)
-    //console.log("this.indexData", this.indexData)
+    gl.bindVertexArray(null)
   }
 
   release() {
@@ -81,6 +71,7 @@ class ObjectBuffer {
     this.gl = null
     this.vertexPtr = null
     this.texPtr = null
+    this.vao = null
   }
 
   _ExtendQuadsBatchClean(renderer, numQuads, lastNumQuads) {
@@ -115,23 +106,15 @@ class ObjectBuffer {
   }
 
   DrawGPUBuffer(renderer, lastNumQuads) {
+    const gl = renderer._gl
     const numQuads = this.vertexPtr / 6
     this._ExtendQuadsBatchClean(renderer, numQuads, lastNumQuads)
     renderer._vertexPtr = this.vertexPtr
     renderer._texPtr = this.texPtr
-    const gl = renderer._gl
-    const locAPos = this.locAPos
-    const locATex = this.locATex
-    const vB = this.vertexBuffer
-    const tB = this.texcoordBuffer
-    gl.bindBuffer(gl.ARRAY_BUFFER, vB)
-    gl.vertexAttribPointer(locAPos, 3, gl.FLOAT, false, 0, 0)
-    gl.enableVertexAttribArray(locAPos)
-    gl.bindBuffer(gl.ARRAY_BUFFER, tB)
-    gl.vertexAttribPointer(locATex, 2, gl.FLOAT, false, 0, 0)
-    gl.enableVertexAttribArray(locATex)
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer)
+
+    gl.bindVertexArray(this.vao)
     this._ExecuteBatch(renderer)
+    gl.bindVertexArray(null)
   }
 }
 
@@ -836,11 +819,13 @@ class GltfModel {
               console.log("cached mesh batch", j, subBatchIndex, vertexPtr, renderer._vertexPtr)
             }
           } else {
-            const meshBatch = this._sdkType.meshBatchCache.get(j)
-            const objectBuffer = meshBatch.objectBuffer[subBatchIndex]
-            let lastNumQuads = 0
-            if (subBatchIndex > 0) lastNumQuads = this._sdkType.meshBatchCache.get(j).vertexPtr[subBatchIndex - 1] / 6
-            objectBuffer.DrawGPUBuffer(renderer, lastNumQuads)
+            const meshBatch = this._sdkType?.meshBatchCache?.get(j)
+            const objectBuffer = meshBatch?.objectBuffer[subBatchIndex]
+            if (objectBuffer?.vao) {
+              let lastNumQuads = 0
+              if (subBatchIndex > 0) lastNumQuads = this._sdkType.meshBatchCache.get(j).vertexPtr[subBatchIndex - 1] / 6
+              objectBuffer.DrawGPUBuffer(renderer, lastNumQuads)
+            }
           }
         }
       }
