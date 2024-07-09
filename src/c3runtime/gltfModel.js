@@ -412,19 +412,6 @@ class GltfModel {
       if (this.drawMeshes[j].disabled) continue
 
       const drawVerts = this.drawMeshes[j].drawVerts
-      // Cull based on first vert, camera position and camera direction
-      //      if (this.inst.cameraPosition[0] != 0 || this.inst.cameraPosition[1] != 0 || this.inst.cameraPosition[2] != 0) {
-      if (false) {
-        const cullVert = drawVerts[0][0]
-        const cull = this._cullPoint(
-          this.inst.cameraPosition,
-          this.inst.cameraVector,
-          cullVert,
-          90 * (Math.PI / 180),
-          1000
-        )
-        if (!cull) continue
-      }
 
       const drawUVs = this.drawMeshes[j].drawUVs
       const drawIndices = this.drawMeshes[j].drawIndices
@@ -511,15 +498,6 @@ class GltfModel {
           }
         }
       }
-      /*
-      if (this.inst.staticGeometry && this._sdkType.meshBatchCacheComplete) {
-        const numQuads = this._sdkType.meshBatchCache.get(j).vertexPtr[0] / 6
-        let lastNumQuads = 0
-        if (j > 0) lastNumQuads = this._sdkType.meshBatchCache.get(j - 1).vertexPtr[0] / 6
-        this._ExtendQuadsBatchClean(renderer, numQuads, lastNumQuads)
-        // console.log("extendQuads", renderer._batch[renderer._batchPtr], renderer._batchPtr)
-      }
-      */
       // Create const for mat2
       const mat2 = globalThis.glMatrix3D.mat2
       const vec2 = globalThis.glMatrix3D.vec2
@@ -553,7 +531,7 @@ class GltfModel {
         // Create array of values based on trianglecount < 1000, divided values, e.g. 3500 becomes: [0,1000,2000,3000,3500]
         const triangleCounts = []
         const MAX_TRIANGLES_PER_BATCH = 900
-        for (let i = 0; i < triangleCount; i += MAX_TRIANGLES_PER_BATCH) {
+        for (let i = 0; i <= triangleCount; i += MAX_TRIANGLES_PER_BATCH) {
           triangleCounts.push(i)
         }
         if (triangleCount % MAX_TRIANGLES_PER_BATCH !== 0) {
@@ -862,7 +840,7 @@ class GltfModel {
       renderer._texPtr = 0
     }
     if (!this.inst.isEditor) {
-      this._OrphanBuffers(renderer)
+      // this._OrphanBuffers(renderer)
       renderer.EndBatch()
     }
   }
