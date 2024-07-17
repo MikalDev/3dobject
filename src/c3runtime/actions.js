@@ -469,6 +469,9 @@
     },
     SetStaticGeometry(enable) {
       this.staticGeometry = enable
+      if (enable) {
+        this.renderOnce = true
+      }
       if (!enable) {
         this.gltf.meshBatchCache = new Map()
       }

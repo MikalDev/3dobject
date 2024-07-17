@@ -198,7 +198,13 @@
             this.drawVerts = []
             this.drawUVs = []
             this.drawIndices = []
-            this.gltf.updateAnimationPolygons(this.animationIndex, this.animationTime, onScreen, deltaTime)
+            this.gltf.updateAnimationPolygons(
+              this.animationIndex,
+              this.animationTime,
+              onScreen,
+              deltaTime,
+              this.staticGeometry
+            )
           }
           // } else if (this.renderOnce || (this.workerAnimation))
         } else if (this.renderOnce || this.lightEnable) {
@@ -206,7 +212,7 @@
           this.drawVerts = []
           this.drawUVs = []
           this.drawIndices = []
-          this.gltf.getPolygons()
+          this.gltf.getPolygons(this.staticGeometry)
           this.runtime.UpdateRender()
           this.updateBbox = true
         }
