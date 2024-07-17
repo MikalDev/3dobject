@@ -2,15 +2,43 @@
 "use strict"
 
 class ObjectBuffer {
-  constructor(renderer, vertexData, texcoordData, indexData, vertexPtr, texPtr) {
+  constructor(
+    renderer,
+    mesh,
+    primitiveIndex,
+    vertexDataDraw = null,
+    texcoordDataDraw = null,
+    indexDataDraw = null,
+    vertexPtr = null,
+    texPtr = null
+  ) {
     this.gl = renderer._gl
     const gl = this.gl
     this.vertexPtr = vertexPtr
     this.texPtr = texPtr
+
+    let vertexData, texcoordData, indexData, colorData
+    if (mesh === null) {
+      vertexData = vertexDataDraw
+      texcoordData = texcoordDataDraw
+      indexData = indexDataDraw
+      colorData = null
+    } else {
+      vertexData = mesh.drawVerts[primitiveIndex]
+      texcoordData = mesh.drawUVs[primitiveIndex]
+      indexData = mesh.drawIndices[primitiveIndex]
+      colorData = mesh.drawColors[primitiveIndex]
+      this.indexDataLength = indexData.length
+    }
     // Create new array for vertexData and texCoordData
-    this.vertexData = new Float32Array(vertexData)
-    this.texcoordData = new Float32Array(texcoordData)
-    this.indexData = new Uint16Array(indexData)
+    this.vertexData = vertexData
+    this.texcoordData = texcoordData
+    this.indexData = indexData
+    if (colorData != null) {
+      this.colorData = colorData
+    } else {
+      this.colorData = null
+    }
 
     // Create vao for object
     this.vao = gl.createVertexArray()
@@ -19,6 +47,9 @@ class ObjectBuffer {
     this.vertexBuffer = gl.createBuffer()
     this.texcoordBuffer = gl.createBuffer()
     this.indexBuffer = gl.createBuffer()
+    if (colorData != null) {
+      this.colorBuffer = gl.createBuffer()
+    }
     // Fill all buffers
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer)
     gl.bufferData(gl.ARRAY_BUFFER, this.vertexData, gl.STATIC_DRAW)
@@ -29,29 +60,70 @@ class ObjectBuffer {
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer)
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.indexData, gl.STATIC_DRAW)
 
+    if (colorData != null) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.colorBuffer)
+      gl.bufferData(gl.ARRAY_BUFFER, this.colorData, gl.STATIC_DRAW)
+    }
+
     const batchState = renderer._batchState
     const shaderProgram = batchState.currentShader._shaderProgram
     this.locAPos = gl.getAttribLocation(shaderProgram, "aPos")
     this.locATex = gl.getAttribLocation(shaderProgram, "aTex")
+    this.locAColor = gl.getAttribLocation(shaderProgram, "aColor")
 
     const locAPos = this.locAPos
     const locATex = this.locATex
+    const locAColor = this.locAColor
     const vB = this.vertexBuffer
     const tB = this.texcoordBuffer
+    const cB = this.colorBuffer
     gl.bindBuffer(gl.ARRAY_BUFFER, vB)
     gl.vertexAttribPointer(locAPos, 3, gl.FLOAT, false, 0, 0)
     gl.enableVertexAttribArray(locAPos)
     gl.bindBuffer(gl.ARRAY_BUFFER, tB)
     gl.vertexAttribPointer(locATex, 2, gl.FLOAT, false, 0, 0)
     gl.enableVertexAttribArray(locATex)
+    if (cB != null) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, cB)
+      gl.vertexAttribPointer(locAColor, 3, gl.FLOAT, false, 0, 0)
+      gl.enableVertexAttribArray(locAColor)
+    }
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer)
 
-    // Release the typed arrays
-    this.vertexData = null
-    this.texcoordData = null
-    this.indexData = null
-
     gl.bindVertexArray(null)
+  }
+
+  updateVertexData(renderer, mesh, primitiveIndex) {
+    const gl = renderer._gl
+    const vertexData = mesh.drawVerts[primitiveIndex]
+
+    // Fill only vertex buffer
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer)
+    gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.STATIC_DRAW)
+    debugger
+  }
+
+  update(renderer, mesh, primitiveIndex) {
+    const gl = renderer._gl
+    const vertexData = mesh.drawVerts[primitiveIndex]
+    const texcoordData = mesh.drawUVs[primitiveIndex]
+    const indexData = mesh.drawIndices[primitiveIndex]
+    const colorData = mesh.drawColors[primitiveIndex]
+
+    // Fill all buffers
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer)
+    gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.STATIC_DRAW)
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.texcoordBuffer)
+    gl.bufferData(gl.ARRAY_BUFFER, texcoordData, gl.STATIC_DRAW)
+
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer)
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indexData, gl.STATIC_DRAW)
+
+    if (colorData != null) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.colorBuffer)
+      gl.bufferData(gl.ARRAY_BUFFER, colorData, gl.STATIC_DRAW)
+    }
   }
 
   release() {
@@ -67,6 +139,10 @@ class ObjectBuffer {
     if (this.vao) {
       gl.deleteVertexArray(this.vao)
       this.vao = null
+    }
+    if (this.colorBuffer) {
+      gl.deleteBuffer(this.colorBuffer)
+      this.colorBuffer = null
     }
     this.gl = null
     this.vertexPtr = null
@@ -92,7 +168,6 @@ class ObjectBuffer {
 
   _ExecuteBatch(renderer) {
     if (renderer._batchPtr === 0) {
-      console.log("no batch")
       return
     }
     if (renderer.IsContextLost()) return
@@ -114,6 +189,14 @@ class ObjectBuffer {
 
     gl.bindVertexArray(this.vao)
     this._ExecuteBatch(renderer)
+    gl.bindVertexArray(null)
+  }
+
+  draw(renderer) {
+    const gl = renderer._gl
+    this._ExecuteBatch(renderer)
+    gl.bindVertexArray(this.vao)
+    gl.drawElements(gl.TRIANGLES, this.indexDataLength, gl.UNSIGNED_SHORT, 0)
     gl.bindVertexArray(null)
   }
 }
@@ -177,7 +260,8 @@ class GltfModel {
       if (!node.mesh) continue
       this.nodeMeshMap[node.name] = node.mesh.name
     }
-    this.getPolygons()
+    this.getPolygons(this.inst.staticGeometry)
+    if (this.inst.debug) console.log("init meshes:", this.drawMeshes, this.inst.staticGeometry)
     if (!this.inst.isEditor) this.inst.initBoundingBox()
   }
 
@@ -261,7 +345,6 @@ class GltfModel {
 
   _ExecuteBatch(renderer) {
     if (renderer._batchPtr === 0) {
-      console.log("no batch")
       return
     }
     if (renderer.IsContextLost()) return
@@ -493,7 +576,6 @@ class GltfModel {
           if (!texture) continue
           if (texture != currentTexture) {
             renderer.SetTexture(texture)
-            // console.log("texture changed", renderer._batch[renderer._batchPtr], renderer._batchPtr)
             currentTexture = texture
           }
         }
@@ -518,6 +600,16 @@ class GltfModel {
         xVerts = this.transformDrawVerts(drawVerts, this.modelRotate)
       } else {
         xVerts = drawVerts
+      }
+
+      if (this.inst.staticGeometry) {
+        const objectBuffers = this.drawMeshes[j].objectBuffers
+        // Draw
+        for (let i = 0; i < objectBuffers.length; i++) {
+          objectBuffers[i].draw(this.inst.renderer)
+          totalTriangles += objectBuffers[i].indexDataLength / 3
+        }
+        continue
       }
 
       for (let ii = 0; ii < drawVerts.length; ii++) {
@@ -784,6 +876,8 @@ class GltfModel {
               // meshBatch.texData.push(texData)
               const objectBuffer = new ObjectBuffer(
                 renderer,
+                null,
+                0,
                 renderer._vertexData,
                 renderer._texcoordData,
                 renderer._indexData,
@@ -794,7 +888,6 @@ class GltfModel {
               meshBatch.vertexPtr.push(vertexPtr)
               meshBatch.texPtr.push(texPtr)
               renderer.EndBatch()
-              console.log("cached mesh batch", j, subBatchIndex, vertexPtr, renderer._vertexPtr)
             }
           } else {
             const meshBatch = this._sdkType?.meshBatchCache?.get(j)
@@ -849,7 +942,7 @@ class GltfModel {
         Updates a node's matrix and all it's children nodes.
         After that it transforms unskinned mesh points and sends them to c2.
     */
-  transformNode(node, parentMat, modelScaleRotate) {
+  transformNode(node, parentMat, modelScaleRotate, staticGeometry = false) {
     // @ts-ignore
     const mat4 = globalThis.glMatrix3D.mat4
     // @ts-ignore
@@ -880,9 +973,8 @@ class GltfModel {
     // unskinned meshes
     if (node.mesh != undefined && node.skin == undefined) {
       for (let i = 0; i < node.mesh.primitives.length; i++) {
-        let transformedVerts = []
-        transformedVerts.length = 0
         let posData = node.mesh.primitives[i].attributes.POSITION.data
+        let transformedVerts = new Float32Array(posData.length)
         const weights = node.mesh.weights
 
         let morphActive = false
@@ -907,8 +999,10 @@ class GltfModel {
             drawUVs: [],
             drawIndices: [],
             drawLights: [],
+            drawColors: [],
             disabled: false,
             morphWeights: null,
+            objectBuffers: [],
           })
           this.meshNames.set(node.name, this.drawMeshesIndex)
         }
@@ -926,6 +1020,8 @@ class GltfModel {
         const drawVerts = this.drawMeshes[this.drawMeshesIndex].drawVerts
         const drawUVs = this.drawMeshes[this.drawMeshesIndex].drawUVs
         const drawIndices = this.drawMeshes[this.drawMeshesIndex].drawIndices
+        const drawColors = this.drawMeshes[this.drawMeshesIndex].drawColors
+        const objectBuffers = this.drawMeshes[this.drawMeshesIndex].objectBuffers
 
         // reset draw array for new values
         drawVerts.length = 0
@@ -958,7 +1054,9 @@ class GltfModel {
           if (this.inst.maxBB[1] < y) this.inst.maxBB[1] = y
           if (this.inst.maxBB[2] < z) this.inst.maxBB[2] = z
 
-          transformedVerts.push(x, y, z)
+          transformedVerts[j * 3] = x
+          transformedVerts[j * 3 + 1] = y
+          transformedVerts[j * 3 + 2] = z
         }
 
         if (transformedVerts.length > 0) {
@@ -966,18 +1064,29 @@ class GltfModel {
             for (let ii = 0; ii < transformedVerts.length; ii++) gltf.pointBatch.push(transformedVerts[ii])
           else {
             drawVerts.push(transformedVerts)
-            // Only need to set once
+            // Only need to set once for all the below
             if (drawUVs.length === 0 && "TEXCOORD_0" in node.mesh.primitives[i].attributes) {
-              drawUVs.push(Array.from(node.mesh.primitives[i].attributes.TEXCOORD_0.data))
+              drawUVs.push(new Float32Array(node.mesh.primitives[i].attributes.TEXCOORD_0.data))
             }
-            if (drawIndices.length === 0) drawIndices.push(Array.from(node.mesh.primitives[i].indices.data))
+            if (drawColors.length === 0 && "COLOR_0" in node.mesh.primitives[i].attributes) {
+              drawColors.push(new Float32Array(node.mesh.primitives[i].attributes.COLOR_0.data))
+            }
+            if (drawIndices.length === 0) drawIndices.push(new Uint16Array(node.mesh.primitives[i].indices.data))
+            if (staticGeometry) {
+              if (objectBuffers.length == 0) {
+                objectBuffers.push(new ObjectBuffer(this.inst.renderer, this.drawMeshes[this.drawMeshesIndex], 0))
+              } else {
+                objectBuffers[0].updateVertexData(this.inst.renderer, this.drawMeshes[this.drawMeshesIndex], 0)
+              }
+            }
           }
         }
       }
     }
 
     if (node.children != undefined)
-      for (let i = 0; i < node.children.length; i++) this.transformNode(node.children[i], node.matrix, modelScaleRotate)
+      for (let i = 0; i < node.children.length; i++)
+        this.transformNode(node.children[i], node.matrix, modelScaleRotate, staticGeometry)
   }
 
   morphTargets(vin, index, weights, targets) {
@@ -993,8 +1102,16 @@ class GltfModel {
     return vout
   }
 
+  storeMeshAttributes(mesh) {
+    const gltf = this.gltfData
+    const drawVerts = this.drawMeshes[this.drawMeshesIndex].drawVerts
+    const drawUVs = this.drawMeshes[this.drawMeshesIndex].drawUVs
+    const drawIndices = this.drawMeshes[this.drawMeshesIndex].drawIndices
+    const drawColors = this.drawMeshes[this.drawMeshesIndex].drawColors
+  }
+
   //	Updates scene graph, and as a second step sends transformed skinned mesh points to c2.
-  getPolygons() {
+  getPolygons(staticGeometry = false) {
     // @ts-ignore
     const vec3 = globalThis.glMatrix3D.vec3
     // @ts-ignore
@@ -1040,7 +1157,7 @@ class GltfModel {
 
     // update all scene matrixes.
     for (let i = 0; i < gltf.scene.nodes.length; i++) {
-      this.transformNode(gltf.scene.nodes[i], parentMatrix, modelScaleRotate)
+      this.transformNode(gltf.scene.nodes[i], parentMatrix, modelScaleRotate, staticGeometry)
     }
 
     quat.fromEuler(rotationQuat, 0, 0, 0)
@@ -1078,8 +1195,10 @@ class GltfModel {
             drawVerts: [],
             drawUVs: [],
             drawIndices: [],
+            drawColors: [],
             drawLights: [],
             disabled: true,
+            objectBuffers: [],
           })
           this.meshNames.set(node.name, this.drawMeshesIndex)
         }
@@ -1111,14 +1230,16 @@ class GltfModel {
         const drawVerts = this.drawMeshes[this.drawMeshesIndex].drawVerts
         const drawUVs = this.drawMeshes[this.drawMeshesIndex].drawUVs
         const drawIndices = this.drawMeshes[this.drawMeshesIndex].drawIndices
+        const drawColors = this.drawMeshes[this.drawMeshesIndex].drawColors
+        const objectBuffers = this.drawMeshes[this.drawMeshesIndex].objectBuffers
 
         // reset draw array for new values
         drawVerts.length = 0
-        let transformedVerts = []
 
         let posData = node.mesh.primitives[i].attributes.POSITION.data
         let weights = node.mesh.primitives[i].attributes.WEIGHTS_0.data
         let joints = node.mesh.primitives[i].attributes.JOINTS_0.data
+        let transformedVerts = new Float32Array(posData.length)
 
         for (let j = 0; j < posData.length / 3; j++) {
           let w = weights.subarray(j * 4, j * 4 + 4)
@@ -1162,7 +1283,9 @@ class GltfModel {
           if (this.inst.maxBB[1] < y) this.inst.maxBB[1] = y
           if (this.inst.maxBB[2] < z) this.inst.maxBB[2] = z
 
-          transformedVerts.push(x, y, z)
+          transformedVerts[j * 3] = x
+          transformedVerts[j * 3 + 1] = y
+          transformedVerts[j * 3 + 2] = z
         }
 
         if (transformedVerts.length > 0) {
@@ -1172,9 +1295,19 @@ class GltfModel {
             drawVerts.push(transformedVerts)
             // Only need to set once
             if (drawUVs.length === 0 && "TEXCOORD_0" in node.mesh.primitives[i].attributes) {
-              drawUVs.push(Array.from(node.mesh.primitives[i].attributes.TEXCOORD_0.data))
+              drawUVs.push(new Float32Array(node.mesh.primitives[i].attributes.TEXCOORD_0.data))
             }
-            if (drawIndices.length === 0) drawIndices.push(Array.from(node.mesh.primitives[i].indices.data))
+            if (drawColors.length === 0 && "COLOR_0" in node.mesh.primitives[i].attributes) {
+              drawColors.push(new Float32Array(node.mesh.primitives[i].attributes.COLOR_0.data))
+            }
+            if (drawIndices.length === 0) drawIndices.push(new Uint16Array(node.mesh.primitives[i].indices.data))
+            if (staticGeometry) {
+              if (objectBuffers.length == 0) {
+                objectBuffers.push(new ObjectBuffer(this.inst.renderer, this.drawMeshes[this.drawMeshesIndex], 0))
+              } else {
+                objectBuffers[0].updateVertexData(this.inst.renderer, this.drawMeshes[this.drawMeshesIndex], 0)
+              }
+            }
           }
         }
       }
@@ -1196,9 +1329,6 @@ class GltfModel {
         vec3.set(vOut, x, y, z)
 
         vec3.transformMat4(vOut, vOut, modelScaleRotate)
-        // v[j] = vOut[0];
-        // v[j + 1] = vOut[1];
-        // v[j + 2] = vOut[2];
         xform.push(vOut[0], vOut[1], vOut[2])
       }
       xformVerts.push(xform)
@@ -1271,10 +1401,10 @@ class GltfModel {
     )
   }
 
-  updateAnimationPolygons(index, time, onScreen, deltaTime) {
+  updateAnimationPolygons(index, time, onScreen, deltaTime, staticGeometry) {
     this.updateAnimation(index, time, onScreen, deltaTime)
     if (onScreen) {
-      this.getPolygons()
+      this.getPolygons(staticGeometry)
       this.inst.runtime.UpdateRender()
       this.inst.updateBbox = true
     }
