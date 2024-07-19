@@ -17,28 +17,27 @@ class ObjectBuffer {
     this.vertexPtr = vertexPtr
     this.texPtr = texPtr
 
-    let vertexData, texcoordData, indexData, colorData
+    let vertexData, texcoordData, indexData, colorData, normalData
     if (mesh === null) {
       vertexData = vertexDataDraw
       texcoordData = texcoordDataDraw
       indexData = indexDataDraw
       colorData = null
+      normalData = null
     } else {
       vertexData = mesh.drawVerts[primitiveIndex]
       texcoordData = mesh.drawUVs[primitiveIndex]
       indexData = mesh.drawIndices[primitiveIndex]
       colorData = mesh.drawColors[primitiveIndex]
+      normalData = mesh.drawNormals[primitiveIndex]
       this.indexDataLength = indexData.length
     }
     // Create new array for vertexData and texCoordData
     this.vertexData = vertexData
     this.texcoordData = texcoordData
     this.indexData = indexData
-    if (colorData != null) {
-      this.colorData = colorData
-    } else {
-      this.colorData = null
-    }
+    this.colorData = colorData
+    this.normalData = normalData
 
     // Create vao for object
     this.vao = gl.createVertexArray()
@@ -49,6 +48,9 @@ class ObjectBuffer {
     this.indexBuffer = gl.createBuffer()
     if (colorData != null) {
       this.colorBuffer = gl.createBuffer()
+    }
+    if (normalData != null) {
+      this.normalBuffer = gl.createBuffer()
     }
     // Fill all buffers
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer)
@@ -64,19 +66,26 @@ class ObjectBuffer {
       gl.bindBuffer(gl.ARRAY_BUFFER, this.colorBuffer)
       gl.bufferData(gl.ARRAY_BUFFER, this.colorData, gl.STATIC_DRAW)
     }
+    if (normalData != null) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.normalBuffer)
+      gl.bufferData(gl.ARRAY_BUFFER, this.normalData, gl.STATIC_DRAW)
+    }
 
     const batchState = renderer._batchState
     const shaderProgram = batchState.currentShader._shaderProgram
     this.locAPos = gl.getAttribLocation(shaderProgram, "aPos")
     this.locATex = gl.getAttribLocation(shaderProgram, "aTex")
     this.locAColor = gl.getAttribLocation(shaderProgram, "aColor")
+    this.locANormal = gl.getAttribLocation(shaderProgram, "aNormal")
 
     const locAPos = this.locAPos
     const locATex = this.locATex
     const locAColor = this.locAColor
+    const locANormal = this.locANormal
     const vB = this.vertexBuffer
     const tB = this.texcoordBuffer
     const cB = this.colorBuffer
+    const nB = this.normalBuffer
     gl.bindBuffer(gl.ARRAY_BUFFER, vB)
     gl.vertexAttribPointer(locAPos, 3, gl.FLOAT, false, 0, 0)
     gl.enableVertexAttribArray(locAPos)
@@ -87,6 +96,11 @@ class ObjectBuffer {
       gl.bindBuffer(gl.ARRAY_BUFFER, cB)
       gl.vertexAttribPointer(locAColor, 3, gl.FLOAT, false, 0, 0)
       gl.enableVertexAttribArray(locAColor)
+    }
+    if (nB != null) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, nB)
+      gl.vertexAttribPointer(locANormal, 3, gl.FLOAT, false, 0, 0)
+      gl.enableVertexAttribArray(locANormal)
     }
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer)
 
@@ -100,7 +114,6 @@ class ObjectBuffer {
     // Fill only vertex buffer
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer)
     gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.STATIC_DRAW)
-    debugger
   }
 
   update(renderer, mesh, primitiveIndex) {
@@ -109,6 +122,7 @@ class ObjectBuffer {
     const texcoordData = mesh.drawUVs[primitiveIndex]
     const indexData = mesh.drawIndices[primitiveIndex]
     const colorData = mesh.drawColors[primitiveIndex]
+    const normalData = mesh.drawNormals[primitiveIndex]
 
     // Fill all buffers
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer)
@@ -123,6 +137,11 @@ class ObjectBuffer {
     if (colorData != null) {
       gl.bindBuffer(gl.ARRAY_BUFFER, this.colorBuffer)
       gl.bufferData(gl.ARRAY_BUFFER, colorData, gl.STATIC_DRAW)
+    }
+
+    if (normalData != null) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.normalBuffer)
+      gl.bufferData(gl.ARRAY_BUFFER, normalData, gl.STATIC_DRAW)
     }
   }
 
@@ -222,6 +241,8 @@ class GltfModel {
     this.currentColor = [-1, -1, -1, -1]
     this.nodeMeshMap = {}
     this.modelRotate = mat4.create()
+    this.normalMatrix = mat4.create()
+    this.locANormalMatrix = null
     this.meshNames = new Map()
     this.viewPos = [0, 0, 0]
     if (!this._sdkType.meshBatchCacheComplete) {
@@ -474,6 +495,12 @@ class GltfModel {
       )
       // from rotationtranslationscaleorigin
       mat4.copy(this.modelRotate, modelRotate)
+      // Create inverse transpose normal matrix from modelRotate
+      if (this.inst.normalVertex) {
+        mat4.invert(this.normalMatrix, modelRotate)
+        mat4.transpose(this.normalMatrix, this.normalMatrix)
+      }
+
       mat4.multiply(modelRotate, tmpModelView, modelRotate)
       if (this.inst.fragLight) mat4.multiply(modelRotate, renderer._matP, modelRotate)
       if (!(this.inst.fragLight && this.inst.isWebGPU)) renderer.SetModelViewMatrix(modelRotate)
@@ -489,6 +516,11 @@ class GltfModel {
     vec4.copy(currentColor, instanceColor)
     let baseColorChanged = false
     if (!vec4.equals(currentColor, [1, 1, 1, 1])) baseColorChanged = true
+
+    // If vertexNormals used set the shader program uniform aNormalMatrix
+    if (this.inst.normalMatrix) {
+      renderer.SetUniformMatrix4fv(this.locANormalMatrix, this.normalMatrix)
+    }
 
     for (let j = 0; j <= this.drawMeshesIndex; j++) {
       // Skip render if disabled
@@ -1000,6 +1032,7 @@ class GltfModel {
             drawIndices: [],
             drawLights: [],
             drawColors: [],
+            drawNormals: [],
             disabled: false,
             morphWeights: null,
             objectBuffers: [],
@@ -1021,6 +1054,7 @@ class GltfModel {
         const drawUVs = this.drawMeshes[this.drawMeshesIndex].drawUVs
         const drawIndices = this.drawMeshes[this.drawMeshesIndex].drawIndices
         const drawColors = this.drawMeshes[this.drawMeshesIndex].drawColors
+        const drawNormals = this.drawMeshes[this.drawMeshesIndex].drawNormals
         const objectBuffers = this.drawMeshes[this.drawMeshesIndex].objectBuffers
 
         // reset draw array for new values
@@ -1070,6 +1104,9 @@ class GltfModel {
             }
             if (drawColors.length === 0 && "COLOR_0" in node.mesh.primitives[i].attributes) {
               drawColors.push(new Float32Array(node.mesh.primitives[i].attributes.COLOR_0.data))
+            }
+            if (drawNormals.length === 0 && "NORMAL" in node.mesh.primitives[i].attributes) {
+              drawNormals.push(new Float32Array(node.mesh.primitives[i].attributes.NORMAL.data))
             }
             if (drawIndices.length === 0) drawIndices.push(new Uint16Array(node.mesh.primitives[i].indices.data))
             if (staticGeometry) {
@@ -1196,6 +1233,7 @@ class GltfModel {
             drawUVs: [],
             drawIndices: [],
             drawColors: [],
+            drawNormals: [],
             drawLights: [],
             disabled: true,
             objectBuffers: [],
@@ -1231,6 +1269,7 @@ class GltfModel {
         const drawUVs = this.drawMeshes[this.drawMeshesIndex].drawUVs
         const drawIndices = this.drawMeshes[this.drawMeshesIndex].drawIndices
         const drawColors = this.drawMeshes[this.drawMeshesIndex].drawColors
+        const drawNormals = this.drawMeshes[this.drawMeshesIndex].drawNormals
         const objectBuffers = this.drawMeshes[this.drawMeshesIndex].objectBuffers
 
         // reset draw array for new values
@@ -1299,6 +1338,9 @@ class GltfModel {
             }
             if (drawColors.length === 0 && "COLOR_0" in node.mesh.primitives[i].attributes) {
               drawColors.push(new Float32Array(node.mesh.primitives[i].attributes.COLOR_0.data))
+            }
+            if (drawNormals.length === 0 && "NORMAL" in node.mesh.primitives[i].attributes) {
+              drawNormals.push(new Float32Array(node.mesh.primitives[i].attributes.NORMAL.data))
             }
             if (drawIndices.length === 0) drawIndices.push(new Uint16Array(node.mesh.primitives[i].indices.data))
             if (staticGeometry) {
