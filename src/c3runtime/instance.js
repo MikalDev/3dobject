@@ -78,6 +78,7 @@
       this.staticGeometry = false
       this.cameraVector = [0, 1, 0]
       this.cameraPosition = [0, 0, 0]
+      this.animationOffset = 0
 
       if (properties) {
         this.scale = properties[0]
@@ -191,7 +192,9 @@
       // Animate gltf model
       if (this.loaded) {
         if (this.animationPlay && this.gltf.gltfData.hasOwnProperty("animations")) {
-          this.animationTime += this._runtime.GetDt() * this.animationSpeed
+          this.animationTime +=
+            this._runtime.GetDt() * this.animationSpeed +
+            (Math.random() * (1 / this.animationRate) - 1 / this.animationRate / 2) * 0.1
           const deltaTime = this.animationTime - this.animationLastTime
           if (deltaTime >= 1 / this.animationRate) {
             this.animationLastTime = this.animationTime
@@ -432,6 +435,7 @@
       }
       if (this.gltf) {
         this.gltf.release()
+        console.log("Instance released")
       }
       this.sdkType = null
       this.runtime = null
@@ -488,6 +492,7 @@
       this.spotEdge = null
       this.ambientColor = null
       this.quaternion = null
+      this.animationOffset = null
       super.Release()
     }
 

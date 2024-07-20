@@ -66,7 +66,7 @@
       this.updateBbox = true
     },
     SetAnimationRate(rate) {
-      this.animationRate = rate
+      this.animationRate = rate > 0 ? rate : 1
     },
     SetZHeight(h) {
       this._setZHeight(h)
