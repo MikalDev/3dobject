@@ -1,38 +1,18 @@
 // @ts-check
 "use strict"
-
+// @ts-ignore
 class ObjectBuffer {
-  constructor(
-    renderer,
-    mesh,
-    primitiveIndex,
-    vertexDataDraw = null,
-    texcoordDataDraw = null,
-    indexDataDraw = null,
-    vertexPtr = null,
-    texPtr = null
-  ) {
+  constructor(renderer, mesh, primitiveIndex) {
     this.gl = renderer._gl
     const gl = this.gl
-    this.vertexPtr = vertexPtr
-    this.texPtr = texPtr
 
     let vertexData, texcoordData, indexData, colorData, normalData
-    if (mesh === null) {
-      vertexData = vertexDataDraw
-      texcoordData = texcoordDataDraw
-      indexData = indexDataDraw
-      colorData = null
-      normalData = null
-    } else {
-      vertexData = mesh.drawVerts[primitiveIndex]
-      texcoordData = mesh.drawUVs[primitiveIndex]
-      indexData = mesh.drawIndices[primitiveIndex]
-      colorData = mesh.drawColors[primitiveIndex]
-      normalData = mesh.drawNormals[primitiveIndex]
-      this.indexDataLength = indexData.length
-    }
-    // Create new array for vertexData and texCoordData
+    vertexData = mesh.drawVerts[primitiveIndex]
+    texcoordData = mesh.drawUVs[primitiveIndex]
+    indexData = mesh.drawIndices[primitiveIndex]
+    colorData = mesh.drawColors[primitiveIndex]
+    normalData = mesh.drawNormals[primitiveIndex]
+    this.indexDataLength = indexData.length
     this.vertexData = vertexData
     this.texcoordData = texcoordData
     this.indexData = indexData
@@ -92,12 +72,12 @@ class ObjectBuffer {
     gl.bindBuffer(gl.ARRAY_BUFFER, tB)
     gl.vertexAttribPointer(locATex, 2, gl.FLOAT, false, 0, 0)
     gl.enableVertexAttribArray(locATex)
-    if (cB != null) {
+    if (cB != null && locAColor != -1) {
       gl.bindBuffer(gl.ARRAY_BUFFER, cB)
       gl.vertexAttribPointer(locAColor, 3, gl.FLOAT, false, 0, 0)
       gl.enableVertexAttribArray(locAColor)
     }
-    if (nB != null) {
+    if (nB != null && locANormal != -1) {
       gl.bindBuffer(gl.ARRAY_BUFFER, nB)
       gl.vertexAttribPointer(locANormal, 3, gl.FLOAT, false, 0, 0)
       gl.enableVertexAttribArray(locANormal)
@@ -163,26 +143,21 @@ class ObjectBuffer {
       gl.deleteBuffer(this.colorBuffer)
       this.colorBuffer = null
     }
+    if (this.normalBuffer) {
+      gl.deleteBuffer(this.normalBuffer)
+      this.normalBuffer = null
+    }
     this.gl = null
-    this.vertexPtr = null
-    this.texPtr = null
     this.vao = null
-  }
-
-  _ExtendQuadsBatchClean(renderer, numQuads, lastNumQuads) {
-    let v = renderer._vertexPtr
-    if (v + numQuads * 2 * 3 > renderer._lastVertexPtr) {
-      alert(`batch too large ${v} ${numQuads} ${renderer._lastVertexPtr}`)
-      renderer.EndBatch()
-      v = 0
-    }
-
-    if (renderer._topOfBatch === 1) renderer._batch[renderer._batchPtr - 1]._indexCount = lastNumQuads * 3
-    else {
-      const b = renderer.PushBatch()
-      b.InitQuad(v, numQuads * 3)
-      this._topOfBatch = 1
-    }
+    this.vertexData = null
+    this.texcoordData = null
+    this.indexData = null
+    this.colorData = null
+    this.normalData = null
+    this.locAPos = null
+    this.locATex = null
+    this.locAColor = null
+    this.locANormal = null
   }
 
   _ExecuteBatch(renderer) {
@@ -197,18 +172,6 @@ class ObjectBuffer {
     renderer._texPtr = 0
     renderer._pointPtr = 0
     renderer._topOfBatch = 0
-  }
-
-  DrawGPUBuffer(renderer, lastNumQuads) {
-    const gl = renderer._gl
-    const numQuads = this.vertexPtr / 6
-    this._ExtendQuadsBatchClean(renderer, numQuads, lastNumQuads)
-    renderer._vertexPtr = this.vertexPtr
-    renderer._texPtr = this.texPtr
-
-    gl.bindVertexArray(this.vao)
-    this._ExecuteBatch(renderer)
-    gl.bindVertexArray(null)
   }
 
   draw(renderer) {
@@ -245,23 +208,6 @@ class GltfModel {
     this.locANormalMatrix = null
     this.meshNames = new Map()
     this.viewPos = [0, 0, 0]
-    if (!this._sdkType.meshBatchCacheComplete) {
-      this._sdkType.meshBatchCache = new Map()
-    }
-    /*
-    const renderer = runtime.GetWebGLRenderer()
-    const gl = renderer?._gl
-    if (gl && !renderer._vertexDataNext) {
-      // Create swap buffers for vertex and texcoord data
-      renderer._vertexDataNext = gl.createBuffer()
-      renderer._texcoordDataNext = gl.createBuffer()
-      // Bind them
-      gl.bindBuffer(gl.ARRAY_BUFFER, renderer._vertexDataNext)
-      gl.bufferData(gl.ARRAY_BUFFER, renderer._vertexData.byteLength, gl.DYNAMIC_DRAW)
-      gl.bindBuffer(gl.ARRAY_BUFFER, renderer._texcoordDataNext)
-      gl.bufferData(gl.ARRAY_BUFFER, renderer._texcoordData.byteLength, gl.DYNAMIC_DRAW)
-    }
-    */
   }
 
   async init() {
@@ -282,7 +228,6 @@ class GltfModel {
       this.nodeMeshMap[node.name] = node.mesh.name
     }
     this.getPolygons(this.inst.staticGeometry)
-    if (this.inst.debug) console.log("init meshes:", this.drawMeshes, this.inst.staticGeometry)
     if (!this.inst.isEditor) this.inst.initBoundingBox()
   }
 
@@ -302,6 +247,12 @@ class GltfModel {
     this._blendTime = null
     // @ts-ignore
     this._lastIndex = null
+    // @ts-ignore
+    for (let ii = 0; ii < this.drawMeshes.length; ii++) {
+      for (let jj = 0; jj < this.drawMeshes[ii].objectBuffers.length; jj++) {
+        this.drawMeshes[ii].objectBuffers[jj].release()
+      }
+    }
     // @ts-ignore
     this.drawMeshes = null
     // @ts-ignore
@@ -346,79 +297,6 @@ class GltfModel {
     const distance = vec3.distance(cameraPos, point)
     if (distance > cullDistance) return false
     return true
-  }
-
-  _ExtendQuadsBatch(renderer, numQuads) {
-    let v = renderer._vertexPtr
-    if (v + numQuads * 4 * 3 > renderer._lastVertexPtr) {
-      renderer.EndBatch()
-      v = 0
-    }
-    const totalIndices = numQuads * 6 // Each quad requires 6 indices (two tris)
-    if (renderer._topOfBatch === 1) {
-      renderer._batch[renderer._batchPtr - 1]._indexCount += totalIndices
-    } else {
-      const b = renderer.PushBatch()
-      b.InitQuad(v, totalIndices)
-      renderer._topOfBatch = 1
-    }
-  }
-
-  _ExecuteBatch(renderer) {
-    if (renderer._batchPtr === 0) {
-      return
-    }
-    if (renderer.IsContextLost()) return
-    // renderer._WriteBuffers()
-    renderer._ExecuteBatch()
-    renderer._batchPtr = 0
-    renderer._vertexPtr = 0
-    renderer._texPtr = 0
-    renderer._pointPtr = 0
-    renderer._topOfBatch = 0
-  }
-
-  _ExtendQuadsBatchClean(renderer, numQuads, lastNumQuads) {
-    let v = renderer._vertexPtr
-    if (v + numQuads * 2 * 3 > renderer._lastVertexPtr) {
-      alert(`batch too large ${v} ${numQuads} ${renderer._lastVertexPtr}`)
-      renderer.EndBatch()
-      v = 0
-    }
-
-    if (renderer._topOfBatch === 1) renderer._batch[renderer._batchPtr - 1]._indexCount = lastNumQuads * 3
-    else {
-      const b = renderer.PushBatch()
-      b.InitQuad(v, numQuads * 3)
-      this._topOfBatch = 1
-    }
-  }
-
-  _OrphanBuffers(renderer) {
-    if (!renderer._vertexData || !renderer._texcoordData) return
-    const gl = renderer._gl
-    gl.bindBuffer(gl.ARRAY_BUFFER, renderer._vertexBuffer)
-    gl.bufferData(gl.ARRAY_BUFFER, renderer._vertexData.byteLength, gl.DYNAMIC_DRAW)
-    gl.bindBuffer(gl.ARRAY_BUFFER, renderer._texcoordBuffer)
-    gl.bufferData(gl.ARRAY_BUFFER, renderer._texcoordData.byteLength, gl.DYNAMIC_DRAW)
-  }
-
-  _SwapBuffers(renderer) {
-    let temp = renderer._vertexData
-    renderer._vertexData = renderer._vertexDataNext
-    renderer._vertexDataNext = temp
-    temp = renderer._texcoordData
-    renderer._texcoordData = renderer._texcoordDataNext
-    renderer._texcoordDataNext = temp
-  }
-
-  _EndBatchInitQuad(renderer) {
-    let v = renderer._vertexPtr
-    renderer.EndBatch()
-    v = 0
-    const b = renderer.PushBatch()
-    b.InitQuad(v, 6)
-    renderer._topOfBatch = 1
   }
 
   render(renderer, x, y, z, tempQuad, whiteTexture, instanceC3Color, textures, instanceTexture) {
@@ -634,6 +512,7 @@ class GltfModel {
         xVerts = drawVerts
       }
 
+      // Static geometry, draw from GPU buffers
       if (this.inst.staticGeometry) {
         const objectBuffers = this.drawMeshes[j].objectBuffers
         // Draw
@@ -652,290 +531,231 @@ class GltfModel {
         let triangleCount = ind.length / 3
         let center = [0, 0, 0]
         totalTriangles += triangleCount
-        // Create array of values based on trianglecount < 1000, divided values, e.g. 3500 becomes: [0,1000,2000,3000,3500]
-        const triangleCounts = []
-        const MAX_TRIANGLES_PER_BATCH = 900
-        for (let i = 0; i <= triangleCount; i += MAX_TRIANGLES_PER_BATCH) {
-          triangleCounts.push(i)
-        }
-        if (triangleCount % MAX_TRIANGLES_PER_BATCH !== 0) {
-          triangleCounts.push(triangleCount)
-        }
-        if (this.inst.staticGeometry && !this._sdkType.meshBatchCache.has(j)) {
-          this._sdkType.meshBatchCache.set(j, {
-            vertexData: [],
-            texData: [],
-            vertexPtr: [],
-            texPtr: [],
-            objectBuffer: [],
-          })
-        }
-        for (let subBatchIndex = 0; subBatchIndex < triangleCounts.length - 1; subBatchIndex++) {
-          if (
-            !this.inst.staticGeometry ||
-            this.inst.isEditor ||
-            (this.inst.staticGeometry && !this._sdkType.meshBatchCacheComplete)
-          ) {
-            for (let i = triangleCounts[subBatchIndex]; i < triangleCounts[subBatchIndex + 1]; i++) {
-              if (hasTexture) {
-                if (offsetMaterial || rotateMaterial) {
-                  // create new arrays for the UVs
-                  const uvQuad = [
-                    [uv[ind[i * 3 + 0] * 2 + 0], uv[ind[i * 3 + 0] * 2 + 1]],
-                    [uv[ind[i * 3 + 1] * 2 + 0], uv[ind[i * 3 + 1] * 2 + 1]],
-                    [uv[ind[i * 3 + 2] * 2 + 0], uv[ind[i * 3 + 2] * 2 + 1]],
-                  ]
-                  if (rotateMaterial) {
-                    // Rotate UVs
-                    vec2.sub(uvQuad[0], uvQuad[0], [rotateMaterial.x, rotateMaterial.y])
-                    vec2.sub(uvQuad[1], uvQuad[1], [rotateMaterial.x, rotateMaterial.y])
-                    vec2.sub(uvQuad[2], uvQuad[2], [rotateMaterial.x, rotateMaterial.y])
-                    mat2.multiply(uvQuad[0], rotateMatrix, uvQuad[0])
-                    mat2.multiply(uvQuad[1], rotateMatrix, uvQuad[1])
-                    mat2.multiply(uvQuad[2], rotateMatrix, uvQuad[2])
-                    vec2.add(uvQuad[0], uvQuad[0], [rotateMaterial.x, rotateMaterial.y])
-                    vec2.add(uvQuad[1], uvQuad[1], [rotateMaterial.x, rotateMaterial.y])
-                    vec2.add(uvQuad[2], uvQuad[2], [rotateMaterial.x, rotateMaterial.y])
-                  }
+        for (let i = 0; i < triangleCount; i++) {
+          if (hasTexture) {
+            if (offsetMaterial || rotateMaterial) {
+              // create new arrays for the UVs
+              const uvQuad = [
+                [uv[ind[i * 3 + 0] * 2 + 0], uv[ind[i * 3 + 0] * 2 + 1]],
+                [uv[ind[i * 3 + 1] * 2 + 0], uv[ind[i * 3 + 1] * 2 + 1]],
+                [uv[ind[i * 3 + 2] * 2 + 0], uv[ind[i * 3 + 2] * 2 + 1]],
+              ]
+              if (rotateMaterial) {
+                // Rotate UVs
+                vec2.sub(uvQuad[0], uvQuad[0], [rotateMaterial.x, rotateMaterial.y])
+                vec2.sub(uvQuad[1], uvQuad[1], [rotateMaterial.x, rotateMaterial.y])
+                vec2.sub(uvQuad[2], uvQuad[2], [rotateMaterial.x, rotateMaterial.y])
+                mat2.multiply(uvQuad[0], rotateMatrix, uvQuad[0])
+                mat2.multiply(uvQuad[1], rotateMatrix, uvQuad[1])
+                mat2.multiply(uvQuad[2], rotateMatrix, uvQuad[2])
+                vec2.add(uvQuad[0], uvQuad[0], [rotateMaterial.x, rotateMaterial.y])
+                vec2.add(uvQuad[1], uvQuad[1], [rotateMaterial.x, rotateMaterial.y])
+                vec2.add(uvQuad[2], uvQuad[2], [rotateMaterial.x, rotateMaterial.y])
+              }
 
-                  if (offsetMaterial) {
-                    const uOffset = offsetMaterial.u
-                    const vOffset = offsetMaterial.v
-                    // Offset UVs in uvQuad
-                    uvQuad[0][0] += uOffset
-                    uvQuad[0][1] += vOffset
-                    uvQuad[1][0] += uOffset
-                    uvQuad[1][1] += vOffset
-                    uvQuad[2][0] += uOffset
-                    uvQuad[2][1] += vOffset
-                  }
-                  // Set tempquad
-                  tempQuad.set(
-                    uvQuad[0][0],
-                    uvQuad[0][1],
-                    uvQuad[1][0],
-                    uvQuad[1][1],
-                    uvQuad[2][0],
-                    uvQuad[2][1],
-                    uvQuad[2][0],
-                    uvQuad[2][1]
-                  )
-                } else if (offsetUV) {
-                  const uOffset = offsetUV.u
-                  const vOffset = offsetUV.v
-                  tempQuad.set(
-                    uv[ind[i * 3 + 0] * 2 + 0] + uOffset,
-                    uv[ind[i * 3 + 0] * 2 + 1] + vOffset,
-                    uv[ind[i * 3 + 1] * 2 + 0] + uOffset,
-                    uv[ind[i * 3 + 1] * 2 + 1] + vOffset,
-                    uv[ind[i * 3 + 2] * 2 + 0] + uOffset,
-                    uv[ind[i * 3 + 2] * 2 + 1] + vOffset,
-                    uv[ind[i * 3 + 2] * 2 + 0] + uOffset,
-                    uv[ind[i * 3 + 2] * 2 + 1] + vOffset
-                  )
-                } else {
-                  tempQuad.set(
-                    uv[ind[i * 3 + 0] * 2 + 0],
-                    uv[ind[i * 3 + 0] * 2 + 1],
-                    uv[ind[i * 3 + 1] * 2 + 0],
-                    uv[ind[i * 3 + 1] * 2 + 1],
-                    uv[ind[i * 3 + 2] * 2 + 0],
-                    uv[ind[i * 3 + 2] * 2 + 1],
-                    uv[ind[i * 3 + 2] * 2 + 0],
-                    uv[ind[i * 3 + 2] * 2 + 1]
-                  )
-                }
-                if (this.inst.instanceTexture || isSpriteTexture) {
-                  tempQuad.setTlx(tempQuad.getTlx() * rWidth + rOffsetX)
-                  tempQuad.setTly(tempQuad.getTly() * rHeight + rOffsetY)
-                  tempQuad.setTrx(tempQuad.getTrx() * rWidth + rOffsetX)
-                  tempQuad.setTry(tempQuad.getTry() * rHeight + rOffsetY)
-                  tempQuad.setBlx(tempQuad.getBlx() * rWidth + rOffsetX)
-                  tempQuad.setBly(tempQuad.getBly() * rHeight + rOffsetY)
-                  tempQuad.setBrx(tempQuad.getBrx() * rWidth + rOffsetX)
-                  tempQuad.setBry(tempQuad.getBry() * rHeight + rOffsetY)
-                  /*
+              if (offsetMaterial) {
+                const uOffset = offsetMaterial.u
+                const vOffset = offsetMaterial.v
+                // Offset UVs in uvQuad
+                uvQuad[0][0] += uOffset
+                uvQuad[0][1] += vOffset
+                uvQuad[1][0] += uOffset
+                uvQuad[1][1] += vOffset
+                uvQuad[2][0] += uOffset
+                uvQuad[2][1] += vOffset
+              }
+              // Set tempquad
+              tempQuad.set(
+                uvQuad[0][0],
+                uvQuad[0][1],
+                uvQuad[1][0],
+                uvQuad[1][1],
+                uvQuad[2][0],
+                uvQuad[2][1],
+                uvQuad[2][0],
+                uvQuad[2][1]
+              )
+            } else if (offsetUV) {
+              const uOffset = offsetUV.u
+              const vOffset = offsetUV.v
+              tempQuad.set(
+                uv[ind[i * 3 + 0] * 2 + 0] + uOffset,
+                uv[ind[i * 3 + 0] * 2 + 1] + vOffset,
+                uv[ind[i * 3 + 1] * 2 + 0] + uOffset,
+                uv[ind[i * 3 + 1] * 2 + 1] + vOffset,
+                uv[ind[i * 3 + 2] * 2 + 0] + uOffset,
+                uv[ind[i * 3 + 2] * 2 + 1] + vOffset,
+                uv[ind[i * 3 + 2] * 2 + 0] + uOffset,
+                uv[ind[i * 3 + 2] * 2 + 1] + vOffset
+              )
+            } else {
+              tempQuad.set(
+                uv[ind[i * 3 + 0] * 2 + 0],
+                uv[ind[i * 3 + 0] * 2 + 1],
+                uv[ind[i * 3 + 1] * 2 + 0],
+                uv[ind[i * 3 + 1] * 2 + 1],
+                uv[ind[i * 3 + 2] * 2 + 0],
+                uv[ind[i * 3 + 2] * 2 + 1],
+                uv[ind[i * 3 + 2] * 2 + 0],
+                uv[ind[i * 3 + 2] * 2 + 1]
+              )
+            }
+            if (this.inst.instanceTexture || isSpriteTexture) {
+              tempQuad.setTlx(tempQuad.getTlx() * rWidth + rOffsetX)
+              tempQuad.setTly(tempQuad.getTly() * rHeight + rOffsetY)
+              tempQuad.setTrx(tempQuad.getTrx() * rWidth + rOffsetX)
+              tempQuad.setTry(tempQuad.getTry() * rHeight + rOffsetY)
+              tempQuad.setBlx(tempQuad.getBlx() * rWidth + rOffsetX)
+              tempQuad.setBly(tempQuad.getBly() * rHeight + rOffsetY)
+              tempQuad.setBrx(tempQuad.getBrx() * rWidth + rOffsetX)
+              tempQuad.setBry(tempQuad.getBry() * rHeight + rOffsetY)
+              /*
             const rcTex = imageInfo.GetTexRect();
             */
-                }
-              } else {
-                // Set face to color if possible
-                tempQuad.set(0, 0, 1, 0, 0, 1, 0, 1)
-              }
-
-              let i3 = i * 3
-              let x0, y0, z0, x1, y1, z1, x2, y2, z2
-
-              x0 = v[ind[i3 + 0] * 3 + 0]
-              y0 = v[ind[i3 + 0] * 3 + 1]
-              z0 = v[ind[i3 + 0] * 3 + 2] - z
-              x1 = v[ind[i3 + 1] * 3 + 0]
-              y1 = v[ind[i3 + 1] * 3 + 1]
-              z1 = v[ind[i3 + 1] * 3 + 2] - z
-              x2 = v[ind[i3 + 2] * 3 + 0]
-              y2 = v[ind[i3 + 2] * 3 + 1]
-              z2 = v[ind[i3 + 2] * 3 + 2] - z
-
-              let colorSum
-              if (lightUpdate) colorSum = vec4.create()
-
-              if (this.inst.wireframe) {
-                this.drawWireFrame(
-                  renderer,
-                  whiteTexture,
-                  tempQuad,
-                  x0,
-                  y0,
-                  z0,
-                  x1,
-                  y1,
-                  z1,
-                  x2,
-                  y2,
-                  z2,
-                  xWireframeWidth,
-                  yWireframeWidth,
-                  zWireframeWidth
-                )
-              } else {
-                if (lightEnable && lightUpdate) {
-                  const normal = vec3.create()
-                  const viewDir = vec3.create()
-                  const v0 = vec3.fromValues(x0, y0, z0 + z)
-                  const v1 = vec3.fromValues(x1, y1, z1 + z)
-                  const v2 = vec3.fromValues(x2, y2, z2 + z)
-
-                  vec3.transformMat4(v0, v0, this.modelRotate)
-                  vec3.transformMat4(v1, v1, this.modelRotate)
-                  vec3.transformMat4(v2, v2, this.modelRotate)
-                  const c = vec3.clone(v0)
-                  vec3.add(c, c, v1)
-                  vec3.add(c, c, v2)
-                  vec3.div(c, c, [3, 3, 3])
-
-                  vec3.cross(
-                    normal,
-                    [v1[0] - v0[0], v1[1] - v0[1], v1[2] - v0[2]],
-                    [v2[0] - v0[0], v2[1] - v0[1], v2[2] - v0[2]]
-                  )
-                  vec3.normalize(normal, normal)
-
-                  for (const light of Object.values(this.inst.lights)) {
-                    if (!light.enable) continue
-                    const l = light.pos
-                    const enableSpot = light.enableSpot
-                    const enableSpecular = light.enableSpecular
-                    const spotDir = light.spotDir
-                    const cutoff = light.cutoff
-                    const edge = light.edge
-                    const color = light.color
-                    const lightDir = vec3.fromValues(c[0] - l[0], c[1] - l[1], c[2] - l[2])
-                    const distance = vec3.length(lightDir)
-                    const attConstant = light.attConstant
-                    const attLinear = light.attLinear
-                    const attSquare = light.attSquare
-                    vec3.normalize(lightDir, lightDir)
-                    let dot = vec3.dot(normal, lightDir) * 0.5 + 0.5
-                    let att = 1.0
-                    let specular = 0.0
-                    if (enableSpot) {
-                      const spotDirN = vec3.clone(spotDir)
-                      vec3.normalize(spotDirN, spotDir)
-                      att = vec3.dot(spotDirN, lightDir)
-                      if (att < cutoff) {
-                        att = this._smoothstep(cutoff * (1 - edge), cutoff, att)
-                      } else {
-                        att = 1.0
-                      }
-                    }
-                    if (enableSpecular) {
-                      vec3.sub(viewDir, this.inst.viewPos, c)
-                      vec3.normalize(viewDir, viewDir)
-                      const reflectDir = vec3.create()
-                      const dotNI = vec3.create()
-                      vec3.dot(dotNI, normal, lightDir)
-                      vec3.scale(dotNI, dotNI, 2.0)
-                      vec3.mul(dotNI, dotNI, normal)
-                      vec3.sub(reflectDir, dotNI, lightDir)
-                      // I - 2.0 * dot(N, I) * N.
-                      vec3.sub(reflectDir, lightDir, normal)
-                      vec3.normalize(reflectDir, reflectDir)
-                      const spec = Math.pow(Math.max(vec3.dot(reflectDir, viewDir), 0.0), light.specularPower)
-                      specular = light.specularAtt * spec
-                    }
-                    att = att / (1.0 * attConstant + distance * attLinear + distance * distance * attSquare)
-                    att = att + specular
-                    dot = dot * dot * att
-                    vec4.add(colorSum, colorSum, [dot * color[0], dot * color[1], dot * color[2], dot * color[3]])
-                  }
-                  // Add ambient color to colorSum
-                  vec4.add(colorSum, colorSum, this.inst.ambientColor)
-                  // Clamp color
-                  colorSum[0] = colorSum[0] < 0.0 ? 0.0 : colorSum[0] > 1.0 ? 1.0 : colorSum[0]
-                  colorSum[1] = colorSum[1] < 0.0 ? 0.0 : colorSum[1] > 1.0 ? 1.0 : colorSum[1]
-                  colorSum[2] = colorSum[2] < 0.0 ? 0.0 : colorSum[2] > 1.0 ? 1.0 : colorSum[2]
-                  colorSum[3] = colorSum[3] < 0.0 ? 0.0 : colorSum[3] > 1.0 ? 1.0 : colorSum[3]
-
-                  drawLights.push(colorSum)
-                }
-                if (lightEnable) {
-                  const c = drawLights[i]
-                  if (baseColorChanged) vec4.mul(c, c, currentColor)
-                  renderer.SetColorRgba(c[0], c[1], c[2], 1)
-                }
-                if (vertexScale != 0) {
-                  const xScale = (this.inst.scale / (this.inst.xScale == 0 ? 1 : this.inst.xScale)) * vertexScale
-                  const yScale = (this.inst.scale / (this.inst.yScale == 0 ? 1 : this.inst.yScale)) * vertexScale
-                  const zScale = (this.inst.scale / (this.inst.zScale == 0 ? 1 : this.inst.zScale)) * vertexScale
-                  x0 = Math.round(x0 * xScale) / xScale
-                  y0 = Math.round(y0 * xScale) / yScale
-                  z0 = Math.round(z0 * xScale) / zScale
-                  x1 = Math.round(x1 * xScale) / xScale
-                  y1 = Math.round(y1 * xScale) / yScale
-                  z1 = Math.round(z1 * xScale) / zScale
-                  x2 = Math.round(x2 * xScale) / xScale
-                  y2 = Math.round(y2 * xScale) / yScale
-                  z2 = Math.round(z2 * xScale) / zScale
-                }
-                renderer.Quad3D2(x0, y0, z0, x1, y1, z1, x2, y2, z2, x2, y2, z2, tempQuad, true)
-              }
-            }
-            if (this.inst.staticGeometry) {
-              const vertexPtr = renderer._vertexPtr
-              const texPtr = renderer._texPtr
-              const meshBatch = this._sdkType.meshBatchCache.get(j)
-              // meshBatch.vertexData.push(vertexData)
-              // meshBatch.texData.push(texData)
-              const objectBuffer = new ObjectBuffer(
-                renderer,
-                null,
-                0,
-                renderer._vertexData,
-                renderer._texcoordData,
-                renderer._indexData,
-                renderer._vertexPtr,
-                renderer._texPtr
-              )
-              meshBatch.objectBuffer.push(objectBuffer)
-              meshBatch.vertexPtr.push(vertexPtr)
-              meshBatch.texPtr.push(texPtr)
-              renderer.EndBatch()
             }
           } else {
-            const meshBatch = this._sdkType?.meshBatchCache?.get(j)
-            const objectBuffer = meshBatch?.objectBuffer[subBatchIndex]
-            if (objectBuffer?.vao) {
-              let lastNumQuads = 0
-              if (subBatchIndex > 0) lastNumQuads = this._sdkType.meshBatchCache.get(j).vertexPtr[subBatchIndex - 1] / 6
-              objectBuffer.DrawGPUBuffer(renderer, lastNumQuads)
+            // Set face to color if possible
+            tempQuad.set(0, 0, 1, 0, 0, 1, 0, 1)
+          }
+
+          let i3 = i * 3
+          let x0, y0, z0, x1, y1, z1, x2, y2, z2
+
+          x0 = v[ind[i3 + 0] * 3 + 0]
+          y0 = v[ind[i3 + 0] * 3 + 1]
+          z0 = v[ind[i3 + 0] * 3 + 2] - z
+          x1 = v[ind[i3 + 1] * 3 + 0]
+          y1 = v[ind[i3 + 1] * 3 + 1]
+          z1 = v[ind[i3 + 1] * 3 + 2] - z
+          x2 = v[ind[i3 + 2] * 3 + 0]
+          y2 = v[ind[i3 + 2] * 3 + 1]
+          z2 = v[ind[i3 + 2] * 3 + 2] - z
+
+          let colorSum
+          if (lightUpdate) colorSum = vec4.create()
+
+          if (this.inst.wireframe) {
+            this.drawWireFrame(
+              renderer,
+              whiteTexture,
+              tempQuad,
+              x0,
+              y0,
+              z0,
+              x1,
+              y1,
+              z1,
+              x2,
+              y2,
+              z2,
+              xWireframeWidth,
+              yWireframeWidth,
+              zWireframeWidth
+            )
+          } else {
+            if (lightEnable && lightUpdate) {
+              const normal = vec3.create()
+              const viewDir = vec3.create()
+              const v0 = vec3.fromValues(x0, y0, z0 + z)
+              const v1 = vec3.fromValues(x1, y1, z1 + z)
+              const v2 = vec3.fromValues(x2, y2, z2 + z)
+
+              vec3.transformMat4(v0, v0, this.modelRotate)
+              vec3.transformMat4(v1, v1, this.modelRotate)
+              vec3.transformMat4(v2, v2, this.modelRotate)
+              const c = vec3.clone(v0)
+              vec3.add(c, c, v1)
+              vec3.add(c, c, v2)
+              vec3.div(c, c, [3, 3, 3])
+
+              vec3.cross(
+                normal,
+                [v1[0] - v0[0], v1[1] - v0[1], v1[2] - v0[2]],
+                [v2[0] - v0[0], v2[1] - v0[1], v2[2] - v0[2]]
+              )
+              vec3.normalize(normal, normal)
+
+              for (const light of Object.values(this.inst.lights)) {
+                if (!light.enable) continue
+                const l = light.pos
+                const enableSpot = light.enableSpot
+                const enableSpecular = light.enableSpecular
+                const spotDir = light.spotDir
+                const cutoff = light.cutoff
+                const edge = light.edge
+                const color = light.color
+                const lightDir = vec3.fromValues(c[0] - l[0], c[1] - l[1], c[2] - l[2])
+                const distance = vec3.length(lightDir)
+                const attConstant = light.attConstant
+                const attLinear = light.attLinear
+                const attSquare = light.attSquare
+                vec3.normalize(lightDir, lightDir)
+                let dot = vec3.dot(normal, lightDir) * 0.5 + 0.5
+                let att = 1.0
+                let specular = 0.0
+                if (enableSpot) {
+                  const spotDirN = vec3.clone(spotDir)
+                  vec3.normalize(spotDirN, spotDir)
+                  att = vec3.dot(spotDirN, lightDir)
+                  if (att < cutoff) {
+                    att = this._smoothstep(cutoff * (1 - edge), cutoff, att)
+                  } else {
+                    att = 1.0
+                  }
+                }
+                if (enableSpecular) {
+                  vec3.sub(viewDir, this.inst.viewPos, c)
+                  vec3.normalize(viewDir, viewDir)
+                  const reflectDir = vec3.create()
+                  const dotNI = vec3.create()
+                  vec3.dot(dotNI, normal, lightDir)
+                  vec3.scale(dotNI, dotNI, 2.0)
+                  vec3.mul(dotNI, dotNI, normal)
+                  vec3.sub(reflectDir, dotNI, lightDir)
+                  // I - 2.0 * dot(N, I) * N.
+                  vec3.sub(reflectDir, lightDir, normal)
+                  vec3.normalize(reflectDir, reflectDir)
+                  const spec = Math.pow(Math.max(vec3.dot(reflectDir, viewDir), 0.0), light.specularPower)
+                  specular = light.specularAtt * spec
+                }
+                att = att / (1.0 * attConstant + distance * attLinear + distance * distance * attSquare)
+                att = att + specular
+                dot = dot * dot * att
+                vec4.add(colorSum, colorSum, [dot * color[0], dot * color[1], dot * color[2], dot * color[3]])
+              }
+              // Add ambient color to colorSum
+              vec4.add(colorSum, colorSum, this.inst.ambientColor)
+              // Clamp color
+              colorSum[0] = colorSum[0] < 0.0 ? 0.0 : colorSum[0] > 1.0 ? 1.0 : colorSum[0]
+              colorSum[1] = colorSum[1] < 0.0 ? 0.0 : colorSum[1] > 1.0 ? 1.0 : colorSum[1]
+              colorSum[2] = colorSum[2] < 0.0 ? 0.0 : colorSum[2] > 1.0 ? 1.0 : colorSum[2]
+              colorSum[3] = colorSum[3] < 0.0 ? 0.0 : colorSum[3] > 1.0 ? 1.0 : colorSum[3]
+
+              drawLights.push(colorSum)
             }
+            if (lightEnable) {
+              const c = drawLights[i]
+              if (baseColorChanged) vec4.mul(c, c, currentColor)
+              renderer.SetColorRgba(c[0], c[1], c[2], 1)
+            }
+            if (vertexScale != 0) {
+              const xScale = (this.inst.scale / (this.inst.xScale == 0 ? 1 : this.inst.xScale)) * vertexScale
+              const yScale = (this.inst.scale / (this.inst.yScale == 0 ? 1 : this.inst.yScale)) * vertexScale
+              const zScale = (this.inst.scale / (this.inst.zScale == 0 ? 1 : this.inst.zScale)) * vertexScale
+              x0 = Math.round(x0 * xScale) / xScale
+              y0 = Math.round(y0 * xScale) / yScale
+              z0 = Math.round(z0 * xScale) / zScale
+              x1 = Math.round(x1 * xScale) / xScale
+              y1 = Math.round(y1 * xScale) / yScale
+              z1 = Math.round(z1 * xScale) / zScale
+              x2 = Math.round(x2 * xScale) / xScale
+              y2 = Math.round(y2 * xScale) / yScale
+              z2 = Math.round(z2 * xScale) / zScale
+            }
+            renderer.Quad3D2(x0, y0, z0, x1, y1, z1, x2, y2, z2, x2, y2, z2, tempQuad, true)
           }
         }
       }
-    }
-
-    if (this.inst.staticGeometry && !this._sdkType.meshBatchCacheComplete) {
-      this._sdkType.meshBatchCacheComplete = true
     }
 
     // Restore modelview matrix
@@ -950,6 +770,7 @@ class GltfModel {
     // Restore attrib
     if (this.inst.staticGeometry) {
       // Restore for other C3 objects
+      // XXX may no longer be needed with new object buffer and separate vertex/texcoord buffers
       const gl = renderer._gl
       const batchState = renderer._batchState
       const shaderProgram = batchState.currentShader._shaderProgram
@@ -965,7 +786,6 @@ class GltfModel {
       renderer._texPtr = 0
     }
     if (!this.inst.isEditor) {
-      // this._OrphanBuffers(renderer)
       renderer.EndBatch()
     }
   }
@@ -1138,15 +958,6 @@ class GltfModel {
     }
     return vout
   }
-
-  storeMeshAttributes(mesh) {
-    const gltf = this.gltfData
-    const drawVerts = this.drawMeshes[this.drawMeshesIndex].drawVerts
-    const drawUVs = this.drawMeshes[this.drawMeshesIndex].drawUVs
-    const drawIndices = this.drawMeshes[this.drawMeshesIndex].drawIndices
-    const drawColors = this.drawMeshes[this.drawMeshesIndex].drawColors
-  }
-
   //	Updates scene graph, and as a second step sends transformed skinned mesh points to c2.
   getPolygons(staticGeometry = false) {
     // @ts-ignore
