@@ -886,6 +886,18 @@
             ]
           },
           {
+            "id": "set-gpu-skinning",
+            "scriptName": "SetGPUSkinning",
+            "highlight": false,
+            "params": [
+              {
+                "id": "enable",
+                "type": "boolean",
+                "initialValue": "false"
+              }
+            ]
+          },
+          {
             "id": "set-quaternion",
             "scriptName": "SetQuaternion",
             "highlight": false,

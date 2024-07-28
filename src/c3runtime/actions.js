@@ -472,8 +472,12 @@
       if (enable) {
         this.renderOnce = true
       }
-      if (!enable) {
-        this.gltf.meshBatchCache = new Map()
+    },
+    SetGPUSkinning(enable) {
+      this.staticGeometry = enable
+      this.gpuSkinning = enable
+      if (enable) {
+        this.renderOnce = true
       }
     },
   }
