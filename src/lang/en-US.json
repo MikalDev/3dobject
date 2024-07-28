@@ -849,6 +849,17 @@
               }
             }
           },
+          "set-gpu-skinning": {
+            "list-name": "Set gpu skinning",
+            "display-text": "Set gpu skinning {0}",
+            "description": "Set gpu skinning (static geometry must be enabled).",
+            "params": {
+              "enable": {
+                "name": "Enable",
+                "desc": "Enable gpu skinning."
+              }
+            }
+          },
           "set-blend-mode": {
             "list-name": "Set blend mode",
             "display-text": "Set blend mode to {0}",

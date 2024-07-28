@@ -76,6 +76,7 @@
       this.spriteTextures = new Map()
       this.fragLight = false
       this.staticGeometry = false
+      this.gpuSkinning = false
       this.cameraVector = [0, 1, 0]
       this.cameraPosition = [0, 0, 0]
       this.animationOffset = 0
@@ -206,7 +207,8 @@
               this.animationTime,
               onScreen,
               deltaTime,
-              this.staticGeometry
+              this.staticGeometry,
+              this.gpuSkinning
             )
           }
           // } else if (this.renderOnce || (this.workerAnimation))
