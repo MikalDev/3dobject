@@ -1,9 +1,9 @@
 // @ts-check
 "use strict"
+// @ts-ignore
 class BoneBuffer {
   constructor(renderer, numBones, skinAnimation = false) {
     const gl = renderer._gl
-    const mat4 = globalThis.glMatrix3D.mat4
     // Get uBones location from current shader program
     const shaderProgram = renderer._batchState.currentShader._shaderProgram
     this.locABones = gl.getUniformLocation(shaderProgram, "uBones")
@@ -258,7 +258,7 @@ class ObjectBuffer {
     renderer._topOfBatch = 0
   }
 
-  draw(renderer, boneBuffer, zElevation) {
+  draw(renderer, boneBuffer) {
     const gl = renderer._gl
     this._ExecuteBatch(renderer)
     gl.bindVertexArray(this.vao)

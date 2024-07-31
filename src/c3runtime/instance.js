@@ -437,7 +437,6 @@
       }
       if (this.gltf) {
         this.gltf.release()
-        console.log("Instance released")
       }
       this.sdkType = null
       this.runtime = null
