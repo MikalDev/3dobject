@@ -5,8 +5,12 @@
 let msgPort = null
 let id = Math.random()
 let buff = null
+let buffBones = null
+let buffNodeMats = null
 let buffLights = null
 let drawVerts = null
+let drawBones = null
+let drawNodeMats = null
 let drawLights = null
 let drawLightsBufferViews = []
 let index = 0
@@ -14,10 +18,14 @@ let gltf = null
 let minBB = [Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY]
 let maxBB = [Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY]
 let buffLength = 0
+let buffBonesLength = 0
+let buffNodeMatsLength = 0
 const disabledNodes = new Map()
 const nodeMorphWeights = new Map()
 let activeNodes = []
 let nodeIndex = 0
+let bonesIndex = 0
+let nodeMatsIndex = 0
 let drawMeshes = null
 
 function initEventListeners(e) {
@@ -32,12 +40,15 @@ function initEventListeners(e) {
 self.addEventListener("message", initEventListeners)
 
 function OnMessage(e) {
+  console.log("msg:", e?.data?.type)
   switch (e.data.type) {
     case "init":
       break
     case "gltf":
       gltf = e.data.gltf
       buffLength = e.data.buffLength
+      buffBonesLength = e.data.buffBonesLength
+      buffNodeMatsLength = e.data.buffNodeMatsLength
       drawMeshes = e.data.drawMeshes
       break
     case "updateAnimationPolygons":
@@ -136,6 +147,8 @@ function updateAnimationPolygons(data) {
   const editorData = data.editorData
   const lightEnable = editorData.lightEnable
   const lightUpdate = editorData.lightUpdate
+  const gpuSkinning = editorData.gpuSkinning
+  console.log("[w] gpuSkinning", gpuSkinning)
 
   updateAnimation(animationData)
   if (animationData.onScreen) {
@@ -147,8 +160,14 @@ function updateAnimationPolygons(data) {
     drawVerts[drawVerts.length - 1] = editorData.tick
     setBBInVerts(drawVerts, minBB, maxBB)
     if (lightEnable && lightUpdate) updateLight(editorData)
-    let msg = { buff, activeNodes, buffLights, drawLightsBufferViews, drawLightsEnable: lightEnable, lightUpdate }
-    msgPort.postMessage(msg, [msg.buff, msg.buffLights])
+    if (gpuSkinning) {
+      // XXX Don't need to pass back buff
+      let msg = { activeNodes, buffBones, buffNodeMats, gpuSkinning: true, buff }
+      msgPort.postMessage(msg, [msg.buffBones, msg.buffNodeMats, msg.buff])
+    } else {
+      let msg = { buff, activeNodes, buffLights, drawLightsBufferViews, drawLightsEnable: lightEnable, lightUpdate }
+      msgPort.postMessage(msg, [msg.buff, msg.buffLights])
+    }
     drawVerts = null
     buffLights = null
     drawLightsBufferViews = []
@@ -374,6 +393,7 @@ function getPolygonsPrep(editorData) {
   const mat4 = glMatrix.mat4
   // @ts-ignore
   const quat = glMatrix.quat
+  const gpuSkinning = editorData.gpuSkinning
   // New array buffer for each frame
   // Extra data: minBB, maxBB, tick
   // buff = new ArrayBuffer((buffLength+7)*4)
@@ -381,8 +401,16 @@ function getPolygonsPrep(editorData) {
   // One light per triangle
   buffLights = new ArrayBuffer(buffLength * 4)
   drawLights = new Uint32Array(buffLights)
+  if (gpuSkinning) {
+    buffBones = new ArrayBuffer(buffBonesLength * 4)
+    drawBones = new Float32Array(buffBones)
+    buffNodeMats = new ArrayBuffer(buffNodeMatsLength * 4)
+    drawNodeMats = new Float32Array(buffNodeMats)
+  }
   // drawVerts index
   index = 0
+  bonesIndex = 0
+  nodeMatsIndex = 0
   const isEditor = editorData.isEditor
   activeNodes = []
   nodeIndex = 0
@@ -441,6 +469,15 @@ function getPolygonsPrep(editorData) {
 
       mat4.multiply(joint.boneMatrix, node.invMatrix, joint.matrix)
       mat4.multiply(joint.boneMatrix, joint.boneMatrix, joint.invBindMatrix)
+      if (gpuSkinning) {
+        drawBones.set(bonesIndex, joint.boneMatrix)
+        bonesIndex += 16
+      }
+    }
+
+    if (gpuSkinning) {
+      drawBones.set(bonesIndex, rootNodeXform)
+      bonesIndex += 16
     }
 
     for (let i = 0; i < node.mesh.primitives.length; i++) {
@@ -525,7 +562,7 @@ function getPolygonsPrep(editorData) {
     Updates a node's matrix and all it's children nodes.
     After that it transforms unskinned mesh points and sends them to c2.
 */
-function transformNode(node, parentMat, modelScaleRotate, isEditor) {
+function transformNode(node, parentMat, modelScaleRotate, isEditor, gpuSkinning) {
   // @ts-ignore
   const mat4 = glMatrix.mat4
   // @ts-ignore
@@ -540,10 +577,16 @@ function transformNode(node, parentMat, modelScaleRotate, isEditor) {
   mat4.multiply(node.matrix, node.matrix, mat4.fromQuat(dummyMat4Out, node.rotation))
   mat4.scale(node.matrix, node.matrix, node.scale)
 
+  // XXX unused?
   if (node.skin != undefined) mat4.invert(node.invMatrix, node.matrix)
 
   // unskinned meshes
   if (node.mesh != undefined && node.skin == undefined) {
+    if (gpuSkinning) {
+      drawNodeMats.set(nodeMatsIndex, node.matrix)
+      nodeMatsIndex += 16
+    }
+
     for (let i = 0; i < node.mesh.primitives.length; i++) {
       let posData = node.mesh.primitives[i].attributes.POSITION.data
 
@@ -574,6 +617,8 @@ function transformNode(node, parentMat, modelScaleRotate, isEditor) {
       nodeIndex++
 
       for (let j = 0; j < posData.length / 3; j++) {
+        if (gpuSkinning) continue
+
         let vin = posData.subarray(j * 3, j * 3 + 3)
         if (morphActive) {
           vin = morphTargetsXform(vin, j, morphWeights, morphTargets)
