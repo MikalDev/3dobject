@@ -657,7 +657,86 @@
     ]
   },
   "material": {
-    "actions": [{
+    "actions": [
+      {
+        "id": "load-material",
+        "isAsync": true,
+        "scriptName": "LoadMaterial",
+        "highlight": false,
+        "params": [
+          {
+            "id": "material-path",
+            "type": "string",
+            "initialValue": ""
+          },
+          {
+            "id": "material-name",
+            "type": "string",
+            "initialValue": ""
+          }
+        ]
+      },
+      {
+        "id": "load-material-from-sprite",
+        "isAsync": false,
+        "scriptName": "LoadMaterialFromSprite",
+        "highlight": false,
+        "params": [
+          {
+            "id": "sprite-uid",
+            "type": "number",
+            "initialValue": ""
+          },
+          {
+            "id": "material-name",
+            "type": "string",
+            "initialValue": ""
+          }
+        ]
+      },
+      {
+        "id": "unload-material-from-sprite",
+        "isAsync": false,
+        "scriptName": "UnloadMaterialFromSprite",
+        "highlight": false,
+        "params": [
+          {
+            "id": "material-name",
+            "type": "string",
+            "initialValue": ""
+          }
+        ]
+      },
+      {
+        "id": "set-mesh-material",
+        "scriptName": "SetMeshMaterial",
+        "highlight": false,
+        "params": [
+          {
+            "id": "mesh-name",
+            "type": "string",
+            "initialValue": ""
+          },
+          {
+            "id": "material-name",
+            "type": "string",
+            "initialValue": ""
+          }
+        ]
+      },
+      {
+        "id": "delete-material",
+        "scriptName": "DeleteMaterial",
+        "highlight": false,
+        "params": [
+          {
+            "id": "material-name",
+            "type": "string",
+            "initialValue": ""
+          }
+        ]
+      },
+      {
       "id": "offset-node-uv",
       "scriptName": "OffsetNodeUV",
       "highlight": false,
@@ -839,6 +918,29 @@
   "lighting": {
     "conditions": [],
     "actions": [
+      {
+        "id": "set-light-dir",
+        "scriptName": "SetLightDir",
+        "highlight": false,
+        "isDeprecated": true,
+        "params": [
+          {
+            "id": "x",
+            "type": "number",
+            "initialValue": 0
+          },
+          {
+            "id": "y",
+            "type": "number",
+            "initialValue": 0
+          },
+          {
+            "id": "z",
+            "type": "number",
+            "initialValue": 0
+          }
+        ]
+      },
       {
         "id": "enable-frag-light",
         "scriptName": "EnableFragLight",
