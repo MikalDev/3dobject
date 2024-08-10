@@ -17,12 +17,12 @@
             "desc": "mtl file path."
           },
           "gtlf-path": {
-            "name": "gtlf path",
-            "desc": "gtlf file path."
+            "name": "gltf path",
+            "desc": "File path, supports .gltf or .glb files (subfoldername/filename.glb)."
           },
           "scale": {
             "name": "Scale",
-            "desc": "Scale object."
+            "desc": "Scale of the object."
           },
           "edit-image": {
             "name": "Edit image",
@@ -49,17 +49,17 @@
             "name": "Rotation order",
             "desc": "Axis euler angle rotation order.",
             "items": {
-              "xyz": "xyz",
-              "xzy": "xzy",
-              "yxz": "yxz",
-              "yzx": "yzx",
-              "zxy": "zxy",
-              "zyx": "zyx" 
+              "xyz": "XYZ",
+              "xzy": "XZY",
+              "yxz": "YXZ",
+              "yzx": "YZX",
+              "zxy": "ZXY",
+              "zyx": "ZYX" 
             }
           },
           "debug": {
             "name": "Debug",
-            "desc": "Debug logging."
+            "desc": "Wether debug info should be logged into the console."
           },
           "animation-blend": {
             "name": "Animation blend",
@@ -67,11 +67,11 @@
           },
           "instance-model": {
             "name": "Instance model data",
-            "desc": "Model data per instance."
+            "desc": "Wether each instance can have its own model data."
           },
           "image-texture": {
             "name": "Image texture",
-            "desc": "Use only image texture, ignore materials and other textures."
+            "desc": "Use only the image texture, ignore materials and other textures."
           },
           "x-scale": {
             "name": "X scale",
@@ -87,15 +87,15 @@
           },
           "wireframe": {
             "name": "Wireframe",
-            "desc": "Render as wireframe."
+            "desc": "Render model as wireframe."
           },
           "worker-animation": {
             "name": "Worker animation",
-            "desc": "Offload animation to worker useful for larger animated models."
+            "desc": "Offload animation to worker, useful for animated models with complex geometry."
           },
           "cpu-xform": {
             "name": "Worker BFC",
-            "desc": "Enable worker back face culling."
+            "desc": "Wether back face culling should be done by a worker."
           }
         },
         "aceCategories": {
@@ -118,13 +118,13 @@
             "description": "True if the animation has finished (only true if not looping)."
           },
           "on-animation-finished": {
-            "list-name": "On animation finished",
-            "display-text": "On animation finished",
+            "list-name": "On any animation finished",
+            "display-text": "On any animation finished",
             "description": "Triggers when the animation has finished (only triggered if not looping)."
           },
           "on-animation-name-finished": {
-            "list-name": "On animation name finished",
-            "display-text": "On animation {0} finished",
+            "list-name": "On animation finished",
+            "display-text": "On animation [b]{0}[/b] finished",
             "description": "Triggers when the named animation has finished (only triggered if not looping).",
             "params": {
               "name": {
@@ -136,11 +136,11 @@
           "is-wireframe-enabled": {
             "list-name": "Is wireframe enabled",
             "display-text": "Is wireframe enabled",
-            "description": "True if wireframe is enabled."
+            "description": "True if model is renered as wireframe."
           },
           "is-playing": {
             "list-name": "Is playing",
-            "display-text": "Is animation {0} playing",
+            "display-text": "Is animation [b]{0}[/b] playing",
             "description": "Is the named animation playing.",
             "params": {
               "animation-name": {
@@ -153,7 +153,7 @@
         "actions": {
           "rotate": {
             "list-name": "Rotate",
-            "display-text": "Rotate {0} degrees around {1} axis",
+            "display-text": "Rotate [i]{0}[/i] degrees around [i]{1}[/i] axis",
             "description": "Rotate object around a specific axis.",
             "params": {
               "angle": {
@@ -173,7 +173,7 @@
           },
           "set-z-elevation-0": {
             "list-name": "Set z elevation",
-            "display-text": "Set z elevation to {0}",
+            "display-text": "Set z elevation to [i]{0}[/i]",
             "description": "Set z elevation (world z axis, depth component).",
             "params": {
                   "z-elevation": {
@@ -184,8 +184,8 @@
           },
           "set-local-center": {
             "list-name": "Set local center",
-            "display-text": "Set local center to {0}, {1}, {2}",
-            "description": "Set local center of object in original obj file coordinate system.",
+            "display-text": "Set local center to [i]{0}, {1}, {2}[/i]",
+            "description": "Set the local center of the 3DObject in the original model files coordinate system.",
             "params": {
               "x": {
                 "name": "X",
@@ -203,7 +203,7 @@
           },
           "set-scale": {
             "list-name": "Set scale",
-            "display-text": "Set scale to {0}",
+            "display-text": "Set scale to [i]{0}[/i]",
             "description": "Set scale from original object size.",
             "params": {
                   "scale": {
@@ -214,7 +214,7 @@
           },
           "set-z-height": {
             "list-name": "Set z height",
-            "display-text": "Set z height to {0}",
+            "display-text": "Set z height to [i]{0}[/i]",
             "description": "Set z height, used for viewport clipping.",
             "params": {
                   "z-height": {
@@ -224,8 +224,8 @@
               }
           },
           "set-rotation": {
-            "list-name": "Set x,y,z rotation",
-            "display-text": "Set rotation to {0}, {1}, {2}, {3} order",
+            "list-name": "Set X,Y,Z rotation",
+            "display-text": "Set rotation to [b]{0}({0}, {1}, {2}[/b], [i]({3} rotation order)[/i]",
             "description": "Set rotation of object from the original position, with rotation order.",
             "params": {
               "x": {
@@ -256,7 +256,7 @@
           },
           "play-animation": {
             "list-name": "Play animation",
-            "display-text": "Play animation {0}, loop {1}",
+            "display-text": "Play animation [b]{0}[/b], [i](is looping {1})[/i]",
             "description": "Play animation by name.",
             "params": {
                   "animation": {
@@ -278,8 +278,8 @@
 
           },
           "unpause-animation": {
-            "list-name": "Unpause animation",
-            "display-text": "Unpause animation",
+            "list-name": "Resume animation",
+            "display-text": "Resume animation",
             "description": "Unpause playing animation.",
             "params": {
             }
@@ -287,7 +287,7 @@
           },
           "set-animation-rate": {
             "list-name": "Set animation rate",
-            "display-text": "Set animation rate to {0}",
+            "display-text": "Set animation rate to [i]{0}[/i]",
             "description": "Set animation rate (FPS).",
             "params": {
                   "rate": {
@@ -298,7 +298,7 @@
           },
           "set-animation-speed": {
             "list-name": "Set animation speed",
-            "display-text": "Set animation speed to {0}x",
+            "display-text": "Set animation speed to [i]{0}x[/i]",
             "description": "Set animation speed.",
             "params": {
                   "speed": {
@@ -308,9 +308,9 @@
               }
           },
           "set-x-scale": {
-            "list-name": "Set x scale",
-            "display-text": "Set x scale to {0}",
-            "description": "Set x scale.",
+            "list-name": "Set X scale",
+            "display-text": "Set X scale to [i]{0}[/i]",
+            "description": "Set X scale.",
             "params": {
                   "x-scale": {
                       "name": "X scale",
@@ -319,9 +319,9 @@
               }
           },
           "set-y-scale": {
-            "list-name": "Set y scale",
-            "display-text": "Set y scale to {0}",
-            "description": "Set y scale.",
+            "list-name": "Set Y scale",
+            "display-text": "Set Y scale to [i]{0}[/i]",
+            "description": "Set Y scale.",
             "params": {
                   "y-scale": {
                       "name": "Y scale",
@@ -330,9 +330,9 @@
               }
           },
           "set-z-scale": {
-            "list-name": "Set z scale",
-            "display-text": "Set z scale to {0}",
-            "description": "Set z scale.",
+            "list-name": "Set Z scale",
+            "display-text": "Set Z scale to [i]{0}[/i]",
+            "description": "Set Z scale.",
             "params": {
                   "z-scale": {
                       "name": "Z scale",
@@ -349,7 +349,7 @@
           },
           "load-model": {
             "list-name": "Load model",
-            "display-text": "Load model {0}",
+            "display-text": "Load model [i]{0}[/i]",
             "description": "Load model from path.",
             "params": {
                   "gltf-path": {
@@ -360,12 +360,12 @@
           },
           "load-material": {
             "list-name": "Load material",
-            "display-text": "Load material {1} from {0}",
+            "display-text": "Load material [i]{1}[/i] from [i]{0}[/i]",
             "description": "Load material from path.",
             "params": {
               "material-path": {
                   "name": "Material path",
-                  "desc": "Material project filename or URL to material (png) file."
+                  "desc": "Material project filename or URL to material (.png) file."
               },
               "material-name": {
                 "name": "Material name",
@@ -375,7 +375,7 @@
           },
           "load-material-from-sprite": {
             "list-name": "Load material from sprite",
-            "display-text": "Load material {1} from sprite uid {0}",
+            "display-text": "Load material [i]{1}[/i] from sprite uid [i]{0}[/i]",
             "description": "Load material from sprite.",
             "params": {
               "sprite-uid": {
@@ -390,7 +390,7 @@
           },
           "unload-material-from-sprite": {
             "list-name": "Unload material from sprite",
-            "display-text": "Unload material {0} from sprite",
+            "display-text": "Unload material [i]{0}[/i] from sprite",
             "description": "Unload material from sprite.",
             "params": {
               "material-name": {
@@ -401,7 +401,7 @@
           },
           "set-mesh-material": {
             "list-name": "Set node material",
-            "display-text": "Set node {0} to material {1}",
+            "display-text": "Set node [i]{0}[/i] to material [i]{1}[/i]",
             "description": "Set node to use a material.",
             "params": {
               "mesh-name": {
@@ -416,7 +416,7 @@
           },
           "enable-node": {
             "list-name": "Enable node",
-            "display-text": "Set node {0} enable to {1}",
+            "display-text": "Set node [i]{0}[/i] enable to [i]{1}[/i]",
             "description": "Enable or disable node for render.",
             "params": {
               "node-name": {
@@ -431,8 +431,8 @@
           },
           "delete-material": {
             "list-name": "Delete material",
-            "display-text": "Delete material {0}",
-            "description": "Delete material (remove from GPU memory).",
+            "display-text": "Delete material [i]{0}[/i]",
+            "description": "Release material (remove from GPU memory).",
             "params": {
               "material-name": {
                 "name": "Material name",
@@ -441,9 +441,9 @@
             }
           },
           "set-origin-x": {
-            "list-name": "Set origin x",
-            "display-text": "Set origin x to {0}",
-            "description": "Set origin x (Normalized value, 0.5 is center).",
+            "list-name": "Set origin X",
+            "display-text": "Set origin X to [i]{0}[/i]",
+            "description": "Set origin X (Normalized value, 0.5 is center).",
             "params": {
                   "origin-x": {
                       "name": "X origin",
@@ -452,9 +452,9 @@
               }
           },
           "set-origin-y": {
-            "list-name": "Set origin y",
-            "display-text": "Set origin y to {0}",
-            "description": "Set origin y (Normalized value, 0.5 is center).",
+            "list-name": "Set origin Y",
+            "display-text": "Set origin Y to [i]{0}[/i]",
+            "description": "Set origin Y (Normalized value, 0.5 is center).",
             "params": {
                   "origin-y": {
                       "name": "Y origin",
@@ -464,7 +464,7 @@
           },
           "set-bbox-scale": {
             "list-name": "Set bounding box scale",
-            "display-text": "Set bounding box scale to {0}",
+            "display-text": "Set bounding box scale to [i]{0}[/i]",
             "description": "Set bounding box scale.",
             "params": {
                   "scale": {
@@ -475,7 +475,7 @@
           },
           "enable-wireframe": {
             "list-name": "Enable wireframe",
-            "display-text": "Set wireframe enable to {0}",
+            "display-text": "Set wireframe enable to [i]{0}[/i]",
             "description": "Enable or disable wireframe render.",
             "params": {
               "enable": {
@@ -485,9 +485,9 @@
             }
           },
           "set-wireframe-widths": {
-            "list-name": "Set wireframe  x, y, z line widths",
-            "display-text": "Set wireframe line widths to {0}, {1}, {2}",
-            "description": "Set wireframe x, y, z widths.",
+            "list-name": "Set wireframe  X, Y, Z line widths",
+            "display-text": "Set wireframe line widths to [i]{0}, {1}, {2}[/i]",
+            "description": "Set wireframe X, y, Z widths.",
             "params": {
               "x-wireframe-width": {
                   "name": "X width",
@@ -505,39 +505,39 @@
           },
           "set-camera-vector-pos": {
             "list-name": "Set camera vector and position",
-            "display-text": "Set camera vector to {0}, {1}, {2} and position to {3}, {4}, {5}",
+            "display-text": "Set camera vector to [i]({0}, {1}, {2})[/i] and position to [i]({3}, {4}, {5}[/i]",
             "description": "Set camera vector and position.",
             "params": {
               "x": {
-                  "name": "X vec",
+                  "name": "Vector X",
                   "desc": "X vector."
               },
               "y": {
-                "name": "Y vec",
+                "name": "Vector Y",
                 "desc": "Y vector."
               },
               "z": {
-                "name": "Z vec",
+                "name": "Vector Z",
                 "desc": "Z vector."
               },
               "x-pos": {
-                "name": "X position",
+                "name": "Camera X",
                 "desc": "X position."
               },
               "y-pos": {
-                "name": "Y position",
+                "name": "Camera Y",
                 "desc": "Y position."
               },
               "z-pos": {
-                "name": "Z position",
+                "name": "Camera Z",
                 "desc": "Z position."
               }
             }
           },
           "offset-node-uv": {
             "list-name": "Offset node UV",
-            "display-text": "Offset node {0} UV by {1}, {2}",
-            "description": "Offset node UV texture coordinates.",
+            "display-text": "Offset node [b]{0})[/b] UV by [i]({1}, {2})[/i]",
+            "description": "Offset a nodes UV texture coordinates.",
             "params": {
               "node-name": {
                   "name": "Node name",
@@ -555,7 +555,7 @@
           },
           "offset-material-uv": {
             "list-name": "Offset material UV",
-            "display-text": "Offset material {0} UV by {1}, {2}",
+            "display-text": "Offset material [b]{0})[/b] UV by [i]({1}, {2})[/i]",
             "description": "Offset material UV texture coordinates.",
             "params": {
               "material-name": {
@@ -574,7 +574,7 @@
           },
           "rotate-material-uv": {
             "list-name": "Rotate material UV",
-            "display-text": "Rotate material {0} UV by {1} around {2}, {3}",
+            "display-text": "Rotate material [b]{0})[/b] UV by {1} degrees around [i]({2}, {3})[/i]",
             "description": "Rotate material UV texture coordinates around point.",
             "params": {
               "material-name": {
@@ -583,7 +583,7 @@
               },
               "angle": {
                 "name": "Angle",
-                "desc": "Angle (degrees)."
+                "desc": "Angle in degrees."
               },
               "x": {
                 "name": "X",
@@ -597,7 +597,7 @@
           },
           "set-light-dir": {
             "list-name": "Set light direction",
-            "display-text": "Set light direction to {0}, {1}, {2}",
+            "display-text": "Set light direction to [i]({0}, {1}, {2})[/i]",
             "description": "Set light direction.",
             "params": {
               "x": {
@@ -616,7 +616,7 @@
           },
           "set-view-pos": {
             "list-name": "Set view position",
-            "display-text": "Set view position to {0}, {1}, {2}",
+            "display-text": "Set view position to i]({0}, {1}, {2})[/i]",
             "description": "Set view position for specular lighting.",
             "params": {
               "x": {
@@ -635,7 +635,7 @@
           },
           "load-model-from-template": {
             "list-name": "Load model from prefab instance",
-            "display-text": "Load model from prefab uid {0}",
+            "display-text": "Load model from prefab uid [i]{0}[/i]",
             "description": "Load model from prefab instance of object.",
             "params": {
                   "template-uid": {
@@ -646,7 +646,7 @@
           },
           "set-animation-blend": {
             "list-name": "Set animation blend time",
-            "display-text": "Set animation blend time to {0}s",
+            "display-text": "Set animation blend time to [i]{0}[/i] seconds",
             "description": "Set animation blend time.",
             "params": {
                   "blend-time": {
@@ -657,7 +657,7 @@
           },
           "enable-light": {
             "list-name": "Enable lights",
-            "display-text": "Enable lights {0}",
+            "display-text": "Set lights enabled: {0}",
             "description": "Enable lights",
             "params": {
                   "enable": {
@@ -679,7 +679,7 @@
           },
           "add-lights": {
             "list-name": "Add light",
-            "display-text": "Add light {0},{1},{2},{3},{4},{5},{6},{6},{7},{8},{9},{10},{11},{12},{13},{14},{15},{16},{17}",
+            "display-text": "Add light [i]({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, {17})[/i]",
             "description": "Add light.",
             "params": {
                 "name": {
@@ -758,7 +758,7 @@
           },
           "enable-lights": {
             "list-name": "Enable light",
-            "display-text": "Enable light {0} {1}",
+            "display-text": "Set light [b]{0}[/b] enabled: {1}",
             "description": "Enable light.",
             "params": {
                   "name": {
@@ -773,7 +773,7 @@
           },
           "delete-lights": {
             "list-name": "Delete light",
-            "display-text": "Delete light {0}",
+            "display-text": "Delete light [b]{0}[/b] ",
             "description": "Delete light",
             "params": {
                   "name": {
@@ -784,7 +784,7 @@
           },
           "set-ambient-color": {
             "list-name": "Set ambient color",
-            "display-text": "Set ambient color {0}",
+            "display-text": "Set ambient color [i]{0}[/i]",
             "description": "Set ambient color",
             "params": {
                   "color": {
@@ -795,7 +795,7 @@
           },
           "set-node-morph-weight": {
             "list-name": "Set node morph target weight",
-            "display-text": "Set node {0} target {1} weight to {2}",
+            "display-text": "Set node [b]{0}[/b] target [i]{1}[/i] weight to [i]{2}[/i]",
             "description": "Set node morph target weight.",
             "params": {
               "name": {
@@ -814,7 +814,7 @@
           },
           "delete-node-morph-weight": {
             "list-name": "Delete node morph target weight",
-            "display-text": "Delete node {0} target {1} weight",
+            "display-text": "Delete node [b]{0}[/b] target [i]{1}[/i] weight",
             "description": "Delete node morph target weight.",
             "params": {
               "name": {
@@ -829,8 +829,8 @@
           },
           "set-vertex-rounding": {
             "list-name": "Set vertex rounding",
-            "display-text": "Set vertex rounding to {0}",
-            "description": "Set vertex rounding (typically 1,2,3, etc.).",
+            "display-text": "Set vertex rounding to [i]{0}[/i]",
+            "description": "Set vertex rounding (typically 1, 2, 3, etc.).",
             "params": {
               "round": {
                 "name": "Round",
@@ -840,7 +840,7 @@
           },
           "set-static-geometry": {
             "list-name": "Set static geometry",
-            "display-text": "Set static geometry {0}",
+            "display-text": "Set static geometry [i]{0}[/i]",
             "description": "Set static geometry.",
             "params": {
               "enable": {
@@ -851,7 +851,7 @@
           },
           "set-blend-mode": {
             "list-name": "Set blend mode",
-            "display-text": "Set blend mode to {0}",
+            "display-text": "Set blend mode to [i]{0}[/i]",
             "description": "Set blend mode.",
             "params": {
               "blend-mode": {
@@ -874,7 +874,7 @@
           },
           "set-quaternion": {
             "list-name": "Set quaternion",
-            "display-text": "Set quaternion to {0}, offset {1}, {2}, {3}",
+            "display-text": "Set quaternion to {0}, offset [i]({1}, {2}, {3})[/i]",
             "description": "Set quaternion for rotation (JSON array string).",
             "params": {
               "quaternion": {
@@ -897,7 +897,7 @@
           },
           "enable-quaternion": {
             "list-name": "Enable quaternion",
-            "display-text": "Enable quaternion {0}",
+            "display-text": "Set quaternion enabled: [b]{0}[/b]",
             "description": "Enable quaternion for rotation.",
             "params": {
               "enable": {
@@ -908,7 +908,7 @@
           },
           "enable-frag-light": {
             "list-name": "Enable fragment light mode",
-            "display-text": "Enable frag light mode {0}",
+            "display-text": "Set fragment light mode enabled: [b]{0}[/b]",
             "description": "Enable fragment light mode for fragment light effect.",
             "params": {
               "enable": {
@@ -926,7 +926,7 @@
             "params": {}
           },
           "z-elevation-0": {
-            "description": "Get z elevation-0.",
+            "description": "Get Z elevation-0.",
             "translated-name": "ZElevation-0",
             "params": {}
           },
@@ -951,17 +951,17 @@
             "params": {}
           },
           "x-scale": {
-            "description": "Get x scale.",
+            "description": "Get X scale.",
             "translated-name": "XScale",
             "params": {}
           },
           "y-scale": {
-            "description": "Get y scale.",
+            "description": "Get Y scale.",
             "translated-name": "YScale",
             "params": {}
           },
           "z-scale": {
-            "description": "Get z scale.",
+            "description": "Get Z scale.",
             "translated-name": "ZScale",
             "params": {}
           },
@@ -981,32 +981,32 @@
             "params": {}
           },
           "y-angle": {
-            "description": "Get y angle.",
+            "description": "Get Y angle.",
             "translated-name": "YAngle",
             "params": {}
           },
           "z-angle": {
-            "description": "Get z angle.",
+            "description": "Get Z angle.",
             "translated-name": "ZAngle",
             "params": {}
           },
           "x-bb-min": {
-            "description": "Get x bounding box min.",
+            "description": "Get X bounding box min.",
             "translated-name": "XBBMin",
             "params": {}
           },
           "y-bb-min": {
-            "description": "Get y bounding box min.",
+            "description": "Get Y bounding box min.",
             "translated-name": "YBBMin",
             "params": {}
           },
           "z-bb-min": {
-            "description": "Get z bounding box min.",
+            "description": "Get Z bounding box min.",
             "translated-name": "ZBBMin",
             "params": {}
           },
           "x-bb-max": {
-            "description": "Get x bounding box max.",
+            "description": "Get X bounding box max.",
             "translated-name": "XBBMax",
             "params": {}
           },
@@ -1086,7 +1086,7 @@
             }
           },
           "material-rotate-x": {
-            "description": "Rotation center x of material.",
+            "description": "Rotation center X of material.",
             "translated-name": "MaterialRotateX",
             "params": {
               "material-name": {
@@ -1096,12 +1096,12 @@
             }
           },
           "material-rotate-y": {
-            "description": "Rotation center y of material.",
+            "description": "Rotation center Y of material.",
             "translated-name": "MaterialRotateY",
             "params": {
               "material-name": {
                   "name": "Material name",
-                  "desc": "Material name of rotation center y."
+                  "desc": "Material name of rotation center Y."
               }
             }
           },
@@ -1125,7 +1125,7 @@
             }
           },
           "node-vertex-length": {
-            "description": "Length of node's mesh's vertex array.",
+            "description": "Length of the nodes meshs vertex array.",
             "translated-name": "NodeVertexLength",
             "params": {
               "node-name": {
@@ -1135,7 +1135,7 @@
             }
           },
           "animation-blend-time": {
-            "description": "Animation blend time.",
+            "description": "Animation blend time in seconds.",
             "translated-name": "AnimationBlendTime",
             "params": {}
           },
