@@ -990,29 +990,6 @@
         ]
       },
       {
-        "id": "set-light-dir",
-        "scriptName": "SetLightDir",
-        "highlight": false,
-        "isDeprecated": true,
-        "params": [
-          {
-            "id": "x",
-            "type": "number",
-            "initialValue": 0
-          },
-          {
-            "id": "y",
-            "type": "number",
-            "initialValue": 0
-          },
-          {
-            "id": "z",
-            "type": "number",
-            "initialValue": 0
-          }
-        ]
-      },
-      {
         "id": "enable-lights",
         "scriptName": "EnableLights",
         "highlight": false,
