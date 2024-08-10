@@ -66,7 +66,22 @@
                 "initialValue": ""
             }
           ]
-        }     
+        },
+        {
+          "id": "is-node-enabled",
+          "scriptName": "IsNodeEnabled",
+          "highlight": false,
+          "isTrigger": false,
+          "isInvertible": true,
+          "isCompatibleWithTriggers": false,
+          "params": [
+            {
+                "id": "node-name",
+                "type": "string",
+                "initialValue": ""
+            }
+          ]
+        }   
       ],
       "actions": [
         {

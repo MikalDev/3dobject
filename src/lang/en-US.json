@@ -148,7 +148,18 @@
                 "desc": "Enter the name of animation to check if playing."
               }
             }
-          }
+          },
+          "is-node-enabled": {
+            "list-name": "Is node enabled",
+            "display-text": "Is node {0} enabled",
+            "description": "True if node is enabled.",
+            "params": {
+              "node-name": {
+                "name": "Node",
+                "desc": "Enter the name of node to check if enabled."
+              }
+            }
+         }
         },
         "actions": {
           "rotate": {
