@@ -4,9 +4,9 @@
   "text": {
     "plugins": {
       "mikal_3dobject": {
-        "name": "3D object",
-        "description": "3D Object created using the obj/mtl 3D format.",
-        "help-url": "https://github.com/armandoalonso/c3IDE",
+        "name": "3D Object",
+        "description": "3D Object using the gltf/glb file format.",
+        "help-url": "https://kindeyegames.itch.io/c3-3dobject-alpha",
         "properties": {
           "obj-path": {
             "name": "obj path",
@@ -99,7 +99,11 @@
           }
         },
         "aceCategories": {
-          "3dobject" : "3DObject"
+          "3dobject" : "3DObject misc",
+          "lighting" : "Lighting",
+          "animations" : "Animations",
+          "transform" : "Transform",
+          "material" : "Material"
         },
         "conditions": {
           "on-loaded": {
@@ -185,7 +189,7 @@
           "set-local-center": {
             "list-name": "Set local center",
             "display-text": "Set local center to [i]{0}, {1}, {2}[/i]",
-            "description": "Set the local center of the 3DObject in the original model files coordinate system.",
+            "description": "Set the local center of the 3DObject in the model files coordinate system.",
             "params": {
               "x": {
                 "name": "X",
@@ -224,7 +228,7 @@
               }
           },
           "set-rotation": {
-            "list-name": "Set X,Y,Z rotation",
+            "list-name": "Set X, Y, Z rotation",
             "display-text": "Set rotation to [b]{0}({0}, {1}, {2}[/b], [i]({3} rotation order)[/i]",
             "description": "Set rotation of object from the original position, with rotation order.",
             "params": {
@@ -536,7 +540,7 @@
           },
           "offset-node-uv": {
             "list-name": "Offset node UV",
-            "display-text": "Offset node [b]{0})[/b] UV by [i]({1}, {2})[/i]",
+            "display-text": "Offset node [b]{0}[/b] UV by [i]({1}, {2})[/i]",
             "description": "Offset a nodes UV texture coordinates.",
             "params": {
               "node-name": {

@@ -1,1347 +1,1245 @@
 {
-    "3dobject": {
-      "conditions": [
-        {
-            "id": "on-loaded",
-            "scriptName": "OnLoaded",
-            "highlight": false,
-            "isTrigger": true,
-            "isInvertible": false,
-            "isCompatibleWithTriggers": false
-        },
-        {
-            "id": "is-loaded",
-            "scriptName": "IsLoaded",
-            "isInvertible": true,
-            "highlight": false
-        },
-        {
-          "id": "is-animation-finished",
-          "scriptName": "IsAnimationFinished",
-          "isInvertible": true,
-          "highlight": false
-        },
-        {
-          "id": "on-animation-finished",
-          "scriptName": "OnAnimationFinished",
-          "highlight": false,
-          "isTrigger": true,
-          "isInvertible": false,
-          "isCompatibleWithTriggers": false
-        },
-        {
-          "id": "on-animation-name-finished",
-          "scriptName": "OnAnimationNameFinished",
-          "highlight": false,
-          "isTrigger": true,
-          "isInvertible": false,
-          "isCompatibleWithTriggers": false,
-          "params": [
-            {
-                "id": "name",
-                "type": "string",
-                "initialValue": ""
-            }
-          ]
-        },
-        {
-          "id": "is-wireframe-enabled",
-          "scriptName": "IsWireframeEnabled",
-          "highlight": false,
-          "isTrigger": false,
-          "isInvertible": true,
-          "isCompatibleWithTriggers": false
-        },
-        {
-          "id": "is-playing",
-          "scriptName": "IsPlaying",
-          "highlight": false,
-          "isTrigger": false,
-          "isInvertible": true,
-          "isCompatibleWithTriggers": false,
-          "params": [
-            {
-                "id": "animation-name",
-                "type": "string",
-                "initialValue": ""
-            }
-          ]
-        }     
-      ],
-      "actions": [
-        {
-          "id": "set-ambient-color",
-          "scriptName": "SetAmbientColor",
-          "highlight": false,
-          "params": [
-            {
-              "id": "color",
-              "type": "number",
-              "initialValue": 0
-            }
-          ]
-        },
-        {
+  "transform": {
+    "conditions": [],
+    "actions": [
+      {
         "id": "rotate",
         "scriptName": "Rotate",
         "highlight": false,
         "isDeprecated": true,
         "params": [
-        {
+          {
             "id": "angle",
             "type": "number",
             "initialValue": "0"
-        },
-        {
+          },
+          {
             "id": "axis",
             "type": "combo",
             "initialValue": "X",
             "items": [
-            "X",
-            "Y",
-            "Z"
-            ]
-        }
-        ]
-        },
-        {
-            "id": "set-z-elevation-0",
-            "scriptName": "SetZElevation0",
-            "highlight": false,
-            "params": [
-                {
-                "id": "z-elevation",
-                "type": "number",
-                "initialValue": "0"
-                }
-            ]
-        },
-        {
-            "id": "set-local-center",
-            "scriptName": "SetLocalCenter",
-            "highlight": false,
-            "params": [
-              {
-                "id": "x",
-                "type": "number",
-                "initialValue": "0"
-              },
-              {
-                "id": "y",
-                "type": "number",
-                "initialValue": "0"
-              },
-              {
-                "id": "z",
-                "type": "number",
-                "initialValue": "0"
-              }
-            ]
-        },
-        {
-          "id": "set-z-height",
-          "scriptName": "SetZHeight",
-          "highlight": false,
-          "params": [
-            {
-              "id": "z-height",
-              "type": "number",
-              "initialValue": "0"
-            }
-          ]
-        },
-        {
-            "id": "set-scale",
-            "scriptName": "SetScale",
-            "highlight": false,
-            "params": [
-              {
-                "id": "scale",
-                "type": "number",
-                "initialValue": "1"
-              }
-            ]
-          },
-          {
-            "id": "set-rotation",
-            "scriptName": "SetRotationOrdered",
-            "highlight": false,
-            "params": [
-              {
-                "id": "x",
-                "type": "number",
-                "initialValue": "0"
-              },
-              {
-                "id": "y",
-                "type": "number",
-                "initialValue": "0"
-              },
-              {
-                "id": "z",
-                "type": "number",
-                "initialValue": "0"
-              },
-              {
-                "id": "rotation-order",
-                "type": "combo",
-                "initialValue": "zxy",
-                "items": ["xyz", "xzy", "yxz", "yzx", "zxy", "zyx"]        
-              }
-            ]
-          },
-          {
-            "id": "play-animation",
-            "scriptName": "PlayAnimation",
-            "highlight": false,
-            "params": [
-              {
-                "id": "animation",
-                "type": "string",
-                "initialValue": ""
-              },
-              {
-                "id": "loop",
-                "type": "boolean",
-                "initialValue": "true"
-              }
-            ]
-          },
-          {
-            "id": "set-animation-rate",
-            "scriptName": "SetAnimationRate",
-            "highlight": false,
-            "params": [
-                {
-                "id": "rate",
-                "type": "number",
-                "initialValue": "60"
-                }
-            ]
-          },
-          {
-            "id": "stop-animation",
-            "scriptName": "StopAnimation",
-            "highlight": false,
-            "params": [
-            ]
-          },
-          {
-            "id": "unpause-animation",
-            "scriptName": "UnpauseAnimation",
-            "highlight": false,
-            "params": [
-            ]
-          },
-          {
-            "id": "set-animation-speed",
-            "scriptName": "SetAnimationSpeed",
-            "highlight": false,
-            "params": [
-                {
-                "id": "speed",
-                "type": "number",
-                "initialValue": "1"
-                }
-            ]
-          },
-          {
-            "id": "set-x-scale",
-            "scriptName": "SetXScale",
-            "highlight": false,
-            "params": [
-                {
-                "id": "x-scale",
-                "type": "number",
-                "initialValue": "1"
-                }
-            ]
-          },
-          {
-            "id": "set-y-scale",
-            "scriptName": "SetYScale",
-            "highlight": false,
-            "params": [
-                {
-                "id": "y-scale",
-                "type": "number",
-                "initialValue": "1"
-                }
-            ]
-          },
-          {
-            "id": "set-z-scale",
-            "scriptName": "SetZScale",
-            "highlight": false,
-            "params": [
-                {
-                "id": "z-scale",
-                "type": "number",
-                "initialValue": "1"
-                }
-            ]
-          },
-          {
-            "id": "update-bbox",
-            "scriptName": "UpdateBbox",
-            "highlight": false,
-            "params": [
-            ]
-          },
-          {
-            "id": "load-model",
-            "scriptName": "LoadModel",
-            "highlight": false,
-            "params": [
-              {
-                "id": "gltf-path",
-                "type": "string",
-                "initialValue": ""
-              }
-            ]
-          },
-          {
-            "id": "load-material",
-            "isAsync": true,
-            "scriptName": "LoadMaterial",
-            "highlight": false,
-            "params": [
-              {
-                "id": "material-path",
-                "type": "string",
-                "initialValue": ""
-              },
-              {
-                "id": "material-name",
-                "type": "string",
-                "initialValue": ""
-              }
-            ]
-          },
-          {
-            "id": "load-material-from-sprite",
-            "isAsync": false,
-            "scriptName": "LoadMaterialFromSprite",
-            "highlight": false,
-            "params": [
-              {
-                "id": "sprite-uid",
-                "type": "number",
-                "initialValue": ""
-              },
-              {
-                "id": "material-name",
-                "type": "string",
-                "initialValue": ""
-              }
-            ]
-          },
-          {
-            "id": "unload-material-from-sprite",
-            "isAsync": false,
-            "scriptName": "UnloadMaterialFromSprite",
-            "highlight": false,
-            "params": [
-              {
-                "id": "material-name",
-                "type": "string",
-                "initialValue": ""
-              }
-            ]
-          },
-          {
-            "id": "set-mesh-material",
-            "scriptName": "SetMeshMaterial",
-            "highlight": false,
-            "params": [
-              {
-                "id": "mesh-name",
-                "type": "string",
-                "initialValue": ""
-              },
-              {
-                "id": "material-name",
-                "type": "string",
-                "initialValue": ""
-              }
-            ]
-          },
-          {
-            "id": "delete-material",
-            "scriptName": "DeleteMaterial",
-            "highlight": false,
-            "params": [
-              {
-                "id": "material-name",
-                "type": "string",
-                "initialValue": ""
-              }
-            ]
-          },
-          {
-            "id": "enable-node",
-            "scriptName": "EnableNode",
-            "highlight": false,
-            "params": [
-              {
-                "id": "node-name",
-                "type": "string",
-                "initialValue": ""
-              },
-              {
-                "id": "enable",
-                "type": "boolean",
-                "initialValue": "false"
-              }
-            ]
-          },
-          {
-            "id": "set-origin-x",
-            "scriptName": "SetOriginX",
-            "highlight": false,
-            "isDeprecated": true,
-            "params": [
-                {
-                "id": "origin-x",
-                "type": "number",
-                "initialValue": "0.5"
-                }
-            ]
-          },
-          {
-            "id": "set-origin-y",
-            "scriptName": "SetOriginY",
-            "highlight": false,
-            "isDeprecated": true,
-            "params": [
-                {
-                "id": "origin-y",
-                "type": "number",
-                "initialValue": "1"
-                }
-            ]
-          },
-          {
-            "id": "set-bbox-scale",
-            "scriptName": "SetBBoxScale",
-            "highlight": false,
-            "isDeprecated": false,
-            "params": [
-                {
-                "id": "scale",
-                "type": "number",
-                "initialValue": "1"
-                }
-            ]
-          },
-          {
-            "id": "enable-wireframe",
-            "scriptName": "EnableWireframe",
-            "highlight": false,
-            "params": [
-              {
-                "id": "enable",
-                "type": "boolean",
-                "initialValue": "true"
-              }
-            ]
-          },
-          {
-            "id": "set-wireframe-widths",
-            "scriptName": "SetWireframeWidths",
-            "highlight": false,
-            "isDeprecated": false,
-            "params": [
-              {
-                "id": "x-wireframe-width",
-                "type": "number",
-                "initialValue": "1"
-                },
-                {
-                "id": "y-wireframe-width",
-                "type": "number",
-                "initialValue": "1"
-                },
-                {
-                "id": "z-wireframe-width",
-                "type": "number",
-                "initialValue": "1"
-              }
-            ]
-          },
-          {
-            "id": "set-camera-vector-pos",
-            "scriptName": "SetCameraVectorPos",
-            "highlight": false,
-            "isDeprecated": false,
-            "params": [
-              {
-                "id": "x",
-                "type": "number",
-                "initialValue": "0"
-                },
-                {
-                "id": "y",
-                "type": "number",
-                "initialValue": "1"
-                },
-                {
-                "id": "z",
-                "type": "number",
-                "initialValue": "0"
-              },
-              {
-                "id": "x-pos",
-                "type": "number",
-                "initialValue": "0"
-              },
-              {
-                "id": "y-pos",
-                "type": "number",
-                "initialValue": "0"
-              },
-              {
-                "id": "z-pos",
-                "type": "number",
-                "initialValue": "0"
-              }
-            ]
-          },
-          {
-            "id": "offset-node-uv",
-            "scriptName": "OffsetNodeUV",
-            "highlight": false,
-            "params": [
-              {
-                "id": "node-name",
-                "type": "string",
-                "initialValue": ""
-              },
-              {
-                "id": "u-offset",
-                "type": "number",
-                "initialValue": "0"
-              },
-              {
-                "id": "v-offset",
-                "type": "number",
-                "initialValue": "0"
-              }
-            ]
-          },
-          {
-            "id": "offset-material-uv",
-            "scriptName": "OffsetMaterialUV",
-            "highlight": false,
-            "params": [
-              {
-                "id": "material-name",
-                "type": "string",
-                "initialValue": ""
-              },
-              {
-                "id": "u-offset",
-                "type": "number",
-                "initialValue": "0"
-              },
-              {
-                "id": "v-offset",
-                "type": "number",
-                "initialValue": "0"
-              }
-            ]
-          },
-          {
-            "id": "rotate-material-uv",
-            "scriptName": "RotateMaterialUV",
-            "highlight": false,
-            "params": [
-              {
-                "id": "material-name",
-                "type": "string",
-                "initialValue": ""
-              },
-              {
-                "id": "angle",
-                "type": "number",
-                "initialValue": "0"
-              },
-              {
-                "id": "x",
-                "type": "number",
-                "initialValue": "0"
-              },
-              {
-                "id": "y",
-                "type": "number",
-                "initialValue": "0"
-              }
-            ]
-          },
-          {
-            "id": "load-model-from-template",
-            "scriptName": "LoadModelFromTemplate",
-            "highlight": false,
-            "params": [
-              {
-                "id": "template-uid",
-                "type": "number",
-                "initialValue": 0
-              }
-            ]
-          },
-          {
-            "id": "set-animation-blend",
-            "scriptName": "SetAnimationBlend",
-            "highlight": false,
-            "params": [
-                {
-                "id": "blend-time",
-                "type": "number",
-                "initialValue": "0"
-                }
-            ]
-          },
-          {
-            "id": "enable-light",
-            "scriptName": "EnableLight",
-            "highlight": false,
-            "params": [
-              {
-                "id": "enable",
-                "type": "boolean",
-                "initialValue": "false"
-              }
-            ]
-          },
-          {
-            "id": "update-light",
-            "scriptName": "UpdateLight",
-            "highlight": false,
-            "params": [
-              {
-                "id": "enable",
-                "type": "boolean",
-                "initialValue": "false"
-              }
-            ]
-          },
-          {
-            "id": "set-light-dir",
-            "scriptName": "SetLightDir",
-            "highlight": false,
-            "isDeprecated": true,
-            "params": [
-              {
-                "id": "x",
-                "type": "number",
-                "initialValue": 0
-              },
-              {
-                "id": "y",
-                "type": "number",
-                "initialValue": 0
-              },
-              {
-                "id": "z",
-                "type": "number",
-                "initialValue": 0
-              }
-            ]
-          },
-          {
-            "id": "enable-lights",
-            "scriptName": "EnableLights",
-            "highlight": false,
-            "params": [
-              {
-                "id": "name",
-                "type": "string",
-                "initialValue": ""
-              },
-              {
-                "id": "enable",
-                "type": "boolean",
-                "initialValue": "false"
-              }
-            ]
-          },
-          {
-            "id": "delete-lights",
-            "scriptName": "DeleteLights",
-            "highlight": false,
-            "params": [
-              {
-                "id": "name",
-                "type": "string",
-                "initialValue": ""
-              }
-            ]
-          },
-          {
-            "id": "add-lights",
-            "scriptName": "AddLights",
-            "highlight": false,
-            "params": [
-              {
-                "id": "name",
-                "type": "string",
-                "initialValue": ""
-              },
-              {
-                "id": "enable",
-                "type": "boolean",
-                "initialValue": "false"
-              },
-              {
-                "id": "color",
-                "type": "number",
-                "initialValue": 0
-              },
-              {
-                "id": "x",
-                "type": "number",
-                "initialValue": 0
-              },
-              {
-                "id": "y",
-                "type": "number",
-                "initialValue": 0
-              },
-              {
-                "id": "z",
-                "type": "number",
-                "initialValue": 0
-              },
-              {
-                "id": "enable-spot",
-                "type": "boolean",
-                "initialValue": "false"
-              },
-              {
-                "id": "dir-x",
-                "type": "number",
-                "initialValue": 0
-              },
-              {
-                "id": "dir-y",
-                "type": "number",
-                "initialValue": 0
-              },
-              {
-                "id": "dir-z",
-                "type": "number",
-                "initialValue": 0
-              },
-              {
-                "id": "cutoff",
-                "type": "number",
-                "initialValue": 90
-              },
-              {
-                "id": "edge",
-                "type": "number",
-                "initialValue": 0.05
-              },
-              {
-                "id": "att-constant",
-                "type": "number",
-                "initialValue": 1
-              },
-              {
-                "id": "att-linear",
-                "type": "number",
-                "initialValue": 0.00001
-              },
-              {
-                "id": "att-square",
-                "type": "number",
-                "initialValue":  0.000005
-              },              
-              {
-                "id": "specular-enable",
-                "type": "boolean",
-                "initialValue": "false"
-              },
-              {
-                "id": "specular-att",
-                "type": "number",
-                "initialValue": 0.5
-              },
-              {
-                "id": "specular-power",
-                "type": "number",
-                "initialValue": 32
-              }              
-            ]
-          },
-          {
-            "id": "set-view-pos",
-            "scriptName": "SetViewPos",
-            "highlight": false,
-            "params": [
-              {
-                "id": "x",
-                "type": "number",
-                "initialValue": 0
-              },
-              {
-                "id": "y",
-                "type": "number",
-                "initialValue": 0
-              },
-              {
-                "id": "z",
-                "type": "number",
-                "initialValue": 0
-              }
-            ]
-          },
-          {
-            "id": "set-node-morph-weight",
-            "scriptName": "SetNodeMorphWeight",
-            "highlight": false,
-            "params": [
-              {
-                "id": "name",
-                "type": "string",
-                "initialValue": ""
-              },
-              {
-                "id": "index",
-                "type": "number",
-                "initialValue": 0
-              },
-              {
-                "id": "weight",
-                "type": "number",
-                "initialValue": 0
-              }
-            ]
-          },
-          {
-            "id": "delete-node-morph-weight",
-            "scriptName": "DeleteNodeMorphWeight",
-            "highlight": false,
-            "params": [
-              {
-                "id": "name",
-                "type": "string",
-                "initialValue": ""
-              },
-              {
-                "id": "index",
-                "type": "number",
-                "initialValue": 0
-              }
-            ]
-          },
-          {
-            "id": "set-blend-mode",
-            "scriptName": "SetBlendMode",
-            "highlight": false,
-            "isDeprecated": true,
-            "params": [
-                {
-                "id": "blend-mode",
-                "type": "combo",
-                "initialValue": "normal",
-                "items": [
-                  "normal",
-                  "additive",
-                  "copy",
-                  "destination-over",
-                  "source-in",
-                  "destination-in",
-                  "source-out",
-                  "destination-out",
-                  "source-atop",
-                  "destination-atop"
-                  ]
-                }
-            ]
-          },
-          {
-            "id": "set-vertex-rounding",
-            "scriptName": "SetVertexRounding",
-            "highlight": false,
-            "params": [
-              {
-                "id": "round",
-                "type": "number",
-                "initialValue": 0
-              }
-            ]
-          },
-          {
-            "id": "set-static-geometry",
-            "scriptName": "SetStaticGeometry",
-            "highlight": false,
-            "params": [
-              {
-                "id": "enable",
-                "type": "boolean",
-                "initialValue": "false"
-              }
-            ]
-          },
-          {
-            "id": "set-quaternion",
-            "scriptName": "SetQuaternion",
-            "highlight": false,
-            "params": [
-              {
-                "id": "quaternion",
-                "type": "string",
-                "initialValue": ""
-              },
-              {
-                "id": "offset-x",
-                "type": "number",
-                "initialValue": 0
-              },
-              {
-                "id": "offset-y",
-                "type": "number",
-                "initialValue": 0
-              },
-              {
-                "id": "offset-z",
-                "type": "number",
-                "initialValue": 0
-              }
-            ]
-          },
-          {
-            "id": "enable-quaternion",
-            "scriptName": "EnableQuaternion",
-            "highlight": false,
-            "params": [
-              {
-                "id": "enable",
-                "type": "boolean",
-                "initialValue": "false"
-              }
-            ]
-          },
-          {
-            "id": "enable-frag-light",
-            "scriptName": "EnableFragLight",
-            "highlight": false,
-            "params": [
-              {
-                "id": "enable",
-                "type": "boolean",
-                "initialValue": "false"
-              }
+              "X",
+              "Y",
+              "Z"
             ]
           }
-
-      ],
-      "expressions": [
-        {
-          "id": "animation-names",
-          "scriptName": "AnimationNames",
-          "expressionName": "AnimationNames",
-          "returnType": "string",
-          "highlight": false,
-          "params": [
-          ]  
-        },
-        {
-          "id": "z-elevation-0",
-          "scriptName": "ZElevation0",
-          "expressionName": "ZElevation0",
-          "returnType": "number",
-          "highlight": false,
-          "params": [
-          ]  
-        },
-        {
-          "id": "current-animation",
-          "scriptName": "CurrentAnimation",
-          "expressionName": "CurrentAnimation",
-          "returnType": "string",
-          "highlight": false,
-          "params": [
-          ]  
-        },
-        {
-          "id": "current-animation-time",
-          "scriptName": "CurrentAnimationTime",
-          "expressionName": "CurrentAnimationTime",
-          "returnType": "number",
-          "highlight": false,
-          "params": [
-          ]  
-        },
-        {
-          "id": "current-animation-frame",
-          "scriptName": "CurrentAnimationFrame",
-          "expressionName": "CurrentAnimationFrame",
-          "returnType": "number",
-          "highlight": false,
-          "params": [
-          ]  
-        },
-        {
-          "id": "scale",
-          "scriptName": "Scale",
-          "expressionName": "Scale",
-          "returnType": "number",
-          "highlight": false,
-          "params": [
-          ]  
-        },
-        {
-          "id": "x-scale",
-          "scriptName": "XScale",
-          "expressionName": "XScale",
-          "returnType": "number",
-          "highlight": false,
-          "params": [
-          ]  
-        },
-        {
-          "id": "y-scale",
-          "scriptName": "YScale",
-          "expressionName": "YScale",
-          "returnType": "number",
-          "highlight": false,
-          "params": [
-          ]  
-        },
-        {
-          "id": "z-scale",
-          "scriptName": "ZScale",
-          "expressionName": "ZScale",
-          "returnType": "number",
-          "highlight": false,
-          "params": [
-          ]  
-        },
-        {
-          "id": "x-angle",
-          "scriptName": "XAngle",
-          "expressionName": "XAngle",
-          "returnType": "number",
-          "highlight": false,
-          "params": [
-          ]  
-        },
-        {
-          "id": "y-angle",
-          "scriptName": "YAngle",
-          "expressionName": "YAngle",
-          "returnType": "number",
-          "highlight": false,
-          "params": [
-          ]  
-        },
-        {
-          "id": "z-angle",
-          "scriptName": "ZAngle",
-          "expressionName": "ZAngle",
-          "returnType": "number",
-          "highlight": false,
-          "params": [
-          ]  
-        },
-        {
-          "id": "x-bb-min",
-          "scriptName": "XBBMin",
-          "expressionName": "XBBMin",
-          "returnType": "number",
-          "highlight": false,
-          "params": [
-          ]  
-        },
-        {
-          "id": "y-bb-min",
-          "scriptName": "YBBMin",
-          "expressionName": "YBBMin",
-          "returnType": "number",
-          "highlight": false,
-          "params": [
-          ]  
-        },
-        {
-          "id": "z-bb-min",
-          "scriptName": "ZBBMin",
-          "expressionName": "ZBBMin",
-          "returnType": "number",
-          "highlight": false,
-          "params": [
-          ]  
-        },
-        {
-          "id": "x-bb-max",
-          "scriptName": "XBBMax",
-          "expressionName": "XBBMax",
-          "returnType": "number",
-          "highlight": false,
-          "params": [
-          ]  
-        },
-        {
-          "id": "y-bb-max",
-          "scriptName": "YBBMax",
-          "expressionName": "YBBMax",
-          "returnType": "number",
-          "highlight": false,
-          "params": [
-          ]  
-        },
-        {
-          "id": "z-bb-max",
-          "scriptName": "ZBBMax",
-          "expressionName": "ZBBMax",
-          "returnType": "number",
-          "highlight": false,
-          "params": [
-          ]  
-        },
-        {
-          "id": "x-wireframe-width",
-          "scriptName": "XWireframeWidth",
-          "expressionName": "XWireframeWidth",
-          "returnType": "number",
-          "highlight": false,
-          "params": [
-          ]  
-        },
-        {
-          "id": "y-wireframe-width",
-          "scriptName": "YWireframeWidth",
-          "expressionName": "YWireframeWidth",
-          "returnType": "number",
-          "highlight": false,
-          "params": [
-          ]  
-        },
-        {
-          "id": "z-wireframe-width",
-          "scriptName": "ZWireframeWidth",
-          "expressionName": "ZWireframeWidth",
-          "returnType": "number",
-          "highlight": false,
-          "params": [
-          ]  
-        },
-        {
-          "id": "u-offset",
-          "scriptName": "UOffset",
-          "expressionName": "UOffset",
-          "returnType": "number",
-          "highlight": false,
-          "params": [
-            {
-              "id": "node-name",
-              "type": "string",
-              "initialValue": ""
-            }            
-          ]  
-        },
-        {
-          "id": "v-offset",
-          "scriptName": "VOffset",
-          "expressionName": "VOffset",
-          "returnType": "number",
-          "highlight": false,
-          "params": [
-            {
-              "id": "node-name",
-              "type": "string",
-              "initialValue": ""
-            }            
-          ]  
-        },
-        {
-          "id": "material-rotate-angle",
-          "scriptName": "MaterialRotateAngle",
-          "expressionName": "MaterialRotateAngle",
-          "returnType": "number",
-          "highlight": false,
-          "params": [
-            {
-              "id": "material-name",
-              "type": "string",
-              "initialValue": ""
-            }            
-          ]  
-        },
-        {
-          "id": "material-rotate-x",
-          "scriptName": "MaterialRotateX",
-          "expressionName": "MaterialRotateX",
-          "returnType": "number",
-          "highlight": false,
-          "params": [
-            {
-              "id": "material-name",
-              "type": "string",
-              "initialValue": ""
-            }            
-          ]  
-        },
-        {
-          "id": "material-rotate-y",
-          "scriptName": "MaterialRotateY",
-          "expressionName": "MaterialRotateY",
-          "returnType": "number",
-          "highlight": false,
-          "params": [
-            {
-              "id": "material-name",
-              "type": "string",
-              "initialValue": ""
-            }            
-          ]  
-        },
-        {
-          "id": "material-u-offset",
-          "scriptName": "MaterialUOffset",
-          "expressionName": "MaterialUOffset",
-          "returnType": "number",
-          "highlight": false,
-          "params": [
-            {
-              "id": "material-name",
-              "type": "string",
-              "initialValue": ""
-            }            
-          ]  
-        },        
-        {
-          "id": "material-v-offset",
-          "scriptName": "MaterialVOffset",
-          "expressionName": "MaterialVOffset",
-          "returnType": "number",
-          "highlight": false,
-          "params": [
-            {
-              "id": "material-name",
-              "type": "string",
-              "initialValue": ""
-            }            
-          ]  
-        },        
-        {
-          "id": "materials",
-          "scriptName": "Materials",
-          "expressionName": "Materials",
-          "returnType": "string",
-          "highlight": false,
-          "params": [
-          ]  
-        },
-        {
-          "id": "node-point-position",
-          "scriptName": "NodePointPosition",
-          "expressionName": "NodePointPosition",
-          "returnType": "string",
-          "highlight": false,
-          "params": [
-            {
-              "id": "node-name",
-              "type": "string",
-              "initialValue": ""
-            },
-            {
-              "id": "point-index",
-              "type": "number",
-              "initialValue": "0"
-            }
-
-          ]  
-        },
-        {
-          "id": "node-vertex-length",
-          "scriptName": "NodeVertexLength",
-          "expressionName": "NodeVertexLength",
-          "returnType": "number",
-          "highlight": false,
-          "params": [
-            {
-              "id": "node-name",
-              "type": "string",
-              "initialValue": ""
-            }
-          ]  
-        },
-        {
-          "id": "animation-blend-time",
-          "scriptName": "AnimationBlendTime",
-          "expressionName": "AnimationBlendTime",
-          "returnType": "number",
-          "highlight": false,
-          "params": [
-          ]  
-        },
-        {
-          "id": "light-color",
-          "scriptName": "LightColor",
-          "expressionName": "LightColor",
-          "returnType": "number",
-          "highlight": false,
-          "params": [
-            {
-              "id": "name",
-              "type": "string",
-              "initialValue": ""
-            }
-          ]  
-        },
-        {
-          "id": "lights-data",
-          "scriptName": "LightsData",
-          "expressionName": "LightsData",
-          "returnType": "string",
-          "highlight": false,
-          "params": [
-          ]  
-        },
-        {
-          "id": "animation-speed",
-          "scriptName": "AnimationSpeed",
-          "expressionName": "AnimationSpeed",
-          "returnType": "number",
-          "highlight": false,
-          "params": [
-          ]  
-        },
-        {
-          "id": "total-triangles",
-          "scriptName": "TotalTriangles",
-          "expressionName": "TotalTriangles",
-          "returnType": "number",
-          "highlight": false,
-          "params": [
-          ]  
-        },
-        {
-          "id": "total-triangles-culled",
-          "scriptName": "TotalTrianglesCulled",
-          "expressionName": "TotalTrianglesCulled",
-          "returnType": "number",
-          "highlight": false,
-          "params": [
-          ]  
-        },
-        {
-          "id": "node-bounding-box",
-          "scriptName": "NodeBoundingBox",
-          "expressionName": "NodeBoundingBox",
-          "returnType": "string",
-          "highlight": false,
-          "params": [
-            {
-              "id": "node-name",
-              "type": "string",
-              "initialValue": ""
-            }
-          ]  
-        }                                               
-      ]
-    }
+        ]
+      },
+      {
+        "id": "set-z-elevation-0",
+        "scriptName": "SetZElevation0",
+        "highlight": false,
+        "params": [
+          {
+            "id": "z-elevation",
+            "type": "number",
+            "initialValue": "0"
+          }
+        ]
+      },
+      {
+        "id": "set-local-center",
+        "scriptName": "SetLocalCenter",
+        "highlight": false,
+        "params": [
+          {
+            "id": "x",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "y",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "z",
+            "type": "number",
+            "initialValue": "0"
+          }
+        ]
+      },
+      {
+        "id": "set-z-height",
+        "scriptName": "SetZHeight",
+        "highlight": false,
+        "params": [
+          {
+            "id": "z-height",
+            "type": "number",
+            "initialValue": "0"
+          }
+        ]
+      },
+      {
+        "id": "set-scale",
+        "scriptName": "SetScale",
+        "highlight": true,
+        "params": [
+          {
+            "id": "scale",
+            "type": "number",
+            "initialValue": "1"
+          }
+        ]
+      },
+      {
+        "id": "set-rotation",
+        "scriptName": "SetRotationOrdered",
+        "highlight": true,
+        "params": [
+          {
+            "id": "x",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "y",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "z",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "rotation-order",
+            "type": "combo",
+            "initialValue": "zxy",
+            "items": [
+              "xyz",
+              "xzy",
+              "yxz",
+              "yzx",
+              "zxy",
+              "zyx"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "set-x-scale",
+        "scriptName": "SetXScale",
+        "highlight": false,
+        "params": [
+          {
+            "id": "x-scale",
+            "type": "number",
+            "initialValue": "1"
+          }
+        ]
+      },
+      {
+        "id": "set-y-scale",
+        "scriptName": "SetYScale",
+        "highlight": false,
+        "params": [
+          {
+            "id": "y-scale",
+            "type": "number",
+            "initialValue": "1"
+          }
+        ]
+      },
+      {
+        "id": "set-z-scale",
+        "scriptName": "SetZScale",
+        "highlight": false,
+        "params": [
+          {
+            "id": "z-scale",
+            "type": "number",
+            "initialValue": "1"
+          }
+        ]
+      },
+      {
+        "id": "update-bbox",
+        "scriptName": "UpdateBbox",
+        "highlight": false,
+        "params": []
+      },
+      {
+        "id": "set-origin-x",
+        "scriptName": "SetOriginX",
+        "highlight": false,
+        "isDeprecated": true,
+        "params": [
+          {
+            "id": "origin-x",
+            "type": "number",
+            "initialValue": "0.5"
+          }
+        ]
+      },
+      {
+        "id": "set-origin-y",
+        "scriptName": "SetOriginY",
+        "highlight": false,
+        "isDeprecated": true,
+        "params": [
+          {
+            "id": "origin-y",
+            "type": "number",
+            "initialValue": "1"
+          }
+        ]
+      },
+      {
+        "id": "set-bbox-scale",
+        "scriptName": "SetBBoxScale",
+        "highlight": false,
+        "isDeprecated": false,
+        "params": [
+          {
+            "id": "scale",
+            "type": "number",
+            "initialValue": "1"
+          }
+        ]
+      },
+      {
+        "id": "set-quaternion",
+        "scriptName": "SetQuaternion",
+        "highlight": false,
+        "params": [
+          {
+            "id": "quaternion",
+            "type": "string",
+            "initialValue": ""
+          },
+          {
+            "id": "offset-x",
+            "type": "number",
+            "initialValue": 0
+          },
+          {
+            "id": "offset-y",
+            "type": "number",
+            "initialValue": 0
+          },
+          {
+            "id": "offset-z",
+            "type": "number",
+            "initialValue": 0
+          }
+        ]
+      },
+      {
+        "id": "enable-quaternion",
+        "scriptName": "EnableQuaternion",
+        "highlight": false,
+        "params": [
+          {
+            "id": "enable",
+            "type": "boolean",
+            "initialValue": "false"
+          }
+        ]
+      }
+    ],
+    "expressions": [
+      {
+        "id": "z-elevation-0",
+        "scriptName": "ZElevation0",
+        "expressionName": "ZElevation0",
+        "returnType": "number",
+        "highlight": false,
+        "params": []
+      },
+      {
+        "id": "scale",
+        "scriptName": "Scale",
+        "expressionName": "Scale",
+        "returnType": "number",
+        "highlight": false,
+        "params": []
+      },
+      {
+        "id": "x-scale",
+        "scriptName": "XScale",
+        "expressionName": "XScale",
+        "returnType": "number",
+        "highlight": false,
+        "params": []
+      },
+      {
+        "id": "y-scale",
+        "scriptName": "YScale",
+        "expressionName": "YScale",
+        "returnType": "number",
+        "highlight": false,
+        "params": []
+      },
+      {
+        "id": "z-scale",
+        "scriptName": "ZScale",
+        "expressionName": "ZScale",
+        "returnType": "number",
+        "highlight": false,
+        "params": []
+      },
+      {
+        "id": "x-angle",
+        "scriptName": "XAngle",
+        "expressionName": "XAngle",
+        "returnType": "number",
+        "highlight": false,
+        "params": []
+      },
+      {
+        "id": "y-angle",
+        "scriptName": "YAngle",
+        "expressionName": "YAngle",
+        "returnType": "number",
+        "highlight": false,
+        "params": []
+      },
+      {
+        "id": "z-angle",
+        "scriptName": "ZAngle",
+        "expressionName": "ZAngle",
+        "returnType": "number",
+        "highlight": false,
+        "params": []
+      },
+      {
+        "id": "x-bb-min",
+        "scriptName": "XBBMin",
+        "expressionName": "XBBMin",
+        "returnType": "number",
+        "highlight": false,
+        "params": []
+      },
+      {
+        "id": "y-bb-min",
+        "scriptName": "YBBMin",
+        "expressionName": "YBBMin",
+        "returnType": "number",
+        "highlight": false,
+        "params": []
+      },
+      {
+        "id": "z-bb-min",
+        "scriptName": "ZBBMin",
+        "expressionName": "ZBBMin",
+        "returnType": "number",
+        "highlight": false,
+        "params": []
+      },
+      {
+        "id": "x-bb-max",
+        "scriptName": "XBBMax",
+        "expressionName": "XBBMax",
+        "returnType": "number",
+        "highlight": false,
+        "params": []
+      },
+      {
+        "id": "y-bb-max",
+        "scriptName": "YBBMax",
+        "expressionName": "YBBMax",
+        "returnType": "number",
+        "highlight": false,
+        "params": []
+      },
+      {
+        "id": "z-bb-max",
+        "scriptName": "ZBBMax",
+        "expressionName": "ZBBMax",
+        "returnType": "number",
+        "highlight": false,
+        "params": []
+      }
+    ]
+  },
+  "3dobject": {
+    "conditions": [
+      {
+        "id": "on-loaded",
+        "scriptName": "OnLoaded",
+        "highlight": false,
+        "isTrigger": true,
+        "isInvertible": false,
+        "isCompatibleWithTriggers": false
+      },
+      {
+        "id": "is-loaded",
+        "scriptName": "IsLoaded",
+        "isInvertible": true,
+        "highlight": false
+      },
+      {
+        "id": "is-wireframe-enabled",
+        "scriptName": "IsWireframeEnabled",
+        "highlight": false,
+        "isTrigger": false,
+        "isInvertible": true,
+        "isCompatibleWithTriggers": false
+      }
+    ],
+    "actions": [
+      {
+        "id": "load-model",
+        "scriptName": "LoadModel",
+        "highlight": false,
+        "params": [
+          {
+            "id": "gltf-path",
+            "type": "string",
+            "initialValue": ""
+          }
+        ]
+      },
+      {
+        "id": "enable-node",
+        "scriptName": "EnableNode",
+        "highlight": false,
+        "params": [
+          {
+            "id": "node-name",
+            "type": "string",
+            "initialValue": ""
+          },
+          {
+            "id": "enable",
+            "type": "boolean",
+            "initialValue": "false"
+          }
+        ]
+      },
+      {
+        "id": "enable-wireframe",
+        "scriptName": "EnableWireframe",
+        "highlight": false,
+        "params": [
+          {
+            "id": "enable",
+            "type": "boolean",
+            "initialValue": "true"
+          }
+        ]
+      },
+      {
+        "id": "set-wireframe-widths",
+        "scriptName": "SetWireframeWidths",
+        "highlight": false,
+        "isDeprecated": false,
+        "params": [
+          {
+            "id": "x-wireframe-width",
+            "type": "number",
+            "initialValue": "1"
+          },
+          {
+            "id": "y-wireframe-width",
+            "type": "number",
+            "initialValue": "1"
+          },
+          {
+            "id": "z-wireframe-width",
+            "type": "number",
+            "initialValue": "1"
+          }
+        ]
+      },
+      {
+        "id": "set-camera-vector-pos",
+        "scriptName": "SetCameraVectorPos",
+        "highlight": false,
+        "isDeprecated": false,
+        "params": [
+          {
+            "id": "x",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "y",
+            "type": "number",
+            "initialValue": "1"
+          },
+          {
+            "id": "z",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "x-pos",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "y-pos",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "z-pos",
+            "type": "number",
+            "initialValue": "0"
+          }
+        ]
+      },
+      {
+        "id": "set-blend-mode",
+        "scriptName": "SetBlendMode",
+        "highlight": false,
+        "isDeprecated": true,
+        "params": [
+          {
+            "id": "blend-mode",
+            "type": "combo",
+            "initialValue": "normal",
+            "items": [
+              "normal",
+              "additive",
+              "copy",
+              "destination-over",
+              "source-in",
+              "destination-in",
+              "source-out",
+              "destination-out",
+              "source-atop",
+              "destination-atop"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "set-view-pos",
+        "scriptName": "SetViewPos",
+        "highlight": false,
+        "params": [
+          {
+            "id": "x",
+            "type": "number",
+            "initialValue": 0
+          },
+          {
+            "id": "y",
+            "type": "number",
+            "initialValue": 0
+          },
+          {
+            "id": "z",
+            "type": "number",
+            "initialValue": 0
+          }
+        ]
+      },
+      {
+        "id": "set-vertex-rounding",
+        "scriptName": "SetVertexRounding",
+        "highlight": false,
+        "params": [
+          {
+            "id": "round",
+            "type": "number",
+            "initialValue": 0
+          }
+        ]
+      },
+      {
+        "id": "set-static-geometry",
+        "scriptName": "SetStaticGeometry",
+        "highlight": false,
+        "params": [
+          {
+            "id": "enable",
+            "type": "boolean",
+            "initialValue": "false"
+          }
+        ]
+      }
+    ],
+    "expressions": [
+      {
+        "id": "x-wireframe-width",
+        "scriptName": "XWireframeWidth",
+        "expressionName": "XWireframeWidth",
+        "returnType": "number",
+        "highlight": false,
+        "params": []
+      },
+      {
+        "id": "y-wireframe-width",
+        "scriptName": "YWireframeWidth",
+        "expressionName": "YWireframeWidth",
+        "returnType": "number",
+        "highlight": false,
+        "params": []
+      },
+      {
+        "id": "z-wireframe-width",
+        "scriptName": "ZWireframeWidth",
+        "expressionName": "ZWireframeWidth",
+        "returnType": "number",
+        "highlight": false,
+        "params": []
+      },
+      {
+        "id": "node-point-position",
+        "scriptName": "NodePointPosition",
+        "expressionName": "NodePointPosition",
+        "returnType": "string",
+        "highlight": false,
+        "params": [
+          {
+            "id": "node-name",
+            "type": "string",
+            "initialValue": ""
+          },
+          {
+            "id": "point-index",
+            "type": "number",
+            "initialValue": "0"
+          }
+        ]
+      },
+      {
+        "id": "node-vertex-length",
+        "scriptName": "NodeVertexLength",
+        "expressionName": "NodeVertexLength",
+        "returnType": "number",
+        "highlight": false,
+        "params": [
+          {
+            "id": "node-name",
+            "type": "string",
+            "initialValue": ""
+          }
+        ]
+      },
+      {
+        "id": "total-triangles",
+        "scriptName": "TotalTriangles",
+        "expressionName": "TotalTriangles",
+        "returnType": "number",
+        "highlight": false,
+        "params": []
+      },
+      {
+        "id": "total-triangles-culled",
+        "scriptName": "TotalTrianglesCulled",
+        "expressionName": "TotalTrianglesCulled",
+        "returnType": "number",
+        "highlight": false,
+        "params": []
+      },
+      {
+        "id": "node-bounding-box",
+        "scriptName": "NodeBoundingBox",
+        "expressionName": "NodeBoundingBox",
+        "returnType": "string",
+        "highlight": false,
+        "params": [
+          {
+            "id": "node-name",
+            "type": "string",
+            "initialValue": ""
+          }
+        ]
+      }
+    ]
+  },
+  "material": {
+    "actions": [
+      {
+        "id": "load-material",
+        "isAsync": true,
+        "scriptName": "LoadMaterial",
+        "highlight": false,
+        "params": [
+          {
+            "id": "material-path",
+            "type": "string",
+            "initialValue": ""
+          },
+          {
+            "id": "material-name",
+            "type": "string",
+            "initialValue": ""
+          }
+        ]
+      },
+      {
+        "id": "load-material-from-sprite",
+        "isAsync": false,
+        "scriptName": "LoadMaterialFromSprite",
+        "highlight": false,
+        "params": [
+          {
+            "id": "sprite-uid",
+            "type": "number",
+            "initialValue": ""
+          },
+          {
+            "id": "material-name",
+            "type": "string",
+            "initialValue": ""
+          }
+        ]
+      },
+      {
+        "id": "unload-material-from-sprite",
+        "isAsync": false,
+        "scriptName": "UnloadMaterialFromSprite",
+        "highlight": false,
+        "params": [
+          {
+            "id": "material-name",
+            "type": "string",
+            "initialValue": ""
+          }
+        ]
+      },
+      {
+        "id": "set-mesh-material",
+        "scriptName": "SetMeshMaterial",
+        "highlight": false,
+        "params": [
+          {
+            "id": "mesh-name",
+            "type": "string",
+            "initialValue": ""
+          },
+          {
+            "id": "material-name",
+            "type": "string",
+            "initialValue": ""
+          }
+        ]
+      },
+      {
+        "id": "delete-material",
+        "scriptName": "DeleteMaterial",
+        "highlight": false,
+        "params": [
+          {
+            "id": "material-name",
+            "type": "string",
+            "initialValue": ""
+          }
+        ]
+      },
+      {
+        "id": "offset-node-uv",
+        "scriptName": "OffsetNodeUV",
+        "highlight": false,
+        "params": [
+          {
+            "id": "node-name",
+            "type": "string",
+            "initialValue": ""
+          },
+          {
+            "id": "u-offset",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "v-offset",
+            "type": "number",
+            "initialValue": "0"
+          }
+        ]
+      },
+      {
+        "id": "offset-material-uv",
+        "scriptName": "OffsetMaterialUV",
+        "highlight": false,
+        "params": [
+          {
+            "id": "material-name",
+            "type": "string",
+            "initialValue": ""
+          },
+          {
+            "id": "u-offset",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "v-offset",
+            "type": "number",
+            "initialValue": "0"
+          }
+        ]
+      },
+      {
+        "id": "rotate-material-uv",
+        "scriptName": "RotateMaterialUV",
+        "highlight": false,
+        "params": [
+          {
+            "id": "material-name",
+            "type": "string",
+            "initialValue": ""
+          },
+          {
+            "id": "angle",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "x",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "y",
+            "type": "number",
+            "initialValue": "0"
+          }
+        ]
+      },
+      {
+        "id": "load-model-from-template",
+        "scriptName": "LoadModelFromTemplate",
+        "highlight": false,
+        "params": [
+          {
+            "id": "template-uid",
+            "type": "number",
+            "initialValue": 0
+          }
+        ]
+      }
+    ],
+    "conditions": [
+      
+    ]
+  },
+  "lighting": {
+    "conditions": [],
+    "actions": [
+      {
+        "id": "enable-frag-light",
+        "scriptName": "EnableFragLight",
+        "highlight": false,
+        "params": [
+          {
+            "id": "enable",
+            "type": "boolean",
+            "initialValue": "false"
+          }
+        ]
+      },
+      {
+        "id": "set-ambient-color",
+        "scriptName": "SetAmbientColor",
+        "highlight": false,
+        "params": [
+          {
+            "id": "color",
+            "type": "number",
+            "initialValue": 0
+          }
+        ]
+      },
+      {
+        "id": "enable-light",
+        "scriptName": "EnableLight",
+        "highlight": false,
+        "params": [
+          {
+            "id": "enable",
+            "type": "boolean",
+            "initialValue": "false"
+          }
+        ]
+      },
+      {
+        "id": "update-light",
+        "scriptName": "UpdateLight",
+        "highlight": false,
+        "params": [
+          {
+            "id": "enable",
+            "type": "boolean",
+            "initialValue": "false"
+          }
+        ]
+      },
+      {
+        "id": "set-light-dir",
+        "scriptName": "SetLightDir",
+        "highlight": false,
+        "isDeprecated": true,
+        "params": [
+          {
+            "id": "x",
+            "type": "number",
+            "initialValue": 0
+          },
+          {
+            "id": "y",
+            "type": "number",
+            "initialValue": 0
+          },
+          {
+            "id": "z",
+            "type": "number",
+            "initialValue": 0
+          }
+        ]
+      },
+      {
+        "id": "enable-lights",
+        "scriptName": "EnableLights",
+        "highlight": false,
+        "params": [
+          {
+            "id": "name",
+            "type": "string",
+            "initialValue": ""
+          },
+          {
+            "id": "enable",
+            "type": "boolean",
+            "initialValue": "false"
+          }
+        ]
+      },
+      {
+        "id": "delete-lights",
+        "scriptName": "DeleteLights",
+        "highlight": false,
+        "params": [
+          {
+            "id": "name",
+            "type": "string",
+            "initialValue": ""
+          }
+        ]
+      },
+      {
+        "id": "add-lights",
+        "scriptName": "AddLights",
+        "highlight": false,
+        "params": [
+          {
+            "id": "name",
+            "type": "string",
+            "initialValue": ""
+          },
+          {
+            "id": "enable",
+            "type": "boolean",
+            "initialValue": "false"
+          },
+          {
+            "id": "color",
+            "type": "number",
+            "initialValue": 0
+          },
+          {
+            "id": "x",
+            "type": "number",
+            "initialValue": 0
+          },
+          {
+            "id": "y",
+            "type": "number",
+            "initialValue": 0
+          },
+          {
+            "id": "z",
+            "type": "number",
+            "initialValue": 0
+          },
+          {
+            "id": "enable-spot",
+            "type": "boolean",
+            "initialValue": "false"
+          },
+          {
+            "id": "dir-x",
+            "type": "number",
+            "initialValue": 0
+          },
+          {
+            "id": "dir-y",
+            "type": "number",
+            "initialValue": 0
+          },
+          {
+            "id": "dir-z",
+            "type": "number",
+            "initialValue": 0
+          },
+          {
+            "id": "cutoff",
+            "type": "number",
+            "initialValue": 90
+          },
+          {
+            "id": "edge",
+            "type": "number",
+            "initialValue": 0.05
+          },
+          {
+            "id": "att-constant",
+            "type": "number",
+            "initialValue": 1
+          },
+          {
+            "id": "att-linear",
+            "type": "number",
+            "initialValue": 0.00001
+          },
+          {
+            "id": "att-square",
+            "type": "number",
+            "initialValue": 0.000005
+          },
+          {
+            "id": "specular-enable",
+            "type": "boolean",
+            "initialValue": "false"
+          },
+          {
+            "id": "specular-att",
+            "type": "number",
+            "initialValue": 0.5
+          },
+          {
+            "id": "specular-power",
+            "type": "number",
+            "initialValue": 32
+          }
+        ]
+      }
+    ],
+    "expressions": [
+      {
+        "id": "light-color",
+        "scriptName": "LightColor",
+        "expressionName": "LightColor",
+        "returnType": "number",
+        "highlight": false,
+        "params": [
+          {
+            "id": "name",
+            "type": "string",
+            "initialValue": ""
+          }
+        ]
+      },
+      {
+        "id": "lights-data",
+        "scriptName": "LightsData",
+        "expressionName": "LightsData",
+        "returnType": "string",
+        "highlight": false,
+        "params": []
+      }
+    ]
+  },
+  "animations": {
+    "conditions": [
+      {
+        "id": "is-animation-finished",
+        "scriptName": "IsAnimationFinished",
+        "isInvertible": true,
+        "highlight": false
+      },
+      {
+        "id": "on-animation-finished",
+        "scriptName": "OnAnimationFinished",
+        "highlight": false,
+        "isTrigger": true,
+        "isInvertible": false,
+        "isCompatibleWithTriggers": false
+      },
+      {
+        "id": "on-animation-name-finished",
+        "scriptName": "OnAnimationNameFinished",
+        "highlight": false,
+        "isTrigger": true,
+        "isInvertible": false,
+        "isCompatibleWithTriggers": false,
+        "params": [
+          {
+            "id": "name",
+            "type": "string",
+            "initialValue": ""
+          }
+        ]
+      },
+      {
+        "id": "is-playing",
+        "scriptName": "IsPlaying",
+        "highlight": false,
+        "isTrigger": false,
+        "isInvertible": true,
+        "isCompatibleWithTriggers": false,
+        "params": [
+          {
+            "id": "animation-name",
+            "type": "string",
+            "initialValue": ""
+          }
+        ]
+      }
+    ],
+    "actions": [
+      {
+        "id": "set-animation-blend",
+        "scriptName": "SetAnimationBlend",
+        "highlight": false,
+        "params": [
+          {
+            "id": "blend-time",
+            "type": "number",
+            "initialValue": "0"
+          }
+        ]
+      },
+      {
+        "id": "set-node-morph-weight",
+        "scriptName": "SetNodeMorphWeight",
+        "highlight": false,
+        "params": [
+          {
+            "id": "name",
+            "type": "string",
+            "initialValue": ""
+          },
+          {
+            "id": "index",
+            "type": "number",
+            "initialValue": 0
+          },
+          {
+            "id": "weight",
+            "type": "number",
+            "initialValue": 0
+          }
+        ]
+      },
+      {
+        "id": "delete-node-morph-weight",
+        "scriptName": "DeleteNodeMorphWeight",
+        "highlight": false,
+        "params": [
+          {
+            "id": "name",
+            "type": "string",
+            "initialValue": ""
+          },
+          {
+            "id": "index",
+            "type": "number",
+            "initialValue": 0
+          }
+        ]
+      },
+      {
+        "id": "play-animation",
+        "scriptName": "PlayAnimation",
+        "highlight": true,
+        "params": [
+          {
+            "id": "animation",
+            "type": "string",
+            "initialValue": ""
+          },
+          {
+            "id": "loop",
+            "type": "boolean",
+            "initialValue": "true"
+          }
+        ]
+      },
+      {
+        "id": "set-animation-rate",
+        "scriptName": "SetAnimationRate",
+        "highlight": false,
+        "params": [
+          {
+            "id": "rate",
+            "type": "number",
+            "initialValue": "60"
+          }
+        ]
+      },
+      {
+        "id": "stop-animation",
+        "scriptName": "StopAnimation",
+        "highlight": false,
+        "params": []
+      },
+      {
+        "id": "unpause-animation",
+        "scriptName": "UnpauseAnimation",
+        "highlight": false,
+        "params": []
+      },
+      {
+        "id": "set-animation-speed",
+        "scriptName": "SetAnimationSpeed",
+        "highlight": false,
+        "params": [
+          {
+            "id": "speed",
+            "type": "number",
+            "initialValue": "1"
+          }
+        ]
+      }
+    ],
+    "expressions": [
+      {
+        "id": "animation-names",
+        "scriptName": "AnimationNames",
+        "expressionName": "AnimationNames",
+        "returnType": "string",
+        "highlight": false,
+        "params": []
+      },
+      {
+        "id": "current-animation",
+        "scriptName": "CurrentAnimation",
+        "expressionName": "CurrentAnimation",
+        "returnType": "string",
+        "highlight": false,
+        "params": []
+      },
+      {
+        "id": "current-animation-time",
+        "scriptName": "CurrentAnimationTime",
+        "expressionName": "CurrentAnimationTime",
+        "returnType": "number",
+        "highlight": false,
+        "params": []
+      },
+      {
+        "id": "current-animation-frame",
+        "scriptName": "CurrentAnimationFrame",
+        "expressionName": "CurrentAnimationFrame",
+        "returnType": "number",
+        "highlight": false,
+        "params": []
+      },
+      {
+        "id": "animation-blend-time",
+        "scriptName": "AnimationBlendTime",
+        "expressionName": "AnimationBlendTime",
+        "returnType": "number",
+        "highlight": false,
+        "params": []
+      },
+      {
+        "id": "animation-speed",
+        "scriptName": "AnimationSpeed",
+        "expressionName": "AnimationSpeed",
+        "returnType": "number",
+        "highlight": false,
+        "params": []
+      }
+    ]
   }
+}
