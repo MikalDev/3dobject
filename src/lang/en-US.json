@@ -59,7 +59,7 @@
           },
           "debug": {
             "name": "Debug",
-            "desc": "Wether debug info should be logged into the console."
+            "desc": "Whether debug info should be logged into the console."
           },
           "animation-blend": {
             "name": "Animation blend",
@@ -67,7 +67,7 @@
           },
           "instance-model": {
             "name": "Instance model data",
-            "desc": "Wether each instance can have its own model data."
+            "desc": "Whether each instance can have its own model data."
           },
           "image-texture": {
             "name": "Image texture",
@@ -95,7 +95,7 @@
           },
           "cpu-xform": {
             "name": "Worker BFC",
-            "desc": "Wether back face culling should be done by a worker."
+            "desc": "Whether back face culling should be done by a worker."
           }
         },
         "aceCategories": {
