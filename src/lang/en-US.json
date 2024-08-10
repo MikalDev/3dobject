@@ -99,7 +99,7 @@
           }
         },
         "aceCategories": {
-          "3dobject" : "3DObject misc",
+          "3dobject" : "3DObject",
           "lighting" : "Lighting",
           "animations" : "Animations",
           "transform" : "Transform",
