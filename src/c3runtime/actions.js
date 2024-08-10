@@ -107,7 +107,7 @@
       if (this.instanceModel) {
         //@ts-ignore
         this.gltfData = new globalThis.GltfData(this.runtime, this)
-        if (this.debug) console.log("gltfPath - ACE", gltfPath)
+        if (this.debug) console.info("gltfPath - ACE", gltfPath)
         this.gltfData.load(gltfPath, true, this.debug)
         this.gltfData.dynamicTexturesLoaded = false
         this.doingInit = false

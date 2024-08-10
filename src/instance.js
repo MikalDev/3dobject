@@ -99,7 +99,6 @@
         this.gltf = new globalThis.GltfModel(this._runtime, this.sdkType, this)
       }
       await this.gltf.init()
-      console.log(this.gltf)
       this.loaded = true
       this.drawVerts = []
       this.drawUVs = []
@@ -288,7 +287,7 @@
                     if (this.sdkType.initOwner = this.uid)
                     {
                         this.gltfPath = this._inst.GetPropertyValue('gtlf-path');
-                        console.log('gltf-path changed', this.gltfPath)
+                        console.info('gltf-path changed', this.gltfPath)
                         this.sdkType.gltfData.load(this.gltfPath, false)
                         if (this.layoutView) this.layoutView.Refresh();
                     }
