@@ -50,7 +50,7 @@
           "highlight": false,
           "isTrigger": false,
           "isInvertible": true,
-          "isCompatibleWithTriggers": false
+          "isCompatibleWithTriggers": true
         },
         {
           "id": "is-playing",
@@ -58,7 +58,7 @@
           "highlight": false,
           "isTrigger": false,
           "isInvertible": true,
-          "isCompatibleWithTriggers": false,
+          "isCompatibleWithTriggers": true,
           "params": [
             {
                 "id": "animation-name",
