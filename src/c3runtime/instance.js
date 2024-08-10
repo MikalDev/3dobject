@@ -217,7 +217,7 @@
           this.drawVerts = []
           this.drawUVs = []
           this.drawIndices = []
-          this.gltf.getPolygons(this.staticGeometry)
+          this.gltf.getPolygons(this.staticGeometry || this.gpuSkinning)
           this.runtime.UpdateRender()
           this.updateBbox = true
         }

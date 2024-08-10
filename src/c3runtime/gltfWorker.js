@@ -6,11 +6,9 @@ let msgPort = null
 let id = Math.random()
 let buff = null
 let buffBones = null
-let buffNodeMats = null
 let buffLights = null
 let drawVerts = null
 let drawBones = null
-let drawNodeMats = null
 let drawLights = null
 let drawLightsBufferViews = []
 let index = 0
@@ -19,7 +17,6 @@ let minBB = [Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY, Number.POSITIVE
 let maxBB = [Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY]
 let buffLength = 0
 let buffBonesLength = 0
-let buffNodeMatsLength = 0
 const disabledNodes = new Map()
 const nodeMorphWeights = new Map()
 let activeNodes = []
@@ -40,7 +37,6 @@ function initEventListeners(e) {
 self.addEventListener("message", initEventListeners)
 
 function OnMessage(e) {
-  console.log("msg:", e?.data?.type)
   switch (e.data.type) {
     case "init":
       break
@@ -48,7 +44,6 @@ function OnMessage(e) {
       gltf = e.data.gltf
       buffLength = e.data.buffLength
       buffBonesLength = e.data.buffBonesLength
-      buffNodeMatsLength = e.data.buffNodeMatsLength
       drawMeshes = e.data.drawMeshes
       break
     case "updateAnimationPolygons":
@@ -148,7 +143,6 @@ function updateAnimationPolygons(data) {
   const lightEnable = editorData.lightEnable
   const lightUpdate = editorData.lightUpdate
   const gpuSkinning = editorData.gpuSkinning
-  console.log("[w] gpuSkinning", gpuSkinning)
 
   updateAnimation(animationData)
   if (animationData.onScreen) {
@@ -162,8 +156,8 @@ function updateAnimationPolygons(data) {
     if (lightEnable && lightUpdate) updateLight(editorData)
     if (gpuSkinning) {
       // XXX Don't need to pass back buff
-      let msg = { activeNodes, buffBones, buffNodeMats, gpuSkinning: true, buff }
-      msgPort.postMessage(msg, [msg.buffBones, msg.buffNodeMats, msg.buff])
+      let msg = { activeNodes, buffBones, gpuSkinning: true, buff }
+      msgPort.postMessage(msg, [msg.buffBones, msg.buff])
     } else {
       let msg = { buff, activeNodes, buffLights, drawLightsBufferViews, drawLightsEnable: lightEnable, lightUpdate }
       msgPort.postMessage(msg, [msg.buff, msg.buffLights])
@@ -187,14 +181,20 @@ function getPolygons(data) {
   const editorData = data.editorData
   const lightEnable = editorData.lightEnable
   const lightUpdate = editorData.lightUpdate
+  const gpuSkinning = editorData.gpuSkinning
   getPolygonsPrep(editorData)
   // Post buffer to messagePort
   // Last float in array will be tick that requested the update
   drawVerts[drawVerts.length - 1] = editorData.tick
   setBBInVerts(drawVerts, minBB, maxBB)
   if (lightEnable && lightUpdate) updateLight(editorData)
-  let msg = { buff, activeNodes, buffLights, drawLightsBufferViews, drawLightsEnable: lightEnable, lightUpdate }
-  msgPort.postMessage(msg, [msg.buff, msg.buffLights])
+  if (gpuSkinning) {
+    let msg = { activeNodes, buffBones, gpuSkinning: true, buff }
+    msgPort.postMessage(msg, [msg.buffBones, msg.buff])
+  } else {
+    let msg = { buff, activeNodes, buffLights, drawLightsBufferViews, drawLightsEnable: lightEnable, lightUpdate }
+    msgPort.postMessage(msg, [msg.buff, msg.buffLights])
+  }
   buffLights = null
   drawLightsBufferViews = []
   drawLights = null
@@ -386,6 +386,8 @@ function lerp(a, b, alpha) {
   return value
 }
 //	Updates scene graph, and as a second step sends transformed skinned mesh points to c2.
+// This function prepares polygon data for rendering. It handles both GPU skinning and non-GPU skinning scenarios.
+// When GPU skinning is enabled, it prepares bone matrices for GPU processing. Otherwise, it computes vertex positions in software.
 function getPolygonsPrep(editorData) {
   // @ts-ignore
   const vec3 = glMatrix.vec3
@@ -404,8 +406,6 @@ function getPolygonsPrep(editorData) {
   if (gpuSkinning) {
     buffBones = new ArrayBuffer(buffBonesLength * 4)
     drawBones = new Float32Array(buffBones)
-    buffNodeMats = new ArrayBuffer(buffNodeMatsLength * 4)
-    drawNodeMats = new Float32Array(buffNodeMats)
   }
   // drawVerts index
   index = 0
@@ -441,7 +441,7 @@ function getPolygonsPrep(editorData) {
 
   // update all scene matrixes.
   for (let i = 0; i < gltf.scene.nodes.length; i++) {
-    transformNode(gltf.scene.nodes[i], parentMatrix, modelScaleRotate, isEditor)
+    transformNode(gltf.scene.nodes[i], parentMatrix, modelScaleRotate, isEditor, gpuSkinning)
   }
 
   quat.fromEuler(rotationQuat, 0, 0, 0)
@@ -470,14 +470,14 @@ function getPolygonsPrep(editorData) {
       mat4.multiply(joint.boneMatrix, node.invMatrix, joint.matrix)
       mat4.multiply(joint.boneMatrix, joint.boneMatrix, joint.invBindMatrix)
       if (gpuSkinning) {
-        drawBones.set(bonesIndex, joint.boneMatrix)
-        bonesIndex += 16
+        drawBones.set(joint.boneMatrix, bonesIndex)
+        bonesIndex += joint.boneMatrix.length
       }
     }
 
     if (gpuSkinning) {
-      drawBones.set(bonesIndex, rootNodeXform)
-      bonesIndex += 16
+      drawBones.set(parentMatrix, bonesIndex)
+      bonesIndex += parentMatrix.length
     }
 
     for (let i = 0; i < node.mesh.primitives.length; i++) {
@@ -491,6 +491,8 @@ function getPolygonsPrep(editorData) {
         nodeIndex++
         continue
       }
+
+      if (gpuSkinning) continue
 
       let morphActive = false
       let morphTargets = null
@@ -583,8 +585,8 @@ function transformNode(node, parentMat, modelScaleRotate, isEditor, gpuSkinning)
   // unskinned meshes
   if (node.mesh != undefined && node.skin == undefined) {
     if (gpuSkinning) {
-      drawNodeMats.set(nodeMatsIndex, node.matrix)
-      nodeMatsIndex += 16
+      drawBones.set(node.matrix, bonesIndex)
+      bonesIndex += 16
     }
 
     for (let i = 0; i < node.mesh.primitives.length; i++) {
@@ -649,7 +651,7 @@ function transformNode(node, parentMat, modelScaleRotate, isEditor, gpuSkinning)
   }
   if (node.children != undefined)
     for (let i = 0; i < node.children.length; i++)
-      transformNode(node.children[i], node.matrix, modelScaleRotate, isEditor)
+      transformNode(node.children[i], node.matrix, modelScaleRotate, isEditor, gpuSkinning)
 }
 
 function morphTargetsXform(vin, index, weights, targets) {

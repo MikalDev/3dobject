@@ -59,12 +59,14 @@ class BoneBufferW {
   }
 
   uploadUniforms(gl) {
+    const mat4 = globalThis.glMatrix3D.mat4
     gl.uniformMatrix4fv(this.locABones, false, this.bones)
     gl.uniform1f(this.locUSkinEnable, 1.0)
     gl.uniformMatrix4fv(this.locARootNodeXform, false, this.rootNodeXform)
   }
 
   uploadUniformsNonSkin(gl) {
+    const mat4 = globalThis.glMatrix3D.mat4
     gl.uniform1f(this.locUSkinEnable, 0.0)
     gl.uniform1f(this.locUNodeXformEnable, 1.0)
     gl.uniformMatrix4fv(this.locANodeXform, false, this.nodeXform)
@@ -458,6 +460,7 @@ class GltfModelW {
   }
 
   scanNode(node, scanSkin, gpuSkinning) {
+    gpuSkinning = true
     if ((node.mesh != undefined && node.skin == undefined) || scanSkin) {
       for (let i = 0; i < node.mesh.primitives.length; i++) {
         let posDataLength = node.mesh.primitives[i].attributes.POSITION.data.length
@@ -465,6 +468,7 @@ class GltfModelW {
         if (!this.drawMeshes[this.drawMeshesIndex]) {
           this.drawMeshes.push({
             drawVerts: [],
+            drawVertsOrig: [],
             bufferViews: [],
             drawUVs: [],
             drawIndices: [],
@@ -477,7 +481,7 @@ class GltfModelW {
             objectBuffers: [],
           })
         }
-        if (gpuSkinning) this.drawMeshes[this.drawMeshesIndex].boneBuffer = node.boneBuffer
+        this.drawMeshes[this.drawMeshesIndex].node = node
         this.drawMeshes[this.drawMeshesIndex].bufferViews.push({ start: this.arrayBufferIndex, length: posDataLength })
         this.arrayBufferIndex += posDataLength
         this.meshNames.set(node.name, this.drawMeshesIndex)
@@ -551,6 +555,8 @@ class GltfModelW {
         } else {
           this.buff = e.data.buff
           this.buffBones = e.data.buffBones
+          this.buffNodesMat = e.data.buffNodeMats
+          this.nodesMat = new Float32Array(this.buffNodesMat)
           this.bones = new Float32Array(this.buffBones)
           // this.setBBFromVerts(this.verts, this.inst.minBB, this.inst.maxBB)
           // this.inst.updateBbox = true
@@ -760,6 +766,10 @@ class GltfModelW {
       // Skip render if disabled
       if (this.drawMeshes[j].disabled) continue
 
+      if (this.inst.gpuSkinning && !this.drawMeshes[j].boneBuffer) {
+        this.drawMeshes[j].boneBuffer = this.drawMeshes[j].node.boneBuffer
+      }
+
       const drawVerts = this.drawMeshes[j].drawVerts
       const drawUVs = this.drawMeshes[j].drawUVs
       const drawIndices = this.drawMeshes[j].drawIndices
@@ -820,10 +830,11 @@ class GltfModelW {
         xVerts = drawVerts
       }
 
-      if (this.inst.staticGeometry) {
+      if (this.inst.staticGeometry || this.inst.gpuSkinning) {
         const objectBuffers = this.drawMeshes[j].objectBuffers
         // Draw
         let boneBuffer
+        boneBuffer = this.drawMeshes[j]?.boneBuffer
         for (let i = 0; i < objectBuffers.length; i++) {
           boneBuffer = this.drawMeshes[j]?.boneBuffer
           objectBuffers[i].draw(this.inst.renderer, boneBuffer)
@@ -998,7 +1009,7 @@ class GltfModelW {
     renderer._texcoordData = rendererTexcoordData
     // Restore attrib
     if (this.inst.staticGeometry) {
-      // XXX may no longer be needed with new object buffer and separate vertex/texcoord buffers
+      // XXX may no longer be needed with an object buffer and separate vertex/texcoord buffers
       // Restore for other C3 objects
       const gl = renderer._gl
       const batchState = renderer._batchState
@@ -1033,7 +1044,9 @@ class GltfModelW {
           const boneBuffer = new BoneBufferW(this.inst.renderer, this.maxBones, false)
           node.boneBuffer = boneBuffer
         }
-        node.boneBuffer.setNodeXform(bones.slice(boneBufferViews[bufferViewIndex].start, MATRIX_SIZE))
+        const start = boneBufferViews[bufferViewIndex].start
+        node.boneBuffer.setNodeXform(bones.slice(start, start + MATRIX_SIZE))
+        bufferViewIndex += 1
       }
     }
 
@@ -1042,13 +1055,12 @@ class GltfModelW {
       if (!skinnedNode.hasOwnProperty("boneBuffer")) {
         const boneBuffer = new BoneBufferW(this.inst.renderer, this.maxBones, true)
         skinnedNode.boneBuffer = boneBuffer
-        debugger
       }
-      debugger
       const length = boneBufferViews[bufferViewIndex].length
       const start = boneBufferViews[bufferViewIndex].start
-      skinnedNode.boneBuffer.setBones(bones.slice(start, length - MATRIX_SIZE))
-      skinnedNode.boneBuffer.setRootNodeXform(bones.slice(start + length - MATRIX_SIZE, MATRIX_SIZE))
+      skinnedNode.boneBuffer.setBones(bones.slice(start, start + length - MATRIX_SIZE))
+      skinnedNode.boneBuffer.setRootNodeXform(bones.slice(start + length - MATRIX_SIZE, start + length))
+      bufferViewIndex += 1
     }
   }
 
@@ -1075,9 +1087,9 @@ class GltfModelW {
         drawVerts.push(v)
         if (staticGeometry) {
           if (objectBuffers.length == 0) {
-            objectBuffers.push(new ObjectBuffer(this.inst.renderer, this.drawMeshes[j], 0))
+            objectBuffers.push(new ObjectBuffer(this.inst.renderer, this.drawMeshes[j], 0, false))
           } else {
-            objectBuffers[0].updateVertexData(this.inst.renderer, this.drawMeshes[j], 0)
+            objectBuffers[0].updateVertexData(this.inst.renderer, this.drawMeshes[j], 0, false)
           }
         }
       }
@@ -1113,9 +1125,17 @@ class GltfModelW {
         } else {
           this.drawMeshes[this.drawMeshesIndex].material = null
         }
+        if (gpuSkinning) {
+          const objectBuffers = this.drawMeshes[this.drawMeshesIndex].objectBuffers
+          if (objectBuffers.length === 0)
+            objectBuffers.push(
+              new ObjectBuffer(this.inst.renderer, this.drawMeshes[this.drawMeshesIndex], 0, gpuSkinning)
+            )
+        }
       }
     }
-    if (node.children != undefined) for (let i = 0; i < node.children.length; i++) this.transformNode(node.children[i])
+    if (node.children != undefined)
+      for (let i = 0; i < node.children.length; i++) this.transformNode(node.children[i], gpuSkinning)
   }
 
   getPolygons(gpuSkinning) {
@@ -1216,12 +1236,11 @@ class GltfModelW {
     this.drawMeshesIndex = -1
 
     const editorData = this.getEditorData(this.inst.isEditor, this.inst.lightEnable, this.inst.lightUpdate, gpuSkinning)
-    console.log(editorData)
 
     // update all scene matrixes.
     // only update drawMesh meta data, vertex data will be updated in the worker
     for (let i = 0; i < gltf.scene.nodes.length; i++) {
-      this.transformNode(gltf.scene.nodes[i])
+      this.transformNode(gltf.scene.nodes[i], gpuSkinning)
     }
 
     for (let ii = 0; ii < gltf.skinnedNodes.length; ii++) {
@@ -1235,6 +1254,13 @@ class GltfModelW {
           this.drawMeshes[this.drawMeshesIndex].material = node.mesh.primitives[i].material
         } else {
           this.drawMeshes[this.drawMeshesIndex].material = null
+        }
+        if (gpuSkinning) {
+          const objectBuffers = this.drawMeshes[this.drawMeshesIndex].objectBuffers
+          if (objectBuffers.length === 0)
+            objectBuffers.push(
+              new ObjectBuffer(this.inst.renderer, this.drawMeshes[this.drawMeshesIndex], 0, gpuSkinning)
+            )
         }
       }
     }
@@ -1313,7 +1339,6 @@ class GltfModelW {
     this.updateAnimation(index, time, onScreen, deltaTime)
     const animationBlend = this.inst.animationBlend
     const animationLoop = this.inst.animationLoop
-    let lightData
     let animationData = { index, time, onScreen, deltaTime, animationBlend, animationLoop }
     let editorData = {}
     if (onScreen) {
