@@ -28,8 +28,7 @@
 
             const node = this._findNode(nodeName)
             if (!node) return false
-            if (!node.disabled) return true
-
+            return !node.disabled
         }
     };
 }
