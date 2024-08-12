@@ -377,22 +377,7 @@
         "isTrigger": false,
         "isInvertible": true,
         "isCompatibleWithTriggers": false
-      },
-      {
-        "id": "is-node-enabled",
-        "scriptName": "IsNodeEnabled",
-        "highlight": false,
-        "isTrigger": false,
-        "isInvertible": true,
-        "isCompatibleWithTriggers": true,
-        "params": [
-          {
-              "id": "node-name",
-              "type": "string",
-              "initialValue": ""
-          }
-        ]
-      }         
+      }
     ],
     "actions": [
       {
@@ -579,19 +564,7 @@
             "initialValue": "false"
           }
         ]
-      },
-      {
-        "id": "set-gpu-skinning",
-        "scriptName": "SetGPUSkinning",
-        "highlight": false,
-        "params": [
-          {
-            "id": "enable",
-            "type": "boolean",
-            "initialValue": "false"
-          }
-        ]
-      },
+      }
     ],
     "expressions": [
       {

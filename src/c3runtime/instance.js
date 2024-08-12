@@ -76,10 +76,8 @@
       this.spriteTextures = new Map()
       this.fragLight = false
       this.staticGeometry = false
-      this.gpuSkinning = false
       this.cameraVector = [0, 1, 0]
       this.cameraPosition = [0, 0, 0]
-      this.animationOffset = 0
 
       if (properties) {
         this.scale = properties[0]
@@ -193,23 +191,14 @@
       // Animate gltf model
       if (this.loaded) {
         if (this.animationPlay && this.gltf.gltfData.hasOwnProperty("animations")) {
-          this.animationTime +=
-            this._runtime.GetDt() * this.animationSpeed +
-            (Math.random() * (1 / this.animationRate) - 1 / this.animationRate / 2) * 0.1
+          this.animationTime += this._runtime.GetDt() * this.animationSpeed
           const deltaTime = this.animationTime - this.animationLastTime
           if (deltaTime >= 1 / this.animationRate) {
             this.animationLastTime = this.animationTime
             this.drawVerts = []
             this.drawUVs = []
             this.drawIndices = []
-            this.gltf.updateAnimationPolygons(
-              this.animationIndex,
-              this.animationTime,
-              onScreen,
-              deltaTime,
-              this.staticGeometry,
-              this.gpuSkinning
-            )
+            this.gltf.updateAnimationPolygons(this.animationIndex, this.animationTime, onScreen, deltaTime)
           }
           // } else if (this.renderOnce || (this.workerAnimation))
         } else if (this.renderOnce || this.lightEnable) {
@@ -217,7 +206,7 @@
           this.drawVerts = []
           this.drawUVs = []
           this.drawIndices = []
-          this.gltf.getPolygons(this.staticGeometry || this.gpuSkinning)
+          this.gltf.getPolygons()
           this.runtime.UpdateRender()
           this.updateBbox = true
         }
@@ -493,7 +482,6 @@
       this.spotEdge = null
       this.ambientColor = null
       this.quaternion = null
-      this.animationOffset = null
       super.Release()
     }
 

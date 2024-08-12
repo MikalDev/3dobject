@@ -152,18 +152,7 @@
                 "desc": "Enter the name of animation to check if playing."
               }
             }
-          },
-          "is-node-enabled": {
-            "list-name": "Is node enabled",
-            "display-text": "Is node {0} enabled",
-            "description": "True if node is enabled.",
-            "params": {
-              "node-name": {
-                "name": "Node",
-                "desc": "Enter the name of node to check if enabled."
-              }
-            }
-         }
+          }
         },
         "actions": {
           "rotate": {
@@ -861,17 +850,6 @@
               "enable": {
                 "name": "Enable",
                 "desc": "Enable static geometry."
-              }
-            }
-          },
-          "set-gpu-skinning": {
-            "list-name": "Set gpu skinning",
-            "display-text": "Set gpu skinning {0}",
-            "description": "Set gpu skinning (static geometry must be enabled).",
-            "params": {
-              "enable": {
-                "name": "Enable",
-                "desc": "Enable gpu skinning."
               }
             }
           },
