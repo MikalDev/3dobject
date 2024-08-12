@@ -1,5 +1,289 @@
 // @ts-check
 "use strict"
+// @ts-ignore
+class BoneBufferW {
+  constructor(renderer, numBones, skinAnimation = false) {
+    const gl = renderer._gl
+    // Get uBones location from current shader program
+    const shaderProgram = renderer._batchState.currentShader._shaderProgram
+    this.locABones = gl.getUniformLocation(shaderProgram, "uBones")
+    this.locUSkinEnable = gl.getUniformLocation(shaderProgram, "uSkinEnable")
+    this.locUNodeXformEnable = gl.getUniformLocation(shaderProgram, "uNodeXformEnable")
+    this.locARootNodeXform = gl.getUniformLocation(shaderProgram, "uRootNodeXform")
+    this.locANodeXform = gl.getUniformLocation(shaderProgram, "uNodeXform")
+    if (skinAnimation) {
+      this.bones = new Float32Array(numBones * 16)
+      this.nodeXform = null
+      this.rootNodeXform = new Float32Array(16)
+    } else {
+      this.nodeXform = new Float32Array(16)
+      this.bones = null
+      this.rootNodeXform = null
+    }
+    this.skinAnimation = skinAnimation
+  }
+
+  setBone(jointIndex, matrix) {
+    if (this.bones) {
+      const offset = jointIndex * 16
+      for (let i = 0; i < 16; i++) {
+        this.bones[offset + i] = matrix[i]
+      }
+    } else {
+      console.warn("BoneBuffer: No bones array allocated")
+    }
+  }
+
+  setBones(matrices) {
+    if (this.bones) {
+      this.bones.set(matrices)
+    } else {
+      console.warn("BoneBuffer: No bones array allocated")
+    }
+  }
+
+  setRootNodeXform(matrix) {
+    if (this.rootNodeXform) {
+      this.rootNodeXform.set(matrix)
+    } else {
+      console.warn("BoneBuffer: No rootNodeXform array allocated")
+    }
+  }
+
+  setNodeXform(matrix) {
+    if (this.nodeXform) {
+      this.nodeXform.set(matrix)
+    } else {
+      console.warn("BoneBuffer: No nodeXform array allocated")
+    }
+  }
+
+  uploadUniforms(gl) {
+    const mat4 = globalThis.glMatrix3D.mat4
+    gl.uniformMatrix4fv(this.locABones, false, this.bones)
+    gl.uniform1f(this.locUSkinEnable, 1.0)
+    gl.uniformMatrix4fv(this.locARootNodeXform, false, this.rootNodeXform)
+  }
+
+  uploadUniformsNonSkin(gl) {
+    const mat4 = globalThis.glMatrix3D.mat4
+    gl.uniform1f(this.locUSkinEnable, 0.0)
+    gl.uniform1f(this.locUNodeXformEnable, 1.0)
+    gl.uniformMatrix4fv(this.locANodeXform, false, this.nodeXform)
+  }
+
+  disable(gl) {
+    gl.uniform1f(this.locUSkinEnable, 0.0)
+    gl.uniform1f(this.locUNodeXformEnable, 0.0)
+  }
+}
+// @ts-ignore
+class ObjectBuffer {
+  constructor(renderer, mesh, primitiveIndex, gpuSkinning) {
+    this.gl = renderer._gl
+    const gl = this.gl
+
+    let vertexData, texcoordData, indexData, colorData, normalData, weightsData, jointsData
+    if (gpuSkinning) {
+      vertexData = mesh.drawVertsOrig[primitiveIndex]
+    } else {
+      vertexData = mesh.drawVerts[primitiveIndex]
+    }
+    texcoordData = mesh.drawUVs[primitiveIndex]
+    indexData = mesh.drawIndices[primitiveIndex]
+    colorData = mesh.drawColors[primitiveIndex]
+    normalData = mesh.drawNormals ? mesh.drawNormals[primitiveIndex] : null
+    weightsData = mesh.drawWeights ? mesh.drawWeights[primitiveIndex] : null
+    jointsData = mesh.drawJoints ? mesh.drawJoints[primitiveIndex] : null
+    this.indexDataLength = indexData.length
+    this.vertexData = vertexData
+    this.texcoordData = texcoordData
+    this.indexData = indexData
+    this.colorData = colorData
+    this.normalData = normalData
+    this.weightsData = weightsData
+    // Change jointsData to float32ARRAY FROM UINT16ARRAY
+    // C3 Shader uniforms must be cast as float instead of int, unknown why
+    // If non C3 shader program is used, it will not be required
+    if (jointsData) {
+      this.jointsData = new Float32Array(jointsData.length)
+      this.jointsData.set(jointsData)
+    }
+    // Create vao for object
+    this.vao = gl.createVertexArray()
+    gl.bindVertexArray(this.vao)
+
+    this.vertexBuffer = gl.createBuffer()
+    this.texcoordBuffer = gl.createBuffer()
+    this.indexBuffer = gl.createBuffer()
+    if (colorData != null) {
+      this.colorBuffer = gl.createBuffer()
+    }
+    if (normalData != null) {
+      this.normalBuffer = gl.createBuffer()
+    }
+    if (weightsData != null) {
+      this.weightsBuffer = gl.createBuffer()
+    }
+    if (jointsData != null) {
+      this.jointsBuffer = gl.createBuffer()
+    }
+    // Fill all buffers
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer)
+    gl.bufferData(gl.ARRAY_BUFFER, this.vertexData, gl.STATIC_DRAW)
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.texcoordBuffer)
+    gl.bufferData(gl.ARRAY_BUFFER, this.texcoordData, gl.STATIC_DRAW)
+
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer)
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.indexData, gl.STATIC_DRAW)
+
+    if (colorData != null) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.colorBuffer)
+      gl.bufferData(gl.ARRAY_BUFFER, this.colorData, gl.STATIC_DRAW)
+    }
+    if (normalData != null) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.normalBuffer)
+      gl.bufferData(gl.ARRAY_BUFFER, this.normalData, gl.STATIC_DRAW)
+    }
+    if (weightsData != null) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.weightsBuffer)
+      gl.bufferData(gl.ARRAY_BUFFER, this.weightsData, gl.STATIC_DRAW)
+    }
+    if (jointsData != null) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.jointsBuffer)
+      gl.bufferData(gl.ARRAY_BUFFER, this.jointsData, gl.STATIC_DRAW)
+    }
+
+    const batchState = renderer._batchState
+    const shaderProgram = batchState.currentShader._shaderProgram
+    this.locAPos = gl.getAttribLocation(shaderProgram, "aPos")
+    this.locATex = gl.getAttribLocation(shaderProgram, "aTex")
+    this.locAColor = gl.getAttribLocation(shaderProgram, "aColor")
+    this.locANormal = gl.getAttribLocation(shaderProgram, "aNormal")
+    this.locAWeights = gl.getAttribLocation(shaderProgram, "aWeights")
+    this.locAJoints = gl.getAttribLocation(shaderProgram, "aJoints")
+
+    const locAPos = this.locAPos
+    const locATex = this.locATex
+    const locAColor = this.locAColor
+    const locANormal = this.locANormal
+    const locAWeights = this.locAWeights
+    const locAJoints = this.locAJoints
+    const vB = this.vertexBuffer
+    const tB = this.texcoordBuffer
+    const cB = this.colorBuffer
+    const nB = this.normalBuffer
+    const jB = this.jointsBuffer
+    const wB = this.weightsBuffer
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, vB)
+    gl.vertexAttribPointer(locAPos, 3, gl.FLOAT, false, 0, 0)
+    gl.enableVertexAttribArray(locAPos)
+    gl.bindBuffer(gl.ARRAY_BUFFER, tB)
+    gl.vertexAttribPointer(locATex, 2, gl.FLOAT, false, 0, 0)
+    gl.enableVertexAttribArray(locATex)
+    if (cB != null && locAColor != -1) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, cB)
+      gl.vertexAttribPointer(locAColor, 3, gl.FLOAT, false, 0, 0)
+      gl.enableVertexAttribArray(locAColor)
+    }
+    if (nB != null && locANormal != -1) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, nB)
+      gl.vertexAttribPointer(locANormal, 3, gl.FLOAT, false, 0, 0)
+      gl.enableVertexAttribArray(locANormal)
+    }
+    if (wB != null && locAWeights != -1) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, wB)
+      gl.vertexAttribPointer(locAWeights, 4, gl.FLOAT, false, 0, 0)
+      gl.enableVertexAttribArray(locAWeights)
+    }
+    if (jB != null && locAJoints != -1) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, jB)
+      gl.vertexAttribPointer(locAJoints, 4, gl.FLOAT, false, 0, 0)
+      gl.enableVertexAttribArray(locAJoints)
+    }
+
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer)
+
+    gl.bindVertexArray(null)
+  }
+
+  updateVertexData(renderer, mesh, primitiveIndex) {
+    const gl = renderer._gl
+    const vertexData = mesh.drawVerts[primitiveIndex]
+
+    // Fill only vertex buffer
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer)
+    gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.STATIC_DRAW)
+  }
+
+  release() {
+    const gl = this.gl
+    if (this.vertexBuffer) {
+      gl.deleteBuffer(this.vertexBuffer)
+      this.vertexBuffer = null
+    }
+    if (this.texcoordBuffer) {
+      gl.deleteBuffer(this.texcoordBuffer)
+      this.texcoordBuffer = null
+    }
+    if (this.vao) {
+      gl.deleteVertexArray(this.vao)
+      this.vao = null
+    }
+    if (this.colorBuffer) {
+      gl.deleteBuffer(this.colorBuffer)
+      this.colorBuffer = null
+    }
+    if (this.normalBuffer) {
+      gl.deleteBuffer(this.normalBuffer)
+      this.normalBuffer = null
+    }
+    this.gl = null
+    this.vao = null
+    this.vertexData = null
+    this.texcoordData = null
+    this.indexData = null
+    this.colorData = null
+    this.normalData = null
+    this.locAPos = null
+    this.locATex = null
+    this.locAColor = null
+    this.locANormal = null
+  }
+
+  _ExecuteBatch(renderer) {
+    if (renderer._batchPtr === 0) {
+      return
+    }
+    if (renderer.IsContextLost()) return
+    // renderer._WriteBuffers()
+    renderer._ExecuteBatch()
+    renderer._batchPtr = 0
+    renderer._vertexPtr = 0
+    renderer._texPtr = 0
+    renderer._pointPtr = 0
+    renderer._topOfBatch = 0
+  }
+
+  draw(renderer, boneBuffer) {
+    const gl = renderer._gl
+    this._ExecuteBatch(renderer)
+    gl.bindVertexArray(this.vao)
+    // upload bones and enable skinning
+    if (boneBuffer) {
+      if (boneBuffer.skinAnimation) {
+        boneBuffer.uploadUniforms(gl)
+      } else {
+        boneBuffer.uploadUniformsNonSkin(gl)
+      }
+    }
+    gl.drawElements(gl.TRIANGLES, this.indexDataLength, gl.UNSIGNED_SHORT, 0)
+    gl.bindVertexArray(null)
+  }
+}
+
 class GltfModelW {
   constructor(runtime, sdkType, inst) {
     const mat4 = globalThis.glMatrix3D.mat4
@@ -18,11 +302,14 @@ class GltfModelW {
     this.currentColor = [-1, -1, -1, -1]
     this.nodeMeshMap = {}
     this.modelRotate = mat4.create()
+    this.normalMatrix = mat4.create()
+    this.locANormalMatrix = null
     this.meshNames = new Map()
     this.msgPort = null
     this.arrayBufferIndex = 0
     this.buff = null
     this.verts = new Float32Array(0)
+    this.bones = new Float32Array(0)
     this.updateDrawVerts = false
     this.activeNodes = []
     this.drawLights = new Uint32Array(0)
@@ -30,8 +317,8 @@ class GltfModelW {
     this.drawLightsEnable = false
     this.workerReady = false
     this.boundingBoxInit = false
-    this.meshBatchCache = new Map()
-    this.meshBatchCacheComplete = false
+    this.maxBones = 50
+    this.boneBufferViews = []
   }
 
   release() {
@@ -56,6 +343,12 @@ class GltfModelW {
     // @ts-ignore
     this._lastIndex = null
     // @ts-ignore
+    for (let ii = 0; ii < this.drawMeshes.length; ii++) {
+      for (let jj = 0; jj < this.drawMeshes[ii].objectBuffers.length; jj++) {
+        this.drawMeshes[ii].objectBuffers[jj].release()
+      }
+    }
+    // @ts-ignore
     this.drawMeshes = null
     // @ts-ignore
     this.drawMeshesIndex = null
@@ -78,6 +371,29 @@ class GltfModelW {
     this.activeNodes = null
   }
 
+  createBoneBufferViews() {
+    // Iterate through all nodes
+    const MATRIX_SIZE = 16
+    const boneBufferViews = this.boneBufferViews
+    let bufferIndex = 0
+    // Unskinned nodes with mesh
+    for (let node of this.gltfData.nodes) {
+      // Check if the node has a mesh and is not a skinned mesh
+      if (node.mesh && !node.skin) {
+        // Set the bufferView start to the current bufferCounter index
+        boneBufferViews.push({ start: bufferIndex, length: MATRIX_SIZE })
+        bufferIndex += MATRIX_SIZE
+      }
+    }
+    // Iterate through all skinned nodes
+    for (let skinnedNode of this.gltfData.skinnedNodes) {
+      // Create a bufferView for each skinned node
+      // Add additional matrix for rootNodeXform matrix
+      boneBufferViews.push({ start: bufferIndex, length: (skinnedNode.skin.joints.length + 1) * MATRIX_SIZE })
+      bufferIndex += (skinnedNode.skin.joints.length + 1) * MATRIX_SIZE
+    }
+  }
+
   async init() {
     // Deep copy
     // For instance version, may only need points, others remain stable, full copy for now
@@ -98,9 +414,10 @@ class GltfModelW {
     // Create dedicdated web worker for skinned mesh animation
     this.initDrawMeshes()
     this.drawMeshesMin = this.drawMeshes
+    this.createBoneBufferViews()
     await this.createWorker(this._runtime)
     this.workerReady = true
-    this.getPolygons()
+    this.getPolygons(this.inst.gpuSkinning)
   }
 
   initDrawMeshes() {
@@ -118,7 +435,6 @@ class GltfModelW {
   }
 
   transformDrawVerts(drawVerts, modelScaleRotate) {
-    console.log("transformDrawVerts")
     const vec3 = globalThis.glMatrix3D.vec3
     // Transform drawVerts in place
     const xformVerts = []
@@ -143,7 +459,8 @@ class GltfModelW {
     return xformVerts
   }
 
-  scanNode(node, scanSkin) {
+  scanNode(node, scanSkin, gpuSkinning) {
+    gpuSkinning = true
     if ((node.mesh != undefined && node.skin == undefined) || scanSkin) {
       for (let i = 0; i < node.mesh.primitives.length; i++) {
         let posDataLength = node.mesh.primitives[i].attributes.POSITION.data.length
@@ -151,12 +468,20 @@ class GltfModelW {
         if (!this.drawMeshes[this.drawMeshesIndex]) {
           this.drawMeshes.push({
             drawVerts: [],
+            drawVertsOrig: [],
             bufferViews: [],
             drawUVs: [],
             drawIndices: [],
+            drawColors: [],
+            drawNormals: [],
+            drawBones: [],
+            drawJoints: [],
+            drawWeights: [],
             disabled: false,
+            objectBuffers: [],
           })
         }
+        this.drawMeshes[this.drawMeshesIndex].node = node
         this.drawMeshes[this.drawMeshesIndex].bufferViews.push({ start: this.arrayBufferIndex, length: posDataLength })
         this.arrayBufferIndex += posDataLength
         this.meshNames.set(node.name, this.drawMeshesIndex)
@@ -170,13 +495,31 @@ class GltfModelW {
 
         const drawUVs = this.drawMeshes[this.drawMeshesIndex].drawUVs
         const drawIndices = this.drawMeshes[this.drawMeshesIndex].drawIndices
+        const drawColors = this.drawMeshes[this.drawMeshesIndex].drawColors
+        const drawNormals = this.drawMeshes[this.drawMeshesIndex].drawNormals
+        const drawJoints = this.drawMeshes[this.drawMeshesIndex].drawJoints
+        const drawWeights = this.drawMeshes[this.drawMeshesIndex].drawWeights
+        const drawVertsOrig = this.drawMeshes[this.drawMeshesIndex].drawVertsOrig
 
         if (drawUVs.length === 0 && "TEXCOORD_0" in node.mesh.primitives[i].attributes) {
-          drawUVs.push(Array.from(node.mesh.primitives[i].attributes.TEXCOORD_0.data))
+          drawUVs.push(new Float32Array(node.mesh.primitives[i].attributes.TEXCOORD_0.data))
         }
-        if (drawIndices.length === 0) {
-          drawIndices.push(Array.from(node.mesh.primitives[i].indices.data))
+        if (gpuSkinning && drawVertsOrig.length === 0 && "POSITION" in node.mesh.primitives[i].attributes) {
+          drawVertsOrig.push(new Float32Array(node.mesh.primitives[i].attributes.POSITION.data))
         }
+        if (drawColors.length === 0 && "COLOR_0" in node.mesh.primitives[i].attributes) {
+          drawColors.push(new Float32Array(node.mesh.primitives[i].attributes.COLOR_0.data))
+        }
+        if (drawNormals.length === 0 && "NORMAL" in node.mesh.primitives[i].attributes) {
+          drawNormals.push(new Float32Array(node.mesh.primitives[i].attributes.NORMAL.data))
+        }
+        if (gpuSkinning && drawJoints.length === 0 && "JOINTS_0" in node.mesh.primitives[i].attributes) {
+          drawJoints.push(new Uint16Array(node.mesh.primitives[i].attributes.JOINTS_0.data))
+        }
+        if (gpuSkinning && drawWeights.length === 0 && "WEIGHTS_0" in node.mesh.primitives[i].attributes) {
+          drawWeights.push(new Float32Array(node.mesh.primitives[i].attributes.WEIGHTS_0.data))
+        }
+        if (drawIndices.length === 0) drawIndices.push(new Uint16Array(node.mesh.primitives[i].indices.data))
       }
     }
     if (node.children) {
@@ -194,19 +537,32 @@ class GltfModelW {
     // Add an onmessage handler to receive message
     this.msgPort.onmessage = (e) => {
       if (!e.data.type) {
-        this.buff = e.data.buff
         this.activeNodes = e.data.activeNodes
-        this.verts = new Float32Array(this.buff)
-        if (e.data.lightUpdate) {
-          this.buffLights = e.data.buffLights
-          this.drawLights = new Uint32Array(this.buffLights)
-          this.drawLightsBufferViews = e.data.drawLightsBufferViews
+        const gpuSkinning = this.inst.gpuSkinning
+        if (!gpuSkinning) {
+          this.buff = e.data.buff
+          this.verts = new Float32Array(this.buff)
+          if (e.data.lightUpdate) {
+            this.buffLights = e.data.buffLights
+            this.drawLights = new Uint32Array(this.buffLights)
+            this.drawLightsBufferViews = e.data.drawLightsBufferViews
+          }
+          this.drawLightsEnable = e.data.drawLightsEnable
+          this.setBBFromVerts(this.verts, this.inst.minBB, this.inst.maxBB)
+          this.inst.updateBbox = true
+          this.updateDrawVerts = true
+          this.typedVertsToDrawVerts(this.inst.staticGeometry)
+        } else {
+          this.buff = e.data.buff
+          this.buffBones = e.data.buffBones
+          this.buffNodesMat = e.data.buffNodeMats
+          this.nodesMat = new Float32Array(this.buffNodesMat)
+          this.bones = new Float32Array(this.buffBones)
+          // this.setBBFromVerts(this.verts, this.inst.minBB, this.inst.maxBB)
+          // this.inst.updateBbox = true
+          this.updateDrawVerts = true
+          this.typedBonesToDrawBones()
         }
-        this.drawLightsEnable = e.data.drawLightsEnable
-        this.setBBFromVerts(this.verts, this.inst.minBB, this.inst.maxBB)
-        this.inst.updateBbox = true
-        this.updateDrawVerts = true
-        this.typedVertsToDrawVerts()
         this.workerReady = true
         if (!this.boundingBoxInit) {
           this.inst.initBoundingBox()
@@ -225,7 +581,16 @@ class GltfModelW {
     const bufferViews = this.drawMeshes[this.drawMeshes.length - 1].bufferViews
     const buffLength = bufferViews[bufferViews.length - 1].start + bufferViews[bufferViews.length - 1].length
     this.buff = new ArrayBuffer((buffLength + 7) * 4)
-    this.msgPort.postMessage({ type: "gltf", gltf: this.gltfData, buffLength: buffLength, drawMeshes: this.drawMeshes })
+    const buffBonesLength =
+      this.boneBufferViews[this.boneBufferViews.length - 1].start +
+      this.boneBufferViews[this.boneBufferViews.length - 1].length
+    this.msgPort.postMessage({
+      type: "gltf",
+      gltf: this.gltfData,
+      buffLength: buffLength,
+      drawMeshes: this.drawMeshes,
+      buffBonesLength,
+    })
     return { msgPort: this.msgPort }
   }
 
@@ -292,14 +657,6 @@ class GltfModelW {
     const distance = vec3.distance(cameraPos, point)
     if (distance > 1000) return false
     return true
-  }
-
-  _OrphanBuffers(renderer) {
-    const gl = renderer._gl
-    gl.bindBuffer(gl.ARRAY_BUFFER, renderer._vertexBuffer)
-    gl.bufferData(gl.ARRAY_BUFFER, renderer._vertexData.byteLength, gl.DYNAMIC_DRAW)
-    gl.bindBuffer(gl.ARRAY_BUFFER, renderer._texcoordBuffer)
-    gl.bufferData(gl.ARRAY_BUFFER, renderer._texcoordData.byteLength, gl.DYNAMIC_DRAW)
   }
 
   render(renderer, x, y, z, tempQuad, whiteTexture, instanceC3Color, textures, instanceTexture) {
@@ -371,6 +728,11 @@ class GltfModelW {
       }
       mat4.fromRotationTranslationScale(modelRotate, rotate, [x, y, z], [xScale, -yScale, zScale])
       mat4.copy(this.modelRotate, modelRotate)
+      // Create inverse transpose normal matrix from modelRotate
+      if (this.inst.normalVertex) {
+        mat4.invert(this.normalMatrix, modelRotate)
+        mat4.transpose(this.normalMatrix, this.normalMatrix)
+      }
       mat4.multiply(modelRotate, tmpModelView, modelRotate)
       if (this.inst.fragLight) mat4.multiply(modelRotate, renderer._matP, modelRotate)
       if (!(this.inst.fragLight && this.inst.isWebGPU)) renderer.SetModelViewMatrix(modelRotate)
@@ -403,6 +765,10 @@ class GltfModelW {
 
       // Skip render if disabled
       if (this.drawMeshes[j].disabled) continue
+
+      if (this.inst.gpuSkinning && !this.drawMeshes[j].boneBuffer) {
+        this.drawMeshes[j].boneBuffer = this.drawMeshes[j].node.boneBuffer
+      }
 
       const drawVerts = this.drawMeshes[j].drawVerts
       const drawUVs = this.drawMeshes[j].drawUVs
@@ -464,13 +830,24 @@ class GltfModelW {
         xVerts = drawVerts
       }
 
+      if (this.inst.staticGeometry || this.inst.gpuSkinning) {
+        const objectBuffers = this.drawMeshes[j].objectBuffers
+        // Draw
+        let boneBuffer
+        boneBuffer = this.drawMeshes[j]?.boneBuffer
+        for (let i = 0; i < objectBuffers.length; i++) {
+          boneBuffer = this.drawMeshes[j]?.boneBuffer
+          objectBuffers[i].draw(this.inst.renderer, boneBuffer)
+          totalTriangles += objectBuffers[i].indexDataLength / 3
+        }
+        // XXX Perhaps too often, once per mesh, better to do once per model
+        if (boneBuffer) {
+          boneBuffer.disable(renderer._gl)
+        }
+        continue
+      }
+
       for (let ii = 0; ii < drawVerts.length; ii++) {
-        // Convert typed array to regular array
-        // to speed access to data, net win is 10-20%
-        // const v = new Array(bufferView.length);
-        // for (let a=0; a<bufferView.length; a++) {
-        //    v[a] = this.verts[buffStart+a];
-        // }
         let v = xVerts[ii]
         let uv = drawUVs[ii]
         let ind = drawIndices[ii]
@@ -478,198 +855,146 @@ class GltfModelW {
         let triangleCount = ind.length / 3
         let center = [0, 0, 0]
         totalTriangles += triangleCount
-
-        const triangleCounts = []
-        const MAX_TRIANGLES_PER_BATCH = 1000
-        for (let i = 0; i < triangleCount; i += MAX_TRIANGLES_PER_BATCH) {
-          triangleCounts.push(i)
-        }
-        if (triangleCount % MAX_TRIANGLES_PER_BATCH !== 0) {
-          triangleCounts.push(triangleCount)
-        }
-        if (this.inst.staticGeometry && !this.meshBatchCache.get(j)) {
-          this.meshBatchCache.set(j, {
-            vertexData: [],
-            texData: [],
-            vertexPtr: [],
-            texPtr: [],
-          })
-        }
-        for (let subBatchIndex = 0; subBatchIndex < triangleCounts.length; subBatchIndex++) {
-          if (
-            !this.inst.staticGeometry ||
-            this.inst.isEditor ||
-            (this.inst.staticGeometry && !this.meshBatchCacheComplete)
-          ) {
-            for (let i = triangleCounts[subBatchIndex]; i < triangleCounts[subBatchIndex + 1]; i++) {
-              if (this.drawLightsEnable && this.inst.backFaceCull) {
-                const c = this.unpackRGBA(this.drawLights[lightIndex])
-                if (c[3] == 0) {
-                  lightIndex++
-                  totalTrianglesCulled++
-                  continue
-                }
-              }
-
-              if (hasTexture) {
-                if (offsetMaterial || rotateMaterial) {
-                  // create new arrays for the UVs
-                  const uvQuad = [
-                    [uv[ind[i * 3 + 0] * 2 + 0], uv[ind[i * 3 + 0] * 2 + 1]],
-                    [uv[ind[i * 3 + 1] * 2 + 0], uv[ind[i * 3 + 1] * 2 + 1]],
-                    [uv[ind[i * 3 + 2] * 2 + 0], uv[ind[i * 3 + 2] * 2 + 1]],
-                  ]
-                  if (rotateMaterial) {
-                    // Rotate UVs
-                    vec2.sub(uvQuad[0], uvQuad[0], [rotateMaterial.x, rotateMaterial.y])
-                    vec2.sub(uvQuad[1], uvQuad[1], [rotateMaterial.x, rotateMaterial.y])
-                    vec2.sub(uvQuad[2], uvQuad[2], [rotateMaterial.x, rotateMaterial.y])
-                    mat2.multiply(uvQuad[0], rotateMatrix, uvQuad[0])
-                    mat2.multiply(uvQuad[1], rotateMatrix, uvQuad[1])
-                    mat2.multiply(uvQuad[2], rotateMatrix, uvQuad[2])
-                    vec2.add(uvQuad[0], uvQuad[0], [rotateMaterial.x, rotateMaterial.y])
-                    vec2.add(uvQuad[1], uvQuad[1], [rotateMaterial.x, rotateMaterial.y])
-                    vec2.add(uvQuad[2], uvQuad[2], [rotateMaterial.x, rotateMaterial.y])
-                  }
-
-                  if (offsetMaterial) {
-                    const uOffset = offsetMaterial.u
-                    const vOffset = offsetMaterial.v
-                    // Offset UVs in uvQuad
-                    uvQuad[0][0] += uOffset
-                    uvQuad[0][1] += vOffset
-                    uvQuad[1][0] += uOffset
-                    uvQuad[1][1] += vOffset
-                    uvQuad[2][0] += uOffset
-                    uvQuad[2][1] += vOffset
-                  }
-                  // Set tempquad
-                  tempQuad.set(
-                    uvQuad[0][0],
-                    uvQuad[0][1],
-                    uvQuad[1][0],
-                    uvQuad[1][1],
-                    uvQuad[2][0],
-                    uvQuad[2][1],
-                    uvQuad[2][0],
-                    uvQuad[2][1]
-                  )
-                } else if (offsetUV) {
-                  const uOffset = offsetUV.u
-                  const vOffset = offsetUV.v
-                  tempQuad.set(
-                    uv[ind[i * 3 + 0] * 2 + 0] + uOffset,
-                    uv[ind[i * 3 + 0] * 2 + 1] + vOffset,
-                    uv[ind[i * 3 + 1] * 2 + 0] + uOffset,
-                    uv[ind[i * 3 + 1] * 2 + 1] + vOffset,
-                    uv[ind[i * 3 + 2] * 2 + 0] + uOffset,
-                    uv[ind[i * 3 + 2] * 2 + 1] + vOffset,
-                    uv[ind[i * 3 + 2] * 2 + 0] + uOffset,
-                    uv[ind[i * 3 + 2] * 2 + 1] + vOffset
-                  )
-                } else {
-                  tempQuad.set(
-                    uv[ind[i * 3 + 0] * 2 + 0],
-                    uv[ind[i * 3 + 0] * 2 + 1],
-                    uv[ind[i * 3 + 1] * 2 + 0],
-                    uv[ind[i * 3 + 1] * 2 + 1],
-                    uv[ind[i * 3 + 2] * 2 + 0],
-                    uv[ind[i * 3 + 2] * 2 + 1],
-                    uv[ind[i * 3 + 2] * 2 + 0],
-                    uv[ind[i * 3 + 2] * 2 + 1]
-                  )
-                }
-              } else {
-                // Set face to color if possible
-                tempQuad.set(0, 0, 1, 0, 0, 1, 0, 1)
-              }
-
-              let i3 = i * 3
-              let x0, y0, z0, x1, y1, z1, x2, y2, z2
-
-              x0 = v[ind[i3 + 0] * 3 + 0]
-              y0 = v[ind[i3 + 0] * 3 + 1]
-              z0 = v[ind[i3 + 0] * 3 + 2] - z
-              x1 = v[ind[i3 + 1] * 3 + 0]
-              y1 = v[ind[i3 + 1] * 3 + 1]
-              z1 = v[ind[i3 + 1] * 3 + 2] - z
-              x2 = v[ind[i3 + 2] * 3 + 0]
-              y2 = v[ind[i3 + 2] * 3 + 1]
-              z2 = v[ind[i3 + 2] * 3 + 2] - z
-
-              if (vertexScale != 0) {
-                const xScale = (this.inst.scale / (this.inst.xScale == 0 ? 1 : this.inst.xScale)) * vertexScale
-                const yScale = (this.inst.scale / (this.inst.yScale == 0 ? 1 : this.inst.yScale)) * vertexScale
-                const zScale = (this.inst.scale / (this.inst.zScale == 0 ? 1 : this.inst.zScale)) * vertexScale
-                x0 = Math.round(x0 * xScale) / xScale
-                y0 = Math.round(y0 * xScale) / yScale
-                z0 = Math.round(z0 * xScale) / zScale
-                x1 = Math.round(x1 * xScale) / xScale
-                y1 = Math.round(y1 * xScale) / yScale
-                z1 = Math.round(z1 * xScale) / zScale
-                x2 = Math.round(x2 * xScale) / xScale
-                y2 = Math.round(y2 * xScale) / yScale
-                z2 = Math.round(z2 * xScale) / zScale
-              }
-
-              if (this.inst.wireframe) {
-                this.drawWireFrame(
-                  renderer,
-                  whiteTexture,
-                  tempQuad,
-                  x0,
-                  y0,
-                  z0,
-                  x1,
-                  y1,
-                  z1,
-                  x2,
-                  y2,
-                  z2,
-                  xWireframeWidth,
-                  yWireframeWidth,
-                  zWireframeWidth
-                )
-              } else {
-                if (this.drawLightsEnable) {
-                  const c = this.unpackRGBA(this.drawLights[lightIndex])
-                  lightIndex++
-                  if (baseColorChanged) vec4.mul(c, c, currentColor)
-                  renderer.SetColorRgba(c[0], c[1], c[2], 1)
-                }
-                renderer.Quad3D2(x0, y0, z0, x1, y1, z1, x2, y2, z2, x2, y2, z2, tempQuad)
-              }
+        for (let i = 0; i < triangleCount; i++) {
+          if (this.drawLightsEnable && this.inst.backFaceCull) {
+            const c = this.unpackRGBA(this.drawLights[lightIndex])
+            if (c[3] == 0) {
+              lightIndex++
+              totalTrianglesCulled++
+              continue
             }
-            if (this.inst.staticGeometry) {
-              const vertexData = new Float32Array(renderer._vertexData)
-              const texData = new Float32Array(renderer._texcoordData)
-              const vertexPtr = renderer._vertexPtr
-              const texPtr = renderer._texPtr
-              const meshBatch = this.meshBatchCache.get(j)
-              meshBatch.vertexData.push(vertexData)
-              meshBatch.texData.push(texData)
-              meshBatch.vertexPtr.push(vertexPtr)
-              meshBatch.texPtr.push(texPtr)
-              renderer.EndBatch()
+          }
+
+          if (hasTexture) {
+            if (offsetMaterial || rotateMaterial) {
+              // create new arrays for the UVs
+              const uvQuad = [
+                [uv[ind[i * 3 + 0] * 2 + 0], uv[ind[i * 3 + 0] * 2 + 1]],
+                [uv[ind[i * 3 + 1] * 2 + 0], uv[ind[i * 3 + 1] * 2 + 1]],
+                [uv[ind[i * 3 + 2] * 2 + 0], uv[ind[i * 3 + 2] * 2 + 1]],
+              ]
+              if (rotateMaterial) {
+                // Rotate UVs
+                vec2.sub(uvQuad[0], uvQuad[0], [rotateMaterial.x, rotateMaterial.y])
+                vec2.sub(uvQuad[1], uvQuad[1], [rotateMaterial.x, rotateMaterial.y])
+                vec2.sub(uvQuad[2], uvQuad[2], [rotateMaterial.x, rotateMaterial.y])
+                mat2.multiply(uvQuad[0], rotateMatrix, uvQuad[0])
+                mat2.multiply(uvQuad[1], rotateMatrix, uvQuad[1])
+                mat2.multiply(uvQuad[2], rotateMatrix, uvQuad[2])
+                vec2.add(uvQuad[0], uvQuad[0], [rotateMaterial.x, rotateMaterial.y])
+                vec2.add(uvQuad[1], uvQuad[1], [rotateMaterial.x, rotateMaterial.y])
+                vec2.add(uvQuad[2], uvQuad[2], [rotateMaterial.x, rotateMaterial.y])
+              }
+
+              if (offsetMaterial) {
+                const uOffset = offsetMaterial.u
+                const vOffset = offsetMaterial.v
+                // Offset UVs in uvQuad
+                uvQuad[0][0] += uOffset
+                uvQuad[0][1] += vOffset
+                uvQuad[1][0] += uOffset
+                uvQuad[1][1] += vOffset
+                uvQuad[2][0] += uOffset
+                uvQuad[2][1] += vOffset
+              }
+              // Set tempquad
+              tempQuad.set(
+                uvQuad[0][0],
+                uvQuad[0][1],
+                uvQuad[1][0],
+                uvQuad[1][1],
+                uvQuad[2][0],
+                uvQuad[2][1],
+                uvQuad[2][0],
+                uvQuad[2][1]
+              )
+            } else if (offsetUV) {
+              const uOffset = offsetUV.u
+              const vOffset = offsetUV.v
+              tempQuad.set(
+                uv[ind[i * 3 + 0] * 2 + 0] + uOffset,
+                uv[ind[i * 3 + 0] * 2 + 1] + vOffset,
+                uv[ind[i * 3 + 1] * 2 + 0] + uOffset,
+                uv[ind[i * 3 + 1] * 2 + 1] + vOffset,
+                uv[ind[i * 3 + 2] * 2 + 0] + uOffset,
+                uv[ind[i * 3 + 2] * 2 + 1] + vOffset,
+                uv[ind[i * 3 + 2] * 2 + 0] + uOffset,
+                uv[ind[i * 3 + 2] * 2 + 1] + vOffset
+              )
+            } else {
+              tempQuad.set(
+                uv[ind[i * 3 + 0] * 2 + 0],
+                uv[ind[i * 3 + 0] * 2 + 1],
+                uv[ind[i * 3 + 1] * 2 + 0],
+                uv[ind[i * 3 + 1] * 2 + 1],
+                uv[ind[i * 3 + 2] * 2 + 0],
+                uv[ind[i * 3 + 2] * 2 + 1],
+                uv[ind[i * 3 + 2] * 2 + 0],
+                uv[ind[i * 3 + 2] * 2 + 1]
+              )
             }
           } else {
-            const meshBatch = this.meshBatchCache.get(j)
-            const numQuads = meshBatch.vertexPtr[subBatchIndex] / 6
-            this._ExtendQuadsBatch(renderer, numQuads)
-            renderer._vertexData = meshBatch.vertexData[subBatchIndex]
-            renderer._texcoordData = meshBatch.texData[subBatchIndex]
-            renderer._vertexPtr = meshBatch.vertexPtr[subBatchIndex]
-            renderer._texPtr = meshBatch.texPtr[subBatchIndex]
-            this._OrphanBuffers(renderer)
-            renderer.EndBatch()
+            // Set face to color if possible
+            tempQuad.set(0, 0, 1, 0, 0, 1, 0, 1)
+          }
+
+          let i3 = i * 3
+          let x0, y0, z0, x1, y1, z1, x2, y2, z2
+
+          x0 = v[ind[i3 + 0] * 3 + 0]
+          y0 = v[ind[i3 + 0] * 3 + 1]
+          z0 = v[ind[i3 + 0] * 3 + 2] - z
+          x1 = v[ind[i3 + 1] * 3 + 0]
+          y1 = v[ind[i3 + 1] * 3 + 1]
+          z1 = v[ind[i3 + 1] * 3 + 2] - z
+          x2 = v[ind[i3 + 2] * 3 + 0]
+          y2 = v[ind[i3 + 2] * 3 + 1]
+          z2 = v[ind[i3 + 2] * 3 + 2] - z
+
+          if (vertexScale != 0) {
+            const xScale = (this.inst.scale / (this.inst.xScale == 0 ? 1 : this.inst.xScale)) * vertexScale
+            const yScale = (this.inst.scale / (this.inst.yScale == 0 ? 1 : this.inst.yScale)) * vertexScale
+            const zScale = (this.inst.scale / (this.inst.zScale == 0 ? 1 : this.inst.zScale)) * vertexScale
+            x0 = Math.round(x0 * xScale) / xScale
+            y0 = Math.round(y0 * xScale) / yScale
+            z0 = Math.round(z0 * xScale) / zScale
+            x1 = Math.round(x1 * xScale) / xScale
+            y1 = Math.round(y1 * xScale) / yScale
+            z1 = Math.round(z1 * xScale) / zScale
+            x2 = Math.round(x2 * xScale) / xScale
+            y2 = Math.round(y2 * xScale) / yScale
+            z2 = Math.round(z2 * xScale) / zScale
+          }
+
+          if (this.inst.wireframe) {
+            this.drawWireFrame(
+              renderer,
+              whiteTexture,
+              tempQuad,
+              x0,
+              y0,
+              z0,
+              x1,
+              y1,
+              z1,
+              x2,
+              y2,
+              z2,
+              xWireframeWidth,
+              yWireframeWidth,
+              zWireframeWidth
+            )
+          } else {
+            if (this.drawLightsEnable) {
+              const c = this.unpackRGBA(this.drawLights[lightIndex])
+              lightIndex++
+              if (baseColorChanged) vec4.mul(c, c, currentColor)
+              renderer.SetColorRgba(c[0], c[1], c[2], 1)
+            }
+            renderer.Quad3D2(x0, y0, z0, x1, y1, z1, x2, y2, z2, x2, y2, z2, tempQuad)
           }
         }
       }
-    }
-    if (this.inst.staticGeometry && this.meshBatchCache.size > 0) {
-      this.meshBatchCacheComplete = true
-    } else {
-      this.meshBatchCacheComplete = false
     }
 
     // Restore modelview matrix
@@ -682,12 +1007,68 @@ class GltfModelW {
     // Restore renderer buffers
     renderer._vertexData = rendererVertexData
     renderer._texcoordData = rendererTexcoordData
+    // Restore attrib
+    if (this.inst.staticGeometry) {
+      // XXX may no longer be needed with an object buffer and separate vertex/texcoord buffers
+      // Restore for other C3 objects
+      const gl = renderer._gl
+      const batchState = renderer._batchState
+      const shaderProgram = batchState.currentShader._shaderProgram
+      const locAPos = gl.getAttribLocation(shaderProgram, "aPos")
+      const locATex = gl.getAttribLocation(shaderProgram, "aTex")
+      gl.bindBuffer(gl.ARRAY_BUFFER, renderer._vertexBuffer)
+      gl.vertexAttribPointer(locAPos, 3, gl.FLOAT, false, 0, 0)
+      gl.enableVertexAttribArray(locAPos)
+      gl.bindBuffer(gl.ARRAY_BUFFER, renderer._texcoordBuffer)
+      gl.vertexAttribPointer(locATex, 2, gl.FLOAT, false, 0, 0)
+      gl.enableVertexAttribArray(locATex)
+      renderer._vertexPtr = 0
+      renderer._texPtr = 0
+    }
+    if (!this.inst.isEditor) {
+      renderer.EndBatch()
+    }
   }
 
-  typedVertsToDrawVerts() {
+  typedBonesToDrawBones() {
+    // Iterate through all nodes
+    const MATRIX_SIZE = 16
+    const boneBufferViews = this.boneBufferViews
+    let bufferViewIndex = 0
+    // Unskinned nodes with mesh
+    const bones = this.bones
+    for (let node of this.gltfData.nodes) {
+      // Check if the node has a mesh and is not a skinned mesh
+      if (node.mesh && !node.skin) {
+        if (!node.hasOwnProperty("boneBuffer")) {
+          const boneBuffer = new BoneBufferW(this.inst.renderer, this.maxBones, false)
+          node.boneBuffer = boneBuffer
+        }
+        const start = boneBufferViews[bufferViewIndex].start
+        node.boneBuffer.setNodeXform(bones.slice(start, start + MATRIX_SIZE))
+        bufferViewIndex += 1
+      }
+    }
+
+    // Iterate through all skinned nodes
+    for (let skinnedNode of this.gltfData.skinnedNodes) {
+      if (!skinnedNode.hasOwnProperty("boneBuffer")) {
+        const boneBuffer = new BoneBufferW(this.inst.renderer, this.maxBones, true)
+        skinnedNode.boneBuffer = boneBuffer
+      }
+      const length = boneBufferViews[bufferViewIndex].length
+      const start = boneBufferViews[bufferViewIndex].start
+      skinnedNode.boneBuffer.setBones(bones.slice(start, start + length - MATRIX_SIZE))
+      skinnedNode.boneBuffer.setRootNodeXform(bones.slice(start + length - MATRIX_SIZE, start + length))
+      bufferViewIndex += 1
+    }
+  }
+
+  typedVertsToDrawVerts(staticGeometry) {
     for (let j = 0; j <= this.drawMeshesIndex; j++) {
       const drawVerts = this.drawMeshes[j].drawVerts
       const bufferViews = this.drawMeshes[j].bufferViews
+      const objectBuffers = this.drawMeshes[j].objectBuffers
       drawVerts.length = 0
       if (!this.activeNodes.includes(j)) {
         drawVerts.push([])
@@ -699,11 +1080,18 @@ class GltfModelW {
 
         // Convert typed array to regular array
         // to speed access to data, net win is 10-20%
-        const v = new Array(bufferView.length)
+        const v = new Float32Array(bufferView.length)
         for (let a = 0; a < bufferView.length; a++) {
           v[a] = this.verts[buffStart + a]
         }
         drawVerts.push(v)
+        if (staticGeometry) {
+          if (objectBuffers.length == 0) {
+            objectBuffers.push(new ObjectBuffer(this.inst.renderer, this.drawMeshes[j], 0, false))
+          } else {
+            objectBuffers[0].updateVertexData(this.inst.renderer, this.drawMeshes[j], 0, false)
+          }
+        }
       }
     }
   }
@@ -723,7 +1111,7 @@ class GltfModelW {
         Updates a node's matrix and all it's children nodes.
         After that it transforms unskinned mesh points and sends them to c2.
     */
-  transformNode(node) {
+  transformNode(node, gpuSkinning) {
     const gltf = this.gltfData
 
     if (node.mesh != undefined && node.skin == undefined) {
@@ -737,22 +1125,30 @@ class GltfModelW {
         } else {
           this.drawMeshes[this.drawMeshesIndex].material = null
         }
+        if (gpuSkinning) {
+          const objectBuffers = this.drawMeshes[this.drawMeshesIndex].objectBuffers
+          if (objectBuffers.length === 0)
+            objectBuffers.push(
+              new ObjectBuffer(this.inst.renderer, this.drawMeshes[this.drawMeshesIndex], 0, gpuSkinning)
+            )
+        }
       }
     }
-    if (node.children != undefined) for (let i = 0; i < node.children.length; i++) this.transformNode(node.children[i])
+    if (node.children != undefined)
+      for (let i = 0; i < node.children.length; i++) this.transformNode(node.children[i], gpuSkinning)
   }
 
-  getPolygons() {
+  getPolygons(gpuSkinning) {
     if (!this.workerReady) return
-    const editorData = this.getPolygonsPrep()
+    const editorData = this.getPolygonsPrep(gpuSkinning)
     const data = { editorData }
     this.workerReady = false
     this.msgPort.postMessage({ type: "getPolygons", data: data, buff: this.buff }, [this.buff])
   }
 
-  getEditorData(isEditor, lightEnable, lightUpdate) {
+  getEditorData(isEditor, lightEnable, lightUpdate, gpuSkinning) {
     const tick = this._runtime.GetTickCount()
-    let editorData = { tick: tick, isEditor: isEditor }
+    let editorData = { tick: tick, isEditor: isEditor, gpuSkinning }
     if (isEditor) {
       const xAngle = this.inst.xAngle
       const yAngle = this.inst.yAngle
@@ -783,6 +1179,7 @@ class GltfModelW {
         isEditor,
         lightEnable: false,
         cullEnable,
+        gpuSkinning,
       }
     }
 
@@ -826,23 +1223,24 @@ class GltfModelW {
         lightEnable: true,
         cullEnable,
         lightUpdate,
+        gpuSkinning,
       }
     }
     return editorData
   }
 
   //	Updates scene graph, and as a second step sends transformed skinned mesh points to c2.
-  getPolygonsPrep() {
+  getPolygonsPrep(gpuSkinning = false) {
     const gltf = this.gltfData
 
     this.drawMeshesIndex = -1
 
-    const editorData = this.getEditorData(this.inst.isEditor, this.inst.lightEnable, this.inst.lightUpdate)
+    const editorData = this.getEditorData(this.inst.isEditor, this.inst.lightEnable, this.inst.lightUpdate, gpuSkinning)
 
     // update all scene matrixes.
     // only update drawMesh meta data, vertex data will be updated in the worker
     for (let i = 0; i < gltf.scene.nodes.length; i++) {
-      this.transformNode(gltf.scene.nodes[i])
+      this.transformNode(gltf.scene.nodes[i], gpuSkinning)
     }
 
     for (let ii = 0; ii < gltf.skinnedNodes.length; ii++) {
@@ -856,6 +1254,13 @@ class GltfModelW {
           this.drawMeshes[this.drawMeshesIndex].material = node.mesh.primitives[i].material
         } else {
           this.drawMeshes[this.drawMeshesIndex].material = null
+        }
+        if (gpuSkinning) {
+          const objectBuffers = this.drawMeshes[this.drawMeshesIndex].objectBuffers
+          if (objectBuffers.length === 0)
+            objectBuffers.push(
+              new ObjectBuffer(this.inst.renderer, this.drawMeshes[this.drawMeshesIndex], 0, gpuSkinning)
+            )
         }
       }
     }
@@ -928,17 +1333,16 @@ class GltfModelW {
     return this.inst.lights
   }
 
-  updateAnimationPolygons(index, time, onScreen, deltaTime) {
+  updateAnimationPolygons(index, time, onScreen, deltaTime, gpuSkinning = false) {
     if (!this.workerReady) return
     this.workerReady = false
     this.updateAnimation(index, time, onScreen, deltaTime)
     const animationBlend = this.inst.animationBlend
     const animationLoop = this.inst.animationLoop
-    let lightData
     let animationData = { index, time, onScreen, deltaTime, animationBlend, animationLoop }
     let editorData = {}
     if (onScreen) {
-      editorData = this.getPolygonsPrep()
+      editorData = this.getPolygonsPrep(gpuSkinning)
       this.inst.runtime.UpdateRender()
       this.inst.updateBbox = true
     }

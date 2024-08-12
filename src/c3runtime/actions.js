@@ -66,7 +66,7 @@
       this.updateBbox = true
     },
     SetAnimationRate(rate) {
-      this.animationRate = rate
+      this.animationRate = rate > 0 ? rate : 1
     },
     SetZHeight(h) {
       this._setZHeight(h)
@@ -107,7 +107,7 @@
       if (this.instanceModel) {
         //@ts-ignore
         this.gltfData = new globalThis.GltfData(this.runtime, this)
-        console.log("gltfPath -ACE", gltfPath)
+        if (this.debug) console.info("gltfPath - ACE", gltfPath)
         this.gltfData.load(gltfPath, true, this.debug)
         this.gltfData.dynamicTexturesLoaded = false
         this.doingInit = false
@@ -469,8 +469,15 @@
     },
     SetStaticGeometry(enable) {
       this.staticGeometry = enable
-      if (!enable) {
-        this.gltf.meshBatchCache = new Map()
+      if (enable) {
+        this.renderOnce = true
+      }
+    },
+    SetGPUSkinning(enable) {
+      this.staticGeometry = enable
+      this.gpuSkinning = enable
+      if (enable) {
+        this.renderOnce = true
       }
     },
   }

@@ -21,7 +21,14 @@
         },
         IsPlaying(animation) {
             return (this.animationName == animation);
-        }
+        },
+        IsNodeEnabled(nodeName) {
+            if (!this.gltf) return false
+            if (!this.gltf.gltfData) return false
 
+            const node = this._findNode(nodeName)
+            if (!node) return false
+            return !node.disabled
+        }
     };
 }
