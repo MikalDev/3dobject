@@ -58,15 +58,23 @@ class BoneBufferW {
     }
   }
 
-  uploadUniforms(gl) {
-    const mat4 = globalThis.glMatrix3D.mat4
+  uploadUniforms(renderer) {
+    const gl = renderer._gl
+    const shaderProgram = renderer._batchState.currentShader._shaderProgram
+    this.locABones = gl.getUniformLocation(shaderProgram, "uBones")
+    this.locUSkinEnable = gl.getUniformLocation(shaderProgram, "uSkinEnable")
+    this.locARootNodeXform = gl.getUniformLocation(shaderProgram, "uRootNodeXform")
     gl.uniformMatrix4fv(this.locABones, false, this.bones)
     gl.uniform1f(this.locUSkinEnable, 1.0)
     gl.uniformMatrix4fv(this.locARootNodeXform, false, this.rootNodeXform)
   }
 
-  uploadUniformsNonSkin(gl) {
-    const mat4 = globalThis.glMatrix3D.mat4
+  uploadUniformsNonSkin(renderer) {
+    const gl = renderer._gl
+    const shaderProgram = renderer._batchState.currentShader._shaderProgram
+    this.locUSkinEnable = gl.getUniformLocation(shaderProgram, "uSkinEnable")
+    this.locUNodeXformEnable = gl.getUniformLocation(shaderProgram, "uNodeXformEnable")
+    this.locANodeXform = gl.getUniformLocation(shaderProgram, "uNodeXform")
     gl.uniform1f(this.locUSkinEnable, 0.0)
     gl.uniform1f(this.locUNodeXformEnable, 1.0)
     gl.uniformMatrix4fv(this.locANodeXform, false, this.nodeXform)
@@ -274,9 +282,9 @@ class ObjectBuffer {
     // upload bones and enable skinning
     if (boneBuffer) {
       if (boneBuffer.skinAnimation) {
-        boneBuffer.uploadUniforms(gl)
+        boneBuffer.uploadUniforms(renderer)
       } else {
-        boneBuffer.uploadUniformsNonSkin(gl)
+        boneBuffer.uploadUniformsNonSkin(renderer)
       }
     }
     gl.drawElements(gl.TRIANGLES, this.indexDataLength, gl.UNSIGNED_SHORT, 0)
@@ -559,7 +567,12 @@ class GltfModelW {
           this.nodesMat = new Float32Array(this.buffNodesMat)
           this.bones = new Float32Array(this.buffBones)
           // this.setBBFromVerts(this.verts, this.inst.minBB, this.inst.maxBB)
-          // this.inst.updateBbox = true
+          const x = this.inst.isEditor ? this.inst._inst.GetX() : this.inst.GetWorldInfo().GetX()
+          const y = this.inst.isEditor ? this.inst._inst.GetY() : this.inst.GetWorldInfo().GetY()
+          const z = this.inst.isEditor ? this.inst._inst.GetZElevation() : this.inst.GetWorldInfo().GetZElevation()
+          this.inst.minBB = [-10000 + x, -10000 + y, -10000 + z]
+          this.inst.maxBB = [10000 + x, 10000 + y, 10000 + z]
+          this.inst.updateBbox = true
           this.updateDrawVerts = true
           this.typedBonesToDrawBones()
         }
@@ -659,6 +672,24 @@ class GltfModelW {
     return true
   }
 
+  setVertexShaderModelRotate(renderer, modelRotate) {
+    const gl = renderer._gl
+    const batchState = renderer._batchState
+    const shaderProgram = batchState.currentShader._shaderProgram
+    const locUModelRotate = gl.getUniformLocation(shaderProgram, "uModelRotate")
+    const locUModelRotateEnable = gl.getUniformLocation(shaderProgram, "uModelRotateEnable")
+    gl.uniformMatrix4fv(locUModelRotate, false, modelRotate)
+    gl.uniform1f(locUModelRotateEnable, 1)
+  }
+
+  disableVertexShaderModelRotate(renderer) {
+    const gl = renderer._gl
+    const batchState = renderer._batchState
+    const shaderProgram = batchState.currentShader._shaderProgram
+    const locuModelRotateEnable = gl.getUniformLocation(shaderProgram, "uModelRotateEnable")
+    gl.uniform1f(locuModelRotateEnable, 0)
+  }
+
   render(renderer, x, y, z, tempQuad, whiteTexture, instanceC3Color, textures, instanceTexture) {
     renderer.EndBatch()
     let currentColor = [-1, -1, -1, -1]
@@ -705,7 +736,6 @@ class GltfModelW {
     const modelRotate = mat4.create()
     if (!(this.inst.isEditor || this.inst.cpuXform)) {
       mat4.copy(tmpModelView, renderer._matMV)
-      if (this.inst.fragLight && !this.inst.isWebGPU) mat4.copy(tmpProjection, renderer._matP)
       const xAngle = this.inst.xAngle
       const yAngle = this.inst.yAngle
       const zAngle = this.inst.zAngle
@@ -734,13 +764,8 @@ class GltfModelW {
         mat4.transpose(this.normalMatrix, this.normalMatrix)
       }
       mat4.multiply(modelRotate, tmpModelView, modelRotate)
-      if (this.inst.fragLight) mat4.multiply(modelRotate, renderer._matP, modelRotate)
-      if (!(this.inst.fragLight && this.inst.isWebGPU)) renderer.SetModelViewMatrix(modelRotate)
-      if (this.inst.fragLight && !this.inst.isWebGPU) {
-        const encodedModelRotate = mat4.clone(this.modelRotate)
-        encodedModelRotate[3] = encodedModelRotate[12] + 11000000
-        renderer.SetProjectionMatrix(encodedModelRotate)
-      }
+      renderer.SetModelViewMatrix(modelRotate)
+      this.setVertexShaderModelRotate(renderer, this.modelRotate)
     }
 
     // Default color
@@ -837,6 +862,7 @@ class GltfModelW {
         boneBuffer = this.drawMeshes[j]?.boneBuffer
         for (let i = 0; i < objectBuffers.length; i++) {
           boneBuffer = this.drawMeshes[j]?.boneBuffer
+          this.setVertexShaderModelRotate(renderer, this.modelRotate)
           objectBuffers[i].draw(this.inst.renderer, boneBuffer)
           totalTriangles += objectBuffers[i].indexDataLength / 3
         }
@@ -1027,6 +1053,7 @@ class GltfModelW {
     }
     if (!this.inst.isEditor) {
       renderer.EndBatch()
+      this.disableVertexShaderModelRotate(renderer)
     }
   }
 
