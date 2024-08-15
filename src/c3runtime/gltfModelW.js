@@ -1029,7 +1029,7 @@ class GltfModelW {
     // Restore modelview matrix
     if (!(this.inst.isEditor || this.inst.cpuXform) && !(this.inst.fragLight && this.inst.isWebGPU)) {
       renderer.SetModelViewMatrix(tmpModelView)
-      if (this.inst.fragLight && !this.inst.isWebGPU) renderer.SetProjectionMatrix(tmpProjection)
+      // if (this.inst.fragLight && !this.inst.isWebGPU) renderer.SetProjectionMatrix(tmpProjection)
     }
     this.inst.totalTriangles = totalTriangles
     this.inst.totalTrianglesCulled = totalTrianglesCulled

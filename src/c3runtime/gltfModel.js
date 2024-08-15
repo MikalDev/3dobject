@@ -460,11 +460,11 @@ class GltfModel {
     const finalColor = vec4.create()
 
     const tmpModelView = mat4.create()
-    const tmpProjection = mat4.create()
+    // const tmpProjection = mat4.create()
     const modelRotate = mat4.create()
     if (!this.inst.isEditor) {
       mat4.copy(tmpModelView, renderer._matMV)
-      if (this.inst.fragLight && !this.inst.isWebGPU) mat4.copy(tmpProjection, renderer._matP)
+      // if (this.inst.fragLight && !this.inst.isWebGPU) mat4.copy(tmpProjection, renderer._matP)
       const xAngle = this.inst.xAngle
       const yAngle = this.inst.yAngle
       const zAngle = this.inst.zAngle
@@ -885,7 +885,7 @@ class GltfModel {
     // Restore modelview matrix
     if (!(this.inst.isEditor || this.inst.cpuXform) && !(this.inst.fragLight && this.inst.isWebGPU)) {
       renderer.SetModelViewMatrix(tmpModelView)
-      if (this.inst.fragLight && !this.inst.isWebGPU) renderer.SetProjectionMatrix(tmpProjection)
+      // if (this.inst.fragLight && !this.inst.isWebGPU) renderer.SetProjectionMatrix(tmpProjection)
     }
     this.inst.totalTriangles = totalTriangles
     // Restore renderer buffers
