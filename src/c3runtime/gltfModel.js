@@ -165,7 +165,6 @@ class ObjectBuffer {
     this.locANormal = gl.getAttribLocation(shaderProgram, "aNormal")
     this.locAWeights = gl.getAttribLocation(shaderProgram, "aWeights")
     this.locAJoints = gl.getAttribLocation(shaderProgram, "aJoints")
-    console.log("boneBuffer", shaderProgram)
 
     const locAPos = this.locAPos
     const locATex = this.locATex
@@ -1344,14 +1343,6 @@ class GltfModel {
         }
       }
     }
-    if (!this.inst.isEditor) {
-      const x = this.inst.GetWorldInfo().GetX()
-      const y = this.inst.GetWorldInfo().GetY()
-      const z = this.inst.GetWorldInfo().GetZElevation()
-      this.inst.minBB = [-10000 + x, -10000 + y, -10000 + z]
-      this.inst.maxBB = [10000 + x, 10000 + y, 10000 + z]
-    }
-    this.inst.updateBbox = true
   }
 
   transformDrawVerts(drawVerts, modelScaleRotate) {

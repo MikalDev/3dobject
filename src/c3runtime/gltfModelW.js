@@ -80,13 +80,17 @@ class BoneBufferW {
     gl.uniformMatrix4fv(this.locANodeXform, false, this.nodeXform)
   }
 
-  disable(gl) {
+  disable(renderer) {
+    const gl = renderer._gl
+    const shaderProgram = renderer._batchState.currentShader._shaderProgram
+    this.locUSkinEnable = gl.getUniformLocation(shaderProgram, "uSkinEnable")
+    this.locUNodeXformEnable = gl.getUniformLocation(shaderProgram, "uNodeXformEnable")
     gl.uniform1f(this.locUSkinEnable, 0.0)
     gl.uniform1f(this.locUNodeXformEnable, 0.0)
   }
 }
 // @ts-ignore
-class ObjectBuffer {
+class ObjectBufferW {
   constructor(renderer, mesh, primitiveIndex, gpuSkinning) {
     this.gl = renderer._gl
     const gl = this.gl
@@ -295,7 +299,6 @@ class ObjectBuffer {
 class GltfModelW {
   constructor(runtime, sdkType, inst) {
     const mat4 = globalThis.glMatrix3D.mat4
-
     this._runtime = runtime
     this._sdkType = sdkType
     this.inst = inst
@@ -868,7 +871,7 @@ class GltfModelW {
         }
         // XXX Perhaps too often, once per mesh, better to do once per model
         if (boneBuffer) {
-          boneBuffer.disable(renderer._gl)
+          boneBuffer.disable(renderer)
         }
         continue
       }
@@ -1114,9 +1117,9 @@ class GltfModelW {
         drawVerts.push(v)
         if (staticGeometry) {
           if (objectBuffers.length == 0) {
-            objectBuffers.push(new ObjectBuffer(this.inst.renderer, this.drawMeshes[j], 0, false))
+            objectBuffers.push(new ObjectBufferW(this.inst.renderer, this.drawMeshes[j], 0))
           } else {
-            objectBuffers[0].updateVertexData(this.inst.renderer, this.drawMeshes[j], 0, false)
+            objectBuffers[0].updateVertexData(this.inst.renderer, this.drawMeshes[j], 0)
           }
         }
       }
@@ -1138,7 +1141,7 @@ class GltfModelW {
         Updates a node's matrix and all it's children nodes.
         After that it transforms unskinned mesh points and sends them to c2.
     */
-  transformNode(node, gpuSkinning) {
+  transformNode(node, staticGeometry, gpuSkinning) {
     const gltf = this.gltfData
 
     if (node.mesh != undefined && node.skin == undefined) {
@@ -1156,13 +1159,13 @@ class GltfModelW {
           const objectBuffers = this.drawMeshes[this.drawMeshesIndex].objectBuffers
           if (objectBuffers.length === 0)
             objectBuffers.push(
-              new ObjectBuffer(this.inst.renderer, this.drawMeshes[this.drawMeshesIndex], 0, gpuSkinning)
+              new ObjectBufferW(this.inst.renderer, this.drawMeshes[this.drawMeshesIndex], 0, gpuSkinning)
             )
         }
       }
     }
     if (node.children != undefined)
-      for (let i = 0; i < node.children.length; i++) this.transformNode(node.children[i], gpuSkinning)
+      for (let i = 0; i < node.children.length; i++) this.transformNode(node.children[i], staticGeometry, gpuSkinning)
   }
 
   getPolygons(gpuSkinning) {
@@ -1257,7 +1260,7 @@ class GltfModelW {
   }
 
   //	Updates scene graph, and as a second step sends transformed skinned mesh points to c2.
-  getPolygonsPrep(gpuSkinning = false) {
+  getPolygonsPrep(staticGeometry, gpuSkinning = false) {
     const gltf = this.gltfData
 
     this.drawMeshesIndex = -1
@@ -1267,7 +1270,7 @@ class GltfModelW {
     // update all scene matrixes.
     // only update drawMesh meta data, vertex data will be updated in the worker
     for (let i = 0; i < gltf.scene.nodes.length; i++) {
-      this.transformNode(gltf.scene.nodes[i], gpuSkinning)
+      this.transformNode(gltf.scene.nodes[i], staticGeometry, gpuSkinning)
     }
 
     for (let ii = 0; ii < gltf.skinnedNodes.length; ii++) {
@@ -1286,7 +1289,7 @@ class GltfModelW {
           const objectBuffers = this.drawMeshes[this.drawMeshesIndex].objectBuffers
           if (objectBuffers.length === 0)
             objectBuffers.push(
-              new ObjectBuffer(this.inst.renderer, this.drawMeshes[this.drawMeshesIndex], 0, gpuSkinning)
+              new ObjectBufferW(this.inst.renderer, this.drawMeshes[this.drawMeshesIndex], 0, gpuSkinning)
             )
         }
       }
@@ -1360,7 +1363,7 @@ class GltfModelW {
     return this.inst.lights
   }
 
-  updateAnimationPolygons(index, time, onScreen, deltaTime, gpuSkinning = false) {
+  updateAnimationPolygons(index, time, onScreen, deltaTime, staticGeometry, gpuSkinning = false) {
     if (!this.workerReady) return
     this.workerReady = false
     this.updateAnimation(index, time, onScreen, deltaTime)
@@ -1369,7 +1372,7 @@ class GltfModelW {
     let animationData = { index, time, onScreen, deltaTime, animationBlend, animationLoop }
     let editorData = {}
     if (onScreen) {
-      editorData = this.getPolygonsPrep(gpuSkinning)
+      editorData = this.getPolygonsPrep(staticGeometry, gpuSkinning)
       this.inst.runtime.UpdateRender()
       this.inst.updateBbox = true
     }
