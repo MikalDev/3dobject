@@ -21,6 +21,7 @@ class BoneBufferW {
       this.rootNodeXform = null
     }
     this.skinAnimation = skinAnimation
+    this.bonesLoaded = true
   }
 
   setBone(jointIndex, matrix) {
@@ -29,6 +30,7 @@ class BoneBufferW {
       for (let i = 0; i < 16; i++) {
         this.bones[offset + i] = matrix[i]
       }
+      this.bonesLoaded = true
     } else {
       console.warn("BoneBuffer: No bones array allocated")
     }
@@ -83,10 +85,14 @@ class BoneBufferW {
   disable(renderer) {
     const gl = renderer._gl
     const shaderProgram = renderer._batchState.currentShader._shaderProgram
-    this.locUSkinEnable = gl.getUniformLocation(shaderProgram, "uSkinEnable")
-    this.locUNodeXformEnable = gl.getUniformLocation(shaderProgram, "uNodeXformEnable")
-    gl.uniform1f(this.locUSkinEnable, 0.0)
-    gl.uniform1f(this.locUNodeXformEnable, 0.0)
+    const locUSkinEnable = gl.getUniformLocation(shaderProgram, "uSkinEnable")
+    const locUNodeXformEnable = gl.getUniformLocation(shaderProgram, "uNodeXformEnable")
+    if (locUNodeXformEnable == -1 || locUSkinEnable == -1) {
+      console.error("locUNodeXformEnable == -1", locUNodeXformEnable)
+      console.error("locUSkinEnable == -1", locUSkinEnable)
+    }
+    gl.uniform1f(locUSkinEnable, 0.0)
+    gl.uniform1f(locUNodeXformEnable, 0.0)
   }
 }
 // @ts-ignore
@@ -94,6 +100,7 @@ class ObjectBufferW {
   constructor(renderer, mesh, primitiveIndex, gpuSkinning) {
     this.gl = renderer._gl
     const gl = this.gl
+    this.vao = null
 
     let vertexData, texcoordData, indexData, colorData, normalData, weightsData, jointsData
     if (gpuSkinning) {
@@ -121,9 +128,6 @@ class ObjectBufferW {
       this.jointsData = new Float32Array(jointsData.length)
       this.jointsData.set(jointsData)
     }
-    // Create vao for object
-    this.vao = gl.createVertexArray()
-    gl.bindVertexArray(this.vao)
 
     this.vertexBuffer = gl.createBuffer()
     this.texcoordBuffer = gl.createBuffer()
@@ -166,59 +170,6 @@ class ObjectBufferW {
       gl.bindBuffer(gl.ARRAY_BUFFER, this.jointsBuffer)
       gl.bufferData(gl.ARRAY_BUFFER, this.jointsData, gl.STATIC_DRAW)
     }
-
-    const batchState = renderer._batchState
-    const shaderProgram = batchState.currentShader._shaderProgram
-    this.locAPos = gl.getAttribLocation(shaderProgram, "aPos")
-    this.locATex = gl.getAttribLocation(shaderProgram, "aTex")
-    this.locAColor = gl.getAttribLocation(shaderProgram, "aColor")
-    this.locANormal = gl.getAttribLocation(shaderProgram, "aNormal")
-    this.locAWeights = gl.getAttribLocation(shaderProgram, "aWeights")
-    this.locAJoints = gl.getAttribLocation(shaderProgram, "aJoints")
-
-    const locAPos = this.locAPos
-    const locATex = this.locATex
-    const locAColor = this.locAColor
-    const locANormal = this.locANormal
-    const locAWeights = this.locAWeights
-    const locAJoints = this.locAJoints
-    const vB = this.vertexBuffer
-    const tB = this.texcoordBuffer
-    const cB = this.colorBuffer
-    const nB = this.normalBuffer
-    const jB = this.jointsBuffer
-    const wB = this.weightsBuffer
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, vB)
-    gl.vertexAttribPointer(locAPos, 3, gl.FLOAT, false, 0, 0)
-    gl.enableVertexAttribArray(locAPos)
-    gl.bindBuffer(gl.ARRAY_BUFFER, tB)
-    gl.vertexAttribPointer(locATex, 2, gl.FLOAT, false, 0, 0)
-    gl.enableVertexAttribArray(locATex)
-    if (cB != null && locAColor != -1) {
-      gl.bindBuffer(gl.ARRAY_BUFFER, cB)
-      gl.vertexAttribPointer(locAColor, 3, gl.FLOAT, false, 0, 0)
-      gl.enableVertexAttribArray(locAColor)
-    }
-    if (nB != null && locANormal != -1) {
-      gl.bindBuffer(gl.ARRAY_BUFFER, nB)
-      gl.vertexAttribPointer(locANormal, 3, gl.FLOAT, false, 0, 0)
-      gl.enableVertexAttribArray(locANormal)
-    }
-    if (wB != null && locAWeights != -1) {
-      gl.bindBuffer(gl.ARRAY_BUFFER, wB)
-      gl.vertexAttribPointer(locAWeights, 4, gl.FLOAT, false, 0, 0)
-      gl.enableVertexAttribArray(locAWeights)
-    }
-    if (jB != null && locAJoints != -1) {
-      gl.bindBuffer(gl.ARRAY_BUFFER, jB)
-      gl.vertexAttribPointer(locAJoints, 4, gl.FLOAT, false, 0, 0)
-      gl.enableVertexAttribArray(locAJoints)
-    }
-
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer)
-
-    gl.bindVertexArray(null)
   }
 
   updateVertexData(renderer, mesh, primitiveIndex) {
@@ -279,9 +230,80 @@ class ObjectBufferW {
     renderer._topOfBatch = 0
   }
 
+  createVao(renderer) {
+    const gl = renderer._gl
+    const batchState = renderer._batchState
+    const shaderProgram = batchState.currentShader._shaderProgram
+    this.locAPos = gl.getAttribLocation(shaderProgram, "aPos")
+    this.locATex = gl.getAttribLocation(shaderProgram, "aTex")
+    this.locAColor = gl.getAttribLocation(shaderProgram, "aColor")
+    this.locANormal = gl.getAttribLocation(shaderProgram, "aNormal")
+    this.locAWeights = gl.getAttribLocation(shaderProgram, "aWeights")
+    this.locAJoints = gl.getAttribLocation(shaderProgram, "aJoints")
+
+    const locAPos = this.locAPos
+    const locATex = this.locATex
+    const locAColor = this.locAColor
+    const locANormal = this.locANormal
+    const locAWeights = this.locAWeights
+    const locAJoints = this.locAJoints
+    const vB = this.vertexBuffer
+    const tB = this.texcoordBuffer
+    const cB = this.colorBuffer
+    const nB = this.normalBuffer
+    const jB = this.jointsBuffer
+    const wB = this.weightsBuffer
+
+    if (locAJoints == -1) {
+      console.error("locAJoints == -1")
+    }
+
+    if (locAWeights == -1) {
+      console.error("locAWeights == -1")
+    }
+    const vao = gl.createVertexArray()
+    gl.bindVertexArray(vao)
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, vB)
+    gl.vertexAttribPointer(locAPos, 3, gl.FLOAT, false, 0, 0)
+    gl.enableVertexAttribArray(locAPos)
+    gl.bindBuffer(gl.ARRAY_BUFFER, tB)
+    gl.vertexAttribPointer(locATex, 2, gl.FLOAT, false, 0, 0)
+    gl.enableVertexAttribArray(locATex)
+    if (cB != null && locAColor != -1) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, cB)
+      gl.vertexAttribPointer(locAColor, 3, gl.FLOAT, false, 0, 0)
+      gl.enableVertexAttribArray(locAColor)
+    }
+    if (nB != null && locANormal != -1) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, nB)
+      gl.vertexAttribPointer(locANormal, 3, gl.FLOAT, false, 0, 0)
+      gl.enableVertexAttribArray(locANormal)
+    }
+    if (wB != null && locAWeights != -1) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, wB)
+      gl.vertexAttribPointer(locAWeights, 4, gl.FLOAT, false, 0, 0)
+      gl.enableVertexAttribArray(locAWeights)
+    }
+    if (jB != null && locAJoints != -1) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, jB)
+      gl.vertexAttribPointer(locAJoints, 4, gl.FLOAT, false, 0, 0)
+      gl.enableVertexAttribArray(locAJoints)
+    }
+
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer)
+
+    gl.bindVertexArray(null)
+
+    return vao
+  }
+
   draw(renderer, boneBuffer) {
     const gl = renderer._gl
     this._ExecuteBatch(renderer)
+    if (this.vao === null) {
+      this.vao = this.createVao(renderer)
+    }
     gl.bindVertexArray(this.vao)
     // upload bones and enable skinning
     if (boneBuffer) {
@@ -687,10 +709,25 @@ class GltfModelW {
 
   disableVertexShaderModelRotate(renderer) {
     const gl = renderer._gl
-    const batchState = renderer._batchState
-    const shaderProgram = batchState.currentShader._shaderProgram
-    const locuModelRotateEnable = gl.getUniformLocation(shaderProgram, "uModelRotateEnable")
-    gl.uniform1f(locuModelRotateEnable, 0)
+    if (!this.locuModelRotateEnable) {
+      const batchState = renderer._batchState
+      const shaderProgram = batchState.currentShader._shaderProgram
+      this.locuModelRotateEnable = gl.getUniformLocation(shaderProgram, "uModelRotateEnable")
+    }
+    gl.uniform1f(this.locuModelRotateEnable, 0)
+  }
+
+  _disableGPUSkinning(renderer) {
+    const gl = renderer._gl
+    const shaderProgram = renderer._batchState.currentShader._shaderProgram
+    if (!this.locUSkinEnable) this.locUSkinEnable = gl.getUniformLocation(shaderProgram, "uSkinEnable")
+    if (!this.locUNodeXformEnable) this.locUNodeXformEnable = gl.getUniformLocation(shaderProgram, "uNodeXformEnable")
+    if (this.locUNodeXformEnable == -1 || this.locUSkinEnable == -1) {
+      console.error("locUNodeXformEnable == -1", this.locUNodeXformEnable)
+      console.error("locUSkinEnable == -1", this.locUSkinEnable)
+    }
+    gl.uniform1f(this.locUSkinEnable, 0.0)
+    gl.uniform1f(this.locUNodeXformEnable, 0.0)
   }
 
   render(renderer, x, y, z, tempQuad, whiteTexture, instanceC3Color, textures, instanceTexture) {
@@ -1036,27 +1073,30 @@ class GltfModelW {
     // Restore renderer buffers
     renderer._vertexData = rendererVertexData
     renderer._texcoordData = rendererTexcoordData
+
+    if (!this.inst.isEditor) {
+      renderer.EndBatch()
+      this.disableVertexShaderModelRotate(renderer)
+      this._disableGPUSkinning(renderer)
+    }
     // Restore attrib
     if (this.inst.staticGeometry) {
-      // XXX may no longer be needed with an object buffer and separate vertex/texcoord buffers
       // Restore for other C3 objects
       const gl = renderer._gl
       const batchState = renderer._batchState
       const shaderProgram = batchState.currentShader._shaderProgram
-      const locAPos = gl.getAttribLocation(shaderProgram, "aPos")
-      const locATex = gl.getAttribLocation(shaderProgram, "aTex")
+      if (!this.locAPos) this.locAPos = gl.getAttribLocation(shaderProgram, "aPos")
+      if (!this.locATex) this.locATex = gl.getAttribLocation(shaderProgram, "aTex")
       gl.bindBuffer(gl.ARRAY_BUFFER, renderer._vertexBuffer)
-      gl.vertexAttribPointer(locAPos, 3, gl.FLOAT, false, 0, 0)
-      gl.enableVertexAttribArray(locAPos)
+      gl.vertexAttribPointer(this.locAPos, 3, gl.FLOAT, false, 0, 0)
+      gl.enableVertexAttribArray(this.locAPos)
       gl.bindBuffer(gl.ARRAY_BUFFER, renderer._texcoordBuffer)
-      gl.vertexAttribPointer(locATex, 2, gl.FLOAT, false, 0, 0)
-      gl.enableVertexAttribArray(locATex)
+      gl.vertexAttribPointer(this.locATex, 2, gl.FLOAT, false, 0, 0)
+      gl.enableVertexAttribArray(this.locATex)
+      // Restore index buffer
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, renderer._indexBuffer)
       renderer._vertexPtr = 0
       renderer._texPtr = 0
-    }
-    if (!this.inst.isEditor) {
-      renderer.EndBatch()
-      this.disableVertexShaderModelRotate(renderer)
     }
   }
 

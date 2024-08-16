@@ -231,6 +231,8 @@
         this.runtime.UpdateRender()
         this.updateBbox = true
       }
+      // restore element array buffer
+      this.renderer._gl.bindBuffer(this.renderer._gl.ELEMENT_ARRAY_BUFFER, this.renderer._indexBuffer)
     }
 
     RendersToOwnZPlane() {

@@ -48,6 +48,7 @@ function OnMessage(e) {
       break
     case "updateAnimationPolygons":
       buff = e.data.buff
+      if (e.data.debug) console.info("Update animation polygons")
       updateAnimationPolygons(e.data.data)
       break
     case "getPolygons":
