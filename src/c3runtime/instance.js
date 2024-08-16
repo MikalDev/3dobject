@@ -162,7 +162,7 @@
         this.animationName = this.gltf.getAnimationNames()[0]
       }
       this.gltf.updateModelRotate(wi.GetX(), wi.GetY(), wi.GetZElevation())
-      this._updateBoundingBox(wi.GetX(), wi.GetY(), 0)
+      this._updateBoundingBox(wi.GetX(), wi.GetY(), 0, this.gpuSkinning)
       this.Trigger(C3.Plugins.Mikal_3DObject.Cnds.OnLoaded)
     }
 
@@ -294,7 +294,7 @@
           if (this.cpuXform) {
             this._updateBoundingBoxCPU(x, y, z)
           } else {
-            this._updateBoundingBox(x, y, z)
+            this._updateBoundingBox(x, y, z, this.gpuSkinning)
           }
 
           wi.SetBboxChanged()
@@ -320,14 +320,18 @@
       const y = wi.GetY()
       // z elevation handles offset on draw
       const z = wi.GetZElevation()
-      this._updateBoundingBox(x, y, z)
+      this._updateBoundingBox(x, y, z, this.gpuSkinning)
       wi.SetBboxChanged()
       this.boundingBoxInit = true
     }
 
-    _updateBoundingBox(x, y, z) {
-      const maxBB = this.maxBB
-      const minBB = this.minBB
+    _updateBoundingBox(x, y, z, gpuSkinning) {
+      let maxBB = this.maxBB
+      let minBB = this.minBB
+      if (gpuSkinning) {
+        maxBB = this.gltf.gltfData.boundingBox.max
+        minBB = this.gltf.gltfData.boundingBox.min
+      }
       const cube = [
         [minBB[0], minBB[1], minBB[2]],
         [maxBB[0], minBB[1], minBB[2]],
@@ -341,8 +345,8 @@
       const modelRotate = this.gltf.modelRotate
       if (!modelRotate) return
 
-      this.xMinBB = [100000, 100000, 100000]
-      this.xMaxBB = [-100000, -100000, -100000]
+      this.xMinBB = [Infinity, Infinity, Infinity]
+      this.xMaxBB = [-Infinity, -Infinity, -Infinity]
       const xMinBB = this.xMinBB
       const xMaxBB = this.xMaxBB
       const vec3 = globalThis.glMatrix3D.vec3
@@ -360,12 +364,7 @@
         if (xMaxBB[2] < rotatedPoint[2]) xMaxBB[2] = rotatedPoint[2]
       }
 
-      if (
-        this.maxBB[0] != Number.POSITIVE_INFINITY &&
-        this.minBB[0] != Number.NEGATIVE_INFINITY &&
-        this.maxBB[1] != Number.POSITIVE_INFINITY &&
-        this.minBB[1] != Number.NEGATIVE_INFINITY
-      ) {
+      if (xMaxBB[0] != Infinity && xMinBB[0] != -Infinity && xMaxBB[1] != Infinity && xMinBB[1] != -Infinity) {
         const wi = this.GetWorldInfo()
         let width = xMaxBB[0] - xMinBB[0]
         let height = xMaxBB[1] - xMinBB[1]
@@ -375,6 +374,14 @@
         wi.SetOriginX(-(xMinBB[0] - x) / width)
         wi.SetOriginY(-(xMinBB[1] - y) / height)
         this._setZHeight((xMaxBB[2] - xMinBB[2]) * this.bboxScale)
+      } else {
+        const wi = this.GetWorldInfo()
+        wi.SetSize(100 * this.bboxScale, 100 * this.bboxScale)
+        wi.SetOriginX(0.5)
+        wi.SetOriginY(0.5)
+        this._setZHeight(100 * this.bboxScale)
+        if (this.debug)
+          console.warn("No min/max found in GLTF accessors. Bounding box dimensions set to default 100,100,100 values.")
       }
     }
 
