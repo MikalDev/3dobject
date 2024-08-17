@@ -99,13 +99,24 @@
           }
         },
         "aceCategories": {
-          "3dobject" : "3DObject",
-          "lighting" : "Lighting",
-          "animations" : "Animations",
-          "transform" : "Transform",
-          "material" : "Material"
+          "3dobject" : "3DObject Misc",
+          "lighting" : "3DObject Lighting",
+          "animations" : "3DObject Animations",
+          "transform" : "3DObject Transform",
+          "material" : "3DObject Material"
         },
         "conditions": {
+          "is-node-enabled": {
+            "list-name": "Is node enabled",
+            "display-text": "Is node {0} enabled",
+            "description": "True if node is enabled.",
+            "params": {
+              "node-name": {
+                "name": "Node",
+                "desc": "Enter the name of node to check if enabled."
+              }
+            }
+          },
           "on-loaded": {
             "list-name": "On loaded",
             "display-text": "On loaded",
