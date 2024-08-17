@@ -46,19 +46,40 @@ class BoneBuffer {
     }
   }
 
-  uploadUniforms(renderer) {
+  uploadUVXformUniforms(renderer, uvXform) {
+    const gl = renderer._gl
+    const shaderProgram = renderer._batchState.currentShader._shaderProgram
+    if (uvXform.enable) {
+      const rotateMatrix = uvXform.rotateMatrix
+      const rotateCenter = uvXform.rotateCenter
+      const offsetUV = uvXform.offsetUV
+      this.locURotateMatrix = gl.getUniformLocation(shaderProgram, "uUVRotateMatrix")
+      this.locURotateCenter = gl.getUniformLocation(shaderProgram, "uUVRotateCenter")
+      this.locUOffsetUV = gl.getUniformLocation(shaderProgram, "uUVOffset")
+      this.locUVXformEnable = gl.getUniformLocation(shaderProgram, "uUVXformEnable")
+      gl.uniformMatrix4fv(this.locURotateMatrix, false, rotateMatrix)
+      gl.uniform2fv(this.locURotateCenter, rotateCenter)
+      gl.uniform2fv(this.locUOffsetUV, offsetUV)
+      gl.uniform1f(this.locUVXformEnable, 1.0)
+    } else {
+      this.locUVXformEnable = gl.getUniformLocation(shaderProgram, "uUVXformEnable")
+      gl.uniform1f(this.locUVXformEnable, 0.0)
+    }
+  }
+
+  uploadUniforms(renderer, uvXform) {
     const gl = renderer._gl
     const shaderProgram = renderer._batchState.currentShader._shaderProgram
     this.locABones = gl.getUniformLocation(shaderProgram, "uBones")
     this.locUSkinEnable = gl.getUniformLocation(shaderProgram, "uSkinEnable")
-    this.locUNodeXformEnable = gl.getUniformLocation(shaderProgram, "uNodeXformEnable")
     this.locARootNodeXform = gl.getUniformLocation(shaderProgram, "uRootNodeXform")
     gl.uniformMatrix4fv(this.locABones, false, this.bones)
     gl.uniform1f(this.locUSkinEnable, 1.0)
     gl.uniformMatrix4fv(this.locARootNodeXform, false, this.rootNodeXform)
+    this.uploadUVXformUniforms(renderer, uvXform)
   }
 
-  uploadUniformsNonSkin(renderer) {
+  uploadUniformsNonSkin(renderer, uvXform) {
     const gl = renderer._gl
     const shaderProgram = renderer._batchState.currentShader._shaderProgram
     this.locUSkinEnable = gl.getUniformLocation(shaderProgram, "uSkinEnable")
@@ -67,6 +88,7 @@ class BoneBuffer {
     gl.uniform1f(this.locUSkinEnable, 0.0)
     gl.uniform1f(this.locUNodeXformEnable, 1.0)
     gl.uniformMatrix4fv(this.locANodeXform, false, this.nodeXform)
+    this.uploadUVXformUniforms(renderer, uvXform)
   }
 
   disable(renderer) {
@@ -288,8 +310,24 @@ class ObjectBuffer {
     return vao
   }
 
-  draw(renderer, boneBuffer) {
+  draw(renderer, boneBuffer, rotateMaterial, offsetMaterial) {
+    console.log("draw", rotateMaterial, offsetMaterial)
     const gl = renderer._gl
+    const mat2 = globalThis.glMatrix3D.mat2
+    const vec2 = globalThis.glMatrix3D.vec2
+    let effectiveRotateMaterial = rotateMaterial ? { ...rotateMaterial } : { angle: 0, centerX: 0, centerY: 0 }
+    let effectiveOffsetMaterial = offsetMaterial ? { ...offsetMaterial } : { offsetX: 0, offsetY: 0 }
+
+    const rotateMatrix = mat2.create()
+    mat2.fromRotation(rotateMatrix, effectiveRotateMaterial.angle)
+    const rotateCenter = vec2.fromValues(effectiveRotateMaterial.centerX, effectiveRotateMaterial.centerY)
+    const offsetUV = vec2.fromValues(effectiveOffsetMaterial.offsetX, effectiveOffsetMaterial.offsetY)
+    const uvXform = {
+      enable: rotateMaterial || offsetMaterial,
+      rotateMatrix,
+      rotateCenter,
+      offsetUV,
+    }
     this._ExecuteBatch(renderer)
     if (this.vao === null) {
       this.vao = this.createVao(renderer)
@@ -298,9 +336,9 @@ class ObjectBuffer {
     // upload bones and enable skinning
     if (boneBuffer) {
       if (boneBuffer.skinAnimation) {
-        boneBuffer.uploadUniforms(renderer)
+        boneBuffer.uploadUniforms(renderer, uvXform)
       } else {
-        boneBuffer.uploadUniformsNonSkin(renderer)
+        boneBuffer.uploadUniformsNonSkin(renderer, uvXform)
       }
     }
     gl.drawElements(gl.TRIANGLES, this.indexDataLength, gl.UNSIGNED_SHORT, 0)
@@ -645,7 +683,7 @@ class GltfModel {
       // Create const for mat2
       const mat2 = globalThis.glMatrix3D.mat2
       const vec2 = globalThis.glMatrix3D.vec2
-      let rotateMatrix
+      let rotateMatrix = null
 
       if (rotateMaterial) {
         const rotateUV = materialsModify.get(material.name)?.rotateUV
@@ -672,7 +710,7 @@ class GltfModel {
         for (let i = 0; i < objectBuffers.length; i++) {
           boneBuffer = this.drawMeshes[j]?.boneBuffer
           this.setVertexShaderModelRotate(renderer, this.modelRotate)
-          objectBuffers[i].draw(renderer, boneBuffer)
+          objectBuffers[i].draw(renderer, boneBuffer, offsetMaterial, rotateMaterial)
           totalTriangles += objectBuffers[i].indexDataLength / 3
         }
         // XXX Perhaps too often, once per mesh, better to do once per model
