@@ -311,7 +311,6 @@ class ObjectBuffer {
   }
 
   draw(renderer, boneBuffer, rotateMaterial, offsetMaterial) {
-    console.log("draw", rotateMaterial, offsetMaterial)
     const gl = renderer._gl
     const mat2 = globalThis.glMatrix3D.mat2
     const vec2 = globalThis.glMatrix3D.vec2
