@@ -3,7 +3,7 @@
   const SDK = self.SDK
 
   const PLUGIN_ID = "Mikal_3DObject"
-  const PLUGIN_VERSION = "2.69.1"
+  const PLUGIN_VERSION = "2.69.2"
   const PLUGIN_CATEGORY = "3d"
 
   const PLUGIN_CLASS = (SDK.Plugins.Mikal_3DObject = class Object3DPlugin extends SDK.IPluginBase {
@@ -112,6 +112,14 @@
       })
       this._info.AddFileDependency({
         filename: "c3runtime/gltfData.js",
+        type: "external-runtime-script",
+      })
+      this._info.AddFileDependency({
+        filename: "c3runtime/boneBuffer.js",
+        type: "external-runtime-script",
+      })
+      this._info.AddFileDependency({
+        filename: "c3runtime/objectBuffer.js",
         type: "external-runtime-script",
       })
       this._info.AddFileDependency({

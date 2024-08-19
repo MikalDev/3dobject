@@ -434,4 +434,7 @@ class GltfData {
 }
 
 // @ts-ignore
-globalThis.GltfData = GltfData
+if (!globalThis.GltfData) {
+  // @ts-ignore
+  globalThis.GltfData = GltfData
+}
