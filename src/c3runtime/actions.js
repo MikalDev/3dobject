@@ -290,6 +290,7 @@
 
     SetBBoxScale(scale) {
       this._setBBoxScale(scale)
+      this.updateBbox = true
     },
 
     EnableWireframe(enable) {

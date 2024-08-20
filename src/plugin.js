@@ -3,7 +3,7 @@
   const SDK = self.SDK
 
   const PLUGIN_ID = "Mikal_3DObject"
-  const PLUGIN_VERSION = "2.69.2"
+  const PLUGIN_VERSION = "2.69.3"
   const PLUGIN_CATEGORY = "3d"
 
   const PLUGIN_CLASS = (SDK.Plugins.Mikal_3DObject = class Object3DPlugin extends SDK.IPluginBase {

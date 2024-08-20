@@ -161,7 +161,7 @@
       if (this.gltf.getAnimationNames().length > 0) {
         this.animationName = this.gltf.getAnimationNames()[0]
       }
-      this.gltf.updateModelRotate(wi.GetX(), wi.GetY(), wi.GetZElevation())
+      this.gltf.updateModelRotate(wi.GetX(), wi.GetY(), wi.GetTotalZElevation())
       this._updateBoundingBox(wi.GetX(), wi.GetY(), 0, this.gpuSkinning)
       this.Trigger(C3.Plugins.Mikal_3DObject.Cnds.OnLoaded)
     }
@@ -258,7 +258,7 @@
       const x = wi.GetX()
       const y = wi.GetY()
       // z elevation handles offset on draw
-      const z = wi.GetZElevation()
+      const z = wi.GetTotalZElevation()
 
       let textures = this.instanceModel ? this.texture : this.sdkType.texture
       let whiteTextureOwner = this.instanceModel ? this : this.sdkType
@@ -321,7 +321,7 @@
       const x = wi.GetX()
       const y = wi.GetY()
       // z elevation handles offset on draw
-      const z = wi.GetZElevation()
+      const z = wi.GetTotalZElevation()
       this._updateBoundingBox(x, y, z, this.gpuSkinning)
       wi.SetBboxChanged()
       this.boundingBoxInit = true
