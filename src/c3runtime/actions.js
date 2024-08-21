@@ -465,8 +465,8 @@
     EnableQuaternion(enable) {
       this._enableQuaternion(enable)
     },
-    EnableFragLight(enable) {
-      this._enableFragLight(enable)
+    EnableFragLight(enable, enablePhong) {
+      this._enableFragLight(enable, enablePhong)
     },
     SetStaticGeometry(enable) {
       this.staticGeometry = enable

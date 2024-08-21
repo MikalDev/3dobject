@@ -255,7 +255,7 @@ class ObjectBuffer {
     gl.uniform1f(locUUVXformEnable, 0.0)
   }
 
-  draw(renderer, boneBuffer, rotateMaterial, offsetMaterial) {
+  draw(renderer, boneBuffer, rotateMaterial, offsetMaterial, phongEnable) {
     const gl = renderer._gl
     this._ExecuteBatch(renderer)
     if (this.vao === null) {
@@ -266,9 +266,9 @@ class ObjectBuffer {
     // upload bones and enable skinning
     if (boneBuffer) {
       if (boneBuffer.skinAnimation) {
-        boneBuffer.uploadUniforms(renderer, uvXform)
+        boneBuffer.uploadUniforms(renderer, uvXform, phongEnable)
       } else {
-        boneBuffer.uploadUniformsNonSkin(renderer, uvXform)
+        boneBuffer.uploadUniformsNonSkin(renderer, uvXform, phongEnable)
       }
     }
     if (uvXform.enable) {

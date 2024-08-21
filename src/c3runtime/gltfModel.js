@@ -130,6 +130,8 @@ class GltfModel {
     const locUModelRotateEnable = gl.getUniformLocation(shaderProgram, "uModelRotateEnable")
     gl.uniformMatrix4fv(locUModelRotate, false, modelRotate)
     gl.uniform1f(locUModelRotateEnable, 1)
+    const locUPhongEnable = gl.getUniformLocation(shaderProgram, "uPhongEnable")
+    gl.uniform1f(locUPhongEnable, this.inst.fragLightPhong ? 1 : 0)
   }
 
   disableVertexShaderModelRotate(renderer) {
@@ -138,6 +140,8 @@ class GltfModel {
     const shaderProgram = batchState.currentShader._shaderProgram
     const locuModelRotateEnable = gl.getUniformLocation(shaderProgram, "uModelRotateEnable")
     gl.uniform1f(locuModelRotateEnable, 0)
+    const locUPhongEnable = gl.getUniformLocation(shaderProgram, "uPhongEnable")
+    gl.uniform1f(locUPhongEnable, 0)
   }
 
   _disableGPUSkinning(renderer) {
@@ -369,7 +373,7 @@ class GltfModel {
         for (let i = 0; i < objectBuffers.length; i++) {
           boneBuffer = this.drawMeshes[j]?.boneBuffer
           this.setVertexShaderModelRotate(renderer, this.modelRotate)
-          objectBuffers[i].draw(renderer, boneBuffer, rotateMaterial, offsetMaterial)
+          objectBuffers[i].draw(renderer, boneBuffer, rotateMaterial, offsetMaterial, this.inst.fragLightPhong)
           totalTriangles += objectBuffers[i].indexDataLength / 3
         }
         // XXX Perhaps too often, once per mesh, better to do once per model

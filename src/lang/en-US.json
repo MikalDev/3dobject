@@ -934,12 +934,16 @@
           },
           "enable-frag-light": {
             "list-name": "Enable fragment light mode",
-            "display-text": "Set fragment light mode enabled: [b]{0}[/b]",
+            "display-text": "Set fragment light mode enabled: [b]{0}[/b], phong: [b]{1}[/b]",
             "description": "Enable fragment light mode for fragment light effect.",
             "params": {
               "enable": {
                 "name": "Enable",
                 "desc": "Enable fragment light mode."
+              },
+              "enable-phong": {
+                "name": "Enable Phong",
+                "desc": "Enable phong lighting, requires model normals."
               }
             }
           }
