@@ -75,6 +75,7 @@
       this.enableQuaternion = false
       this.spriteTextures = new Map()
       this.fragLight = false
+      this.fragLightPhong = false
       this.staticGeometry = false
       this.gpuSkinning = false
       this.cameraVector = [0, 1, 0]
@@ -686,8 +687,9 @@
       this.renderOnce = true
     }
 
-    _enableFragLight(enable) {
+    _enableFragLight(enable, enablePhong) {
       this.fragLight = enable
+      this.fragLightPhong = enablePhong
     }
 
     _setQuaternion(quaternion, x, y, z) {

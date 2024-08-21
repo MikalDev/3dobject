@@ -965,6 +965,11 @@
             "id": "enable",
             "type": "boolean",
             "initialValue": "false"
+          },
+          {
+            "id": "enable-phong",
+            "type": "boolean",
+            "initialValue": "false"
           }
         ]
       },

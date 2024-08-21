@@ -19,13 +19,16 @@
             `in highp vec3 aPos;`,
             `in highp vec2 aTex;`,
             `in highp vec3 aColor;`,
+            `in highp vec3 aNormal;`,
             `out highp vec2 vTex;`,
             `out highp vec3 vColor;`,
+            `out highp vec3 vNormal;`,
             `uniform highp mat4 matP;`,
             `uniform highp mat4 matMV;`,
             `in vec4 aWeights;`,
             `in vec4 aJoints;`,
             `out highp vec3 pos;`,
+            `out highp vec3 norm;`,
             `uniform highp mat4 uModelRotate;`,
             `uniform mat4 uBones[MAX_BONES];`,
             `uniform mat4 uRootNodeXform;`,
@@ -37,6 +40,7 @@
             `uniform vec2 uUVOffset;`,
             `uniform mat2 uUVRotate;`,
             `uniform vec2 uUVRotateCenter;`,
+            `uniform float uPhongEnable;`,
             `void main(void) {`,
             `    pos = aPos;`,
             `    if (uSkinEnable > 0.5) {`,
@@ -73,6 +77,7 @@
             `        vTex = aTex;`,
             `    }`,
             `    vColor = aColor;`,
+            `    vNormal = uPhongEnable > 0.5 ? mat3(transpose(inverse(uModelRotate))) * aNormal : vec3(0.0, 0.0, 1.0);`,
             `}`,
           ].join("\n")
         }
@@ -84,10 +89,12 @@
         if (shader) {
           shader.glslWebGL2 = shader.glslWebGL2.replace(
             "in mediump vec2 vTex;",
-            "in mediump vec2 vTex;\nin highp vec3 pos;\nin highp vec3 vColor;"
+            "in mediump vec2 vTex;\nin highp vec3 pos;\nin highp vec3 vColor;\nin highp vec3 vNormal;\nuniform highp float uPhongEnable;"
           )
           shader.glslWebGL2 = shader.glslWebGL2.replace("highp vec3 pos = vec3(0.0, 0.0, 0.0);", "")
           shader.glslWebGL2 = shader.glslWebGL2.replace("highp vec3 vColor = vec3(0.0, 1.0, 0.0);", "")
+          shader.glslWebGL2 = shader.glslWebGL2.replace("highp vec3 vNormal = vec3(0.0, 0.0, 0.0);", "")
+          shader.glslWebGL2 = shader.glslWebGL2.replace("highp float uPhongEnable = 0.0;", "")
         } else {
           console.warn("[3DObject] shader mikal_frag_light-8 not found")
         }

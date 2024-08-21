@@ -71,7 +71,7 @@ class BoneBuffer {
     }
   }
 
-  uploadUniforms(renderer, uvXform) {
+  uploadUniforms(renderer, uvXform, phongEnable) {
     const gl = renderer._gl
     const shaderProgram = renderer._batchState.currentShader._shaderProgram
     this.locABones = gl.getUniformLocation(shaderProgram, "uBones")
@@ -81,9 +81,11 @@ class BoneBuffer {
     gl.uniform1f(this.locUSkinEnable, 1.0)
     gl.uniformMatrix4fv(this.locARootNodeXform, false, this.rootNodeXform)
     this.uploadUVXformUniforms(renderer, uvXform)
+    const locUPhongEnable = gl.getUniformLocation(shaderProgram, "uPhongEnable")
+    gl.uniform1f(locUPhongEnable, phongEnable ? 1 : 0)
   }
 
-  uploadUniformsNonSkin(renderer, uvXform) {
+  uploadUniformsNonSkin(renderer, uvXform, phongEnable) {
     const gl = renderer._gl
     const shaderProgram = renderer._batchState.currentShader._shaderProgram
     this.locUSkinEnable = gl.getUniformLocation(shaderProgram, "uSkinEnable")
@@ -93,6 +95,8 @@ class BoneBuffer {
     gl.uniform1f(this.locUNodeXformEnable, 1.0)
     gl.uniformMatrix4fv(this.locANodeXform, false, this.nodeXform)
     this.uploadUVXformUniforms(renderer, uvXform)
+    const locUPhongEnable = gl.getUniformLocation(shaderProgram, "uPhongEnable")
+    gl.uniform1f(locUPhongEnable, phongEnable ? 1 : 0)
   }
 
   disable(renderer) {
@@ -101,6 +105,7 @@ class BoneBuffer {
     const locUSkinEnable = gl.getUniformLocation(shaderProgram, "uSkinEnable")
     const locUNodeXformEnable = gl.getUniformLocation(shaderProgram, "uNodeXformEnable")
     const locUUVXformEnable = gl.getUniformLocation(shaderProgram, "uUVXformEnable")
+    const locUPhongEnable = gl.getUniformLocation(shaderProgram, "uPhongEnable")
     if (locUNodeXformEnable == -1 || locUSkinEnable == -1) {
       console.error("locUNodeXformEnable == -1", locUNodeXformEnable)
       console.error("locUSkinEnable == -1", locUSkinEnable)
@@ -108,6 +113,7 @@ class BoneBuffer {
     gl.uniform1f(locUSkinEnable, 0.0)
     gl.uniform1f(locUNodeXformEnable, 0.0)
     gl.uniform1f(locUUVXformEnable, 0.0)
+    gl.uniform1f(locUPhongEnable, 0.0)
   }
 }
 
