@@ -7,6 +7,7 @@ class ObjectBuffer {
     this.gl = renderer._gl
     const gl = this.gl
     this.vao = null
+    this.nodeXform = new Float32Array(16)
 
     let vertexData, texcoordData, indexData, colorData, normalData, weightsData, jointsData
     if (gpuSkinning) {
@@ -65,6 +66,7 @@ class ObjectBuffer {
       gl.bufferData(gl.ARRAY_BUFFER, this.colorData, gl.STATIC_DRAW)
     }
     if (normalData != null) {
+      debugger
       gl.bindBuffer(gl.ARRAY_BUFFER, this.normalBuffer)
       gl.bufferData(gl.ARRAY_BUFFER, this.normalData, gl.STATIC_DRAW)
     }
@@ -78,6 +80,10 @@ class ObjectBuffer {
     }
 
     // vao created at draw time to insure the correct shader is used
+  }
+
+  setNodeXform(nodeXform) {
+    this.nodeXform = nodeXform
   }
 
   updateVertexData(renderer, mesh, primitiveIndex) {
@@ -248,6 +254,16 @@ class ObjectBuffer {
       gl.uniform1f(this.locUVXformEnable, 0.0)
     }
   }
+
+  uploadNodeXformUniforms(renderer) {
+    const gl = renderer._gl
+    const shaderProgram = renderer._batchState.currentShader._shaderProgram
+    const locUNodeXform = gl.getUniformLocation(shaderProgram, "uNodeXform")
+    gl.uniformMatrix4fv(locUNodeXform, false, this.nodeXform)
+    // const locUNodeXformEnable = gl.getUniformLocation(shaderProgram, "uNodeXformEnable")
+    // gl.uniform1f(locUNodeXformEnable, 1.0)
+  }
+
   disableUVXformUniforms(renderer) {
     const gl = renderer._gl
     const shaderProgram = renderer._batchState.currentShader._shaderProgram
@@ -274,6 +290,7 @@ class ObjectBuffer {
     if (uvXform.enable) {
       this.uploadUVXformUniforms(renderer, uvXform)
     }
+    this.uploadNodeXformUniforms(renderer)
     gl.drawElements(gl.TRIANGLES, this.indexDataLength, gl.UNSIGNED_SHORT, 0)
     gl.bindVertexArray(null)
     if (uvXform.enable) {
