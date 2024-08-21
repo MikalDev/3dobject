@@ -823,6 +823,7 @@ class GltfModel {
               } else if (!gpuSkinning) {
                 objectBuffers[0].updateVertexData(this.inst.renderer, this.drawMeshes[this.drawMeshesIndex], 0)
               }
+              objectBuffers[0].setNodeXform(node.matrix)
             }
           }
         }
