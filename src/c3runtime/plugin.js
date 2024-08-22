@@ -61,7 +61,8 @@
             `        if (uPhongEnable > 0.5) {`,
             `            mat3 modelRotate = mat3(uModelRotate);`,
             `            mat3 rootNodeXform = mat3(uRootNodeXform);`,
-            `            vNormal = mat3(transpose(inverse(modelRotate * rootNodeXform))) * skinnedNormal;`, // Use skinned normal
+            `            vNormal = mat3(transpose(inverse(uModelRotate * uRootNodeXform))) * skinnedNormal;`, // Use skinned normal
+            `            vNormal.x = -vNormal.x;`,
             `        }`,
             `    } else if (uNodeXformEnable > 0.5) {`,
             `        // Apply simple animation using the new transformation matrix`,
@@ -71,14 +72,17 @@
             `            mat3 modelRotate = mat3(uModelRotate);`,
             `            mat3 nodeXform = mat3(uNodeXform);`,
             `            vNormal = mat3(transpose(inverse(modelRotate * nodeXform))) * aNormal;`, // Adjust normal for node transform
+            `            vNormal.x = -vNormal.x;`,
             `        }`,
             `    } else if (uModelRotateEnable > 0.5) {`,
             `        // Apply simple animation using the new transformation matrix`,
             `        pos = (uModelRotate * vec4(aPos, 1.0)).xyz;`,
             `        gl_Position = matP * matMV * vec4(aPos, 1.0);`,
             `        if (uPhongEnable > 0.5) {`,
+            `            // mat4 comboXform = uModelRotate;`,
             `            mat4 comboXform = uModelRotate * uNodeXform;`,
             `            vNormal = mat3(transpose(inverse(comboXform))) * aNormal;`, // Adjust normal for model rotation
+            `            vNormal.x = -vNormal.x;`,
             `        }`,
             `    } else {`,
             `    	    pos = aPos;`,
