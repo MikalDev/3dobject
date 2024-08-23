@@ -16,6 +16,9 @@ class ObjectBuffer {
       vertexData = mesh.drawVerts[primitiveIndex]
     }
     texcoordData = mesh.drawUVs[primitiveIndex]
+    if (!texcoordData || texcoordData.length == 0) {
+      texcoordData = this.createDefaultTexcoordData(vertexData.length)
+    }
     indexData = mesh.drawIndices[primitiveIndex]
     colorData = mesh.drawColors[primitiveIndex]
     normalData = mesh.drawNormals ? mesh.drawNormals[primitiveIndex] : null
@@ -56,6 +59,8 @@ class ObjectBuffer {
     gl.bufferData(gl.ARRAY_BUFFER, this.vertexData, gl.STATIC_DRAW)
 
     gl.bindBuffer(gl.ARRAY_BUFFER, this.texcoordBuffer)
+    if (!this.texcoordData || this.texcoordData.length == 0) {
+    }
     gl.bufferData(gl.ARRAY_BUFFER, this.texcoordData, gl.STATIC_DRAW)
 
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer)
@@ -66,7 +71,6 @@ class ObjectBuffer {
       gl.bufferData(gl.ARRAY_BUFFER, this.colorData, gl.STATIC_DRAW)
     }
     if (normalData != null) {
-      debugger
       gl.bindBuffer(gl.ARRAY_BUFFER, this.normalBuffer)
       gl.bufferData(gl.ARRAY_BUFFER, this.normalData, gl.STATIC_DRAW)
     }
@@ -80,6 +84,14 @@ class ObjectBuffer {
     }
 
     // vao created at draw time to insure the correct shader is used
+  }
+
+  createDefaultTexcoordData(length) {
+    const texcoordData = new Float32Array(length)
+    for (let i = 0; i < length; i++) {
+      texcoordData[i] = 0.5
+    }
+    return texcoordData
   }
 
   setNodeXform(nodeXform) {

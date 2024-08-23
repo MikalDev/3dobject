@@ -586,6 +586,12 @@ class GltfModelW {
         const objectBuffers = this.drawMeshes[j].objectBuffers
         // Draw
         let boneBuffer
+        for (let i = 0; i < objectBuffers.length; i++) {
+          const nodeXform = this.drawMeshes[j]?.boneBuffer?.nodeXform
+          if (nodeXform) {
+            objectBuffers[i].setNodeXform(nodeXform)
+          }
+        }
         boneBuffer = this.drawMeshes[j]?.boneBuffer
         for (let i = 0; i < objectBuffers.length; i++) {
           boneBuffer = this.drawMeshes[j]?.boneBuffer
