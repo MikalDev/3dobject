@@ -290,7 +290,8 @@
           whiteTextureOwner.whiteTexture,
           wi.GetPremultipliedColor(),
           textures,
-          this.instanceTexture
+          this.instanceTexture,
+          wi.GetOpacity()
         )
 
         if (this.updateBbox) {

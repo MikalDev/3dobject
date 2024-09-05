@@ -157,7 +157,8 @@ class GltfModel {
     gl.uniform1f(locUNodeXformEnable, 0.0)
   }
 
-  render(renderer, x, y, z, tempQuad, whiteTexture, instanceC3Color, textures, instanceTexture) {
+  render(renderer, x, y, z, tempQuad, whiteTexture, instanceC3Color, textures, instanceTexture, opacity) {
+    if (opacity === 0) return
     if (!this.inst.isEditor) renderer.EndBatch()
 
     let totalTriangles = 0
