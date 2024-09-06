@@ -251,7 +251,7 @@
           },
           "set-rotation": {
             "list-name": "Set X, Y, Z rotation",
-            "display-text": "Set rotation to [b]{0}({0}, {1}, {2}[/b], [i]({3} rotation order)[/i]",
+            "display-text": "Set rotation to [b]{0}, {1}, {2}[/b], [i]({3} rotation order)[/i]",
             "description": "Set rotation of object from the original position, with rotation order.",
             "params": {
               "x": {

@@ -679,6 +679,12 @@
       this.updateBbox = true
     }
 
+    _setScale(scale) {
+      this.scale = scale
+      this.runtime.UpdateRender()
+      this.updateBbox = true
+    }
+
     _setAnimationBlend(time) {
       this.animationBlend = time
     }
@@ -784,6 +790,14 @@
     }
     get zScale() {
       return map.get(this).zScale
+    }
+
+    set scale(scale) {
+      map.get(this)._setScale(scale)
+    }
+
+    get scale() {
+      return map.get(this).scale
     }
 
     set animationBlend(time) {
