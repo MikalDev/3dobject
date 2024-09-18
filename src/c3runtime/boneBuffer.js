@@ -12,6 +12,15 @@ class BoneBuffer {
     }
     this.skinAnimation = skinAnimation
     this.bonesLoaded = false
+    this.locURotateMatrix = -1
+    this.locURotateCenter = -1
+    this.locUOffsetUV = -1
+    this.locUVXformEnable = -1
+    this.locABones = -1
+    this.locUSkinEnable = -1
+    this.locARootNodeXform = -1
+    this.locUNodeXformEnable = -1
+    this.locANodeXform = -1
   }
 
   setBone(jointIndex, matrix) {
@@ -57,10 +66,10 @@ class BoneBuffer {
       const rotateMatrix = uvXform.rotateMatrix
       const rotateCenter = uvXform.rotateCenter
       const offsetUV = uvXform.offsetUV
-      this.locURotateMatrix = gl.getUniformLocation(shaderProgram, "uUVRotate")
-      this.locURotateCenter = gl.getUniformLocation(shaderProgram, "uUVRotateCenter")
-      this.locUOffsetUV = gl.getUniformLocation(shaderProgram, "uUVOffset")
-      this.locUVXformEnable = gl.getUniformLocation(shaderProgram, "uUVXformEnable")
+      if (this.locURotateMatrix == -1) this.locURotateMatrix = gl.getUniformLocation(shaderProgram, "uUVRotate")
+      if (this.locURotateCenter == -1) this.locURotateCenter = gl.getUniformLocation(shaderProgram, "uUVRotateCenter")
+      if (this.locUOffsetUV == -1) this.locUOffsetUV = gl.getUniformLocation(shaderProgram, "uUVOffset")
+      if (this.locUVXformEnable == -1) this.locUVXformEnable = gl.getUniformLocation(shaderProgram, "uUVXformEnable")
       gl.uniformMatrix2fv(this.locURotateMatrix, false, rotateMatrix)
       gl.uniform2fv(this.locURotateCenter, rotateCenter)
       gl.uniform2fv(this.locUOffsetUV, offsetUV)
@@ -74,9 +83,9 @@ class BoneBuffer {
   uploadUniforms(renderer, uvXform, phongEnable) {
     const gl = renderer._gl
     const shaderProgram = renderer._batchState.currentShader._shaderProgram
-    this.locABones = gl.getUniformLocation(shaderProgram, "uBones")
-    this.locUSkinEnable = gl.getUniformLocation(shaderProgram, "uSkinEnable")
-    this.locARootNodeXform = gl.getUniformLocation(shaderProgram, "uRootNodeXform")
+    if (this.locABones == -1) this.locABones = gl.getUniformLocation(shaderProgram, "uBones")
+    if (this.locUSkinEnable == -1) this.locUSkinEnable = gl.getUniformLocation(shaderProgram, "uSkinEnable")
+    if (this.locARootNodeXform == -1) this.locARootNodeXform = gl.getUniformLocation(shaderProgram, "uRootNodeXform")
     gl.uniformMatrix4fv(this.locABones, false, this.bones)
     gl.uniform1f(this.locUSkinEnable, 1.0)
     gl.uniformMatrix4fv(this.locARootNodeXform, false, this.rootNodeXform)
@@ -88,9 +97,10 @@ class BoneBuffer {
   uploadUniformsNonSkin(renderer, uvXform, phongEnable) {
     const gl = renderer._gl
     const shaderProgram = renderer._batchState.currentShader._shaderProgram
-    this.locUSkinEnable = gl.getUniformLocation(shaderProgram, "uSkinEnable")
-    this.locUNodeXformEnable = gl.getUniformLocation(shaderProgram, "uNodeXformEnable")
-    this.locANodeXform = gl.getUniformLocation(shaderProgram, "uNodeXform")
+    if (this.locUSkinEnable == -1) this.locUSkinEnable = gl.getUniformLocation(shaderProgram, "uSkinEnable")
+    if (this.locUNodeXformEnable == -1)
+      this.locUNodeXformEnable = gl.getUniformLocation(shaderProgram, "uNodeXformEnable")
+    if (this.locANodeXform == -1) this.locANodeXform = gl.getUniformLocation(shaderProgram, "uNodeXform")
     gl.uniform1f(this.locUSkinEnable, 0.0)
     gl.uniform1f(this.locUNodeXformEnable, 1.0)
     gl.uniformMatrix4fv(this.locANodeXform, false, this.nodeXform)
@@ -102,18 +112,19 @@ class BoneBuffer {
   disable(renderer) {
     const gl = renderer._gl
     const shaderProgram = renderer._batchState.currentShader._shaderProgram
-    const locUSkinEnable = gl.getUniformLocation(shaderProgram, "uSkinEnable")
-    const locUNodeXformEnable = gl.getUniformLocation(shaderProgram, "uNodeXformEnable")
-    const locUUVXformEnable = gl.getUniformLocation(shaderProgram, "uUVXformEnable")
-    const locUPhongEnable = gl.getUniformLocation(shaderProgram, "uPhongEnable")
-    if (locUNodeXformEnable == -1 || locUSkinEnable == -1) {
-      console.error("locUNodeXformEnable == -1", locUNodeXformEnable)
-      console.error("locUSkinEnable == -1", locUSkinEnable)
+    if (this.locUSkinEnable == -1) this.locUSkinEnable = gl.getUniformLocation(shaderProgram, "uSkinEnable")
+    if (this.locUNodeXformEnable == -1)
+      this.locUNodeXformEnable = gl.getUniformLocation(shaderProgram, "uNodeXformEnable")
+    if (this.locUUVXformEnable == -1) this.locUUVXformEnable = gl.getUniformLocation(shaderProgram, "uUVXformEnable")
+    if (this.locUPhongEnable == -1) this.locUPhongEnable = gl.getUniformLocation(shaderProgram, "uPhongEnable")
+    if (this.locUNodeXformEnable == -1 || this.locUSkinEnable == -1) {
+      console.error("locUNodeXformEnable == -1", this.locUNodeXformEnable)
+      console.error("locUSkinEnable == -1", this.locUSkinEnable)
     }
-    gl.uniform1f(locUSkinEnable, 0.0)
-    gl.uniform1f(locUNodeXformEnable, 0.0)
-    gl.uniform1f(locUUVXformEnable, 0.0)
-    gl.uniform1f(locUPhongEnable, 0.0)
+    gl.uniform1f(this.locUSkinEnable, 0.0)
+    gl.uniform1f(this.locUNodeXformEnable, 0.0)
+    gl.uniform1f(this.locUUVXformEnable, 0.0)
+    gl.uniform1f(this.locUPhongEnable, 0.0)
   }
 }
 

@@ -352,6 +352,7 @@ function updateAnimation(animationData) {
 
     // Blend to last animation if during blend
     if (blendState == "blend") {
+      // debugger
       const blend = blendTime == 0 ? 0 : blendTime / animationBlend
       const blendTargetI = blendTarget[i]
       if (blendTargetI != null) {
@@ -367,7 +368,7 @@ function updateAnimation(animationData) {
     if (animationBlend != 0) {
       const currentTarget = {}
       currentTarget.node = {}
-      if (currentTarget.path == "translation") {
+      if (target.path == "translation") {
         currentTarget.path = target.path
         currentTarget.node.translation = vec3.clone(target.node.translation)
       } else if (target.path == "rotation") {

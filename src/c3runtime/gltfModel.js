@@ -37,7 +37,9 @@ class GltfModel {
     // Deep copy
     // For instance version, may only need points, others remain stable, full copy for now
     this._sdkType.gltfData.gltf.buffers = null
+    console.log("copying gltfData")
     this.gltfData = await this.structuralClone(this._sdkType.gltfData.gltf)
+    console.log("gltfData copied")
     if ("buffers" in this.gltfData) {
       this.gltfData.buffers = null
     }
@@ -662,6 +664,7 @@ class GltfModel {
         After that it transforms unskinned mesh points and sends them to c2.
     */
   transformNode(node, parentMat, modelScaleRotate, staticGeometry = false, gpuSkinning = false) {
+    if (node.disabled) return
     // @ts-ignore
     const mat4 = globalThis.glMatrix3D.mat4
     // @ts-ignore
@@ -926,6 +929,7 @@ class GltfModel {
       }
 
       for (let jj = 0; jj < node.skin.joints.length; jj++) {
+        if (node.disabled) continue
         let joint = node.skin.joints[jj]
 
         mat4.multiply(joint.boneMatrix, node.invMatrix, joint.matrix)
@@ -956,6 +960,10 @@ class GltfModel {
         }
         if (gpuSkinning) this.drawMeshes[this.drawMeshesIndex].boneBuffer = node.boneBuffer
 
+        this.drawMeshes[this.drawMeshesIndex].disabled = node.disabled
+        if (node.offsetUV) this.drawMeshes[this.drawMeshesIndex].offsetUV = node.offsetUV
+        if (node.disabled) continue
+
         let morphActive = false
         let morphTargets = null
         let morphWeights = null
@@ -970,8 +978,6 @@ class GltfModel {
               if (node.morphWeights.has(j)) morphWeights[j] = node.morphWeights.get(j)
             }
         }
-        this.drawMeshes[this.drawMeshesIndex].disabled = node.disabled
-        if (node.offsetUV) this.drawMeshes[this.drawMeshesIndex].offsetUV = node.offsetUV
 
         // Update material each time, in case an ACE changes it
         if ("material" in node.mesh.primitives[i]) {
@@ -1364,6 +1370,7 @@ class GltfModel {
       if (this._blendState == "blend") {
         const blend = this._blendTime == 0 ? 0 : this._blendTime / animationBlend
         const blendTarget = this._blendTarget[i]
+        debugger
         if (blendTarget != null) {
           if (target.path == "translation" && blendTarget.path == "translation")
             vec3.lerp(target.node.translation, blendTarget.node.translation, target.node.translation, blend)

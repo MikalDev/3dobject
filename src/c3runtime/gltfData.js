@@ -186,6 +186,11 @@ class GltfData {
       }
       let compcount = { SCALAR: 1, VEC2: 2, VEC3: 3, VEC4: 4, MAT2: 4, MAT3: 9, MAT4: 16 }[a.type]
       let bufview = gltf.bufferViews[a.bufferView]
+      if (!bufview) {
+        alert("error: gltf, unhandled bufferView, try exporting gltf without using sparse accessors")
+        console.error("error: gltf, unhandled bufferView", a)
+        return
+      }
 
       // Check for case where there is no byteOffset prop, which means byteOffset is 0.
       if (!("byteOffset" in bufview)) bufview.byteOffset = 0

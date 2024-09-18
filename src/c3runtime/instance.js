@@ -142,7 +142,9 @@
           this.gltf = new globalThis.GltfModel(this._runtime, this.sdkType, this)
         }
       }
+      console.log("init gltf")
       await this.gltf.init()
+      console.log("init gltf done")
 
       // If needed load textures
       let textures = this.instanceModel ? this.texture : this.sdkType.texture
@@ -164,6 +166,8 @@
       }
       this.gltf.updateModelRotate(wi.GetX(), wi.GetY(), wi.GetTotalZElevation())
       this._updateBoundingBox(wi.GetX(), wi.GetY(), 0, this.gpuSkinning)
+      console.log("update bounding box and call trigger")
+      console.log("length of skinnedNodes", this.gltf.gltfData.skinnedNodes.length)
       this.Trigger(C3.Plugins.Mikal_3DObject.Cnds.OnLoaded)
     }
 
@@ -420,13 +424,14 @@
     }
 
     _findNode(nodeName) {
+      if (!this.gltf?.gltfData?.skinnedNodes?.length) return false
       for (let ii = 0; ii < this.gltf.gltfData.skinnedNodes.length; ii++) {
         let node = this.gltf.gltfData.skinnedNodes[ii]
         if (node.name == nodeName) {
           return node
         }
       }
-
+      if (!this.gltf?.gltfData?.nodes?.length) return false
       for (let ii = 0; ii < this.gltf.gltfData.nodes.length; ii++) {
         let node = this.gltf.gltfData.nodes[ii]
         if (node.name == nodeName) {
