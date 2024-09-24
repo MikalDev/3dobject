@@ -1295,6 +1295,10 @@ class GltfModel {
       let otherValues = c.sampler.output.data
       let target = c.target
 
+      if (timeValues.max[0] == timeValues.min[0]) {
+        continue
+      }
+
       if (this.inst.animationLoop) {
         time = ((time - timeValues.min[0]) % (timeValues.max[0] - timeValues.min[0])) + timeValues.min[0] // loop
       } else {
@@ -1332,7 +1336,7 @@ class GltfModel {
 
       // Check if invalid state, if so, skip animation
       // TODO: Change how change animation vs tick is handled to make sure this case does not happen
-      if (timeValues[t1] == null) break
+      if (timeValues[t1] == null) continue
 
       if (target.path == "translation")
         vec3.lerp(
@@ -1370,7 +1374,6 @@ class GltfModel {
       if (this._blendState == "blend") {
         const blend = this._blendTime == 0 ? 0 : this._blendTime / animationBlend
         const blendTarget = this._blendTarget[i]
-        debugger
         if (blendTarget != null) {
           if (target.path == "translation" && blendTarget.path == "translation")
             vec3.lerp(target.node.translation, blendTarget.node.translation, target.node.translation, blend)

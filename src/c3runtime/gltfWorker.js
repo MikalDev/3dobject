@@ -283,6 +283,10 @@ function updateAnimation(animationData) {
     let otherValues = c.sampler.output.data
     let target = c.target
 
+    if (timeValues.max[0] == timeValues.min[0]) {
+      continue
+    }
+
     if (animationLoop) {
       time = ((time - timeValues.min[0]) % (timeValues.max[0] - timeValues.min[0])) + timeValues.min[0] // loop
     } else {
@@ -313,7 +317,7 @@ function updateAnimation(animationData) {
 
     // Check if invalid state, if so, skip animation
     // TODO: Change how change animation vs tick is handled to make sure this case does not happen
-    if (timeValues[t1] == null) break
+    if (timeValues[t1] == null) continue
 
     if (target.path == "translation")
       vec3.lerp(
@@ -352,7 +356,6 @@ function updateAnimation(animationData) {
 
     // Blend to last animation if during blend
     if (blendState == "blend") {
-      // debugger
       const blend = blendTime == 0 ? 0 : blendTime / animationBlend
       const blendTargetI = blendTarget[i]
       if (blendTargetI != null) {
