@@ -5,7 +5,7 @@ const BoneBuffer = globalThis.BoneBuffer
 // @ts-ignore
 const ObjectBuffer = globalThis.ObjectBuffer
 
-class GltfModel {
+class GltfModelTop {
   constructor(runtime, sdkType, inst) {
     const mat4 = globalThis.glMatrix3D.mat4
 
@@ -1406,5 +1406,5 @@ class GltfModel {
 // @ts-ignore
 if (!globalThis.GltfModel) {
   // @ts-ignore
-  globalThis.GltfModel = GltfModel
+  globalThis.GltfModel = GltfModelTop
 }

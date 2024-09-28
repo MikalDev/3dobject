@@ -1,4 +1,4 @@
-class BoneBuffer {
+class BoneBufferTop {
   constructor(renderer, numBones, skinAnimation = false) {
     const gl = renderer._gl
     if (skinAnimation) {
@@ -130,5 +130,5 @@ class BoneBuffer {
 
 // @ts-ignore
 if (!globalThis.BoneBuffer) {
-  globalThis.BoneBuffer = BoneBuffer
+  globalThis.BoneBuffer = BoneBufferTop
 }

@@ -2,7 +2,7 @@
 // @ts-check
 
 // @ts-ignore
-class ObjectBuffer {
+class ObjectBufferTop {
   constructor(renderer, mesh, primitiveIndex, gpuSkinning) {
     this.gl = renderer._gl
     const gl = this.gl
@@ -313,5 +313,5 @@ class ObjectBuffer {
 
 // @ts-ignore
 if (!globalThis.ObjectBuffer) {
-  globalThis.ObjectBuffer = ObjectBuffer
+  globalThis.ObjectBuffer = ObjectBufferTop
 }
