@@ -664,7 +664,6 @@ class GltfModelTop {
         After that it transforms unskinned mesh points and sends them to c2.
     */
   transformNode(node, parentMat, modelScaleRotate, staticGeometry = false, gpuSkinning = false) {
-    if (node.disabled) return
     // @ts-ignore
     const mat4 = globalThis.glMatrix3D.mat4
     // @ts-ignore
