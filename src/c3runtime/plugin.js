@@ -14,7 +14,7 @@
           const texPrecision = useHighP ? "highp" : "mediump"
           return [
             `#version 300 es`,
-            `const int MAX_BONES = 50; // Adjust based on your needs`,
+            `const int MAX_BONES = 80; // Adjust based on your needs`,
 
             `in highp vec3 aPos;`,
             `in highp vec2 aTex;`,
