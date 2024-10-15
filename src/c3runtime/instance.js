@@ -216,6 +216,7 @@
               this.gpuSkinning
             )
           }
+          this.renderOnce = false
           // } else if (this.renderOnce || (this.workerAnimation))
         } else if (this.renderOnce || this.lightEnable) {
           this.renderOnce = false
@@ -424,18 +425,20 @@
     }
 
     _findNode(nodeName) {
-      if (!this.gltf?.gltfData?.skinnedNodes?.length) return false
-      for (let ii = 0; ii < this.gltf.gltfData.skinnedNodes.length; ii++) {
-        let node = this.gltf.gltfData.skinnedNodes[ii]
-        if (node.name == nodeName) {
-          return node
+      if (this.gltf?.gltfData?.skinnedNodes?.length) {
+        for (let ii = 0; ii < this.gltf.gltfData.skinnedNodes.length; ii++) {
+          let node = this.gltf.gltfData.skinnedNodes[ii]
+          if (node.name == nodeName) {
+            return node
+          }
         }
       }
-      if (!this.gltf?.gltfData?.nodes?.length) return false
-      for (let ii = 0; ii < this.gltf.gltfData.nodes.length; ii++) {
-        let node = this.gltf.gltfData.nodes[ii]
-        if (node.name == nodeName) {
-          return node
+      if (this.gltf?.gltfData?.nodes?.length) {
+        for (let ii = 0; ii < this.gltf.gltfData.nodes.length; ii++) {
+          let node = this.gltf.gltfData.nodes[ii]
+          if (node.name == nodeName) {
+            return node
+          }
         }
       }
       return false
