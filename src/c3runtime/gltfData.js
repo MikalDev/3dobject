@@ -185,7 +185,70 @@ class GltfData {
           console.error("error: gltf, unhandled componentType")
       }
       let compcount = { SCALAR: 1, VEC2: 2, VEC3: 3, VEC4: 4, MAT2: 4, MAT3: 9, MAT4: 16 }[a.type]
-      let bufview = gltf.bufferViews[a.bufferView]
+      
+      // Handle sparse accessors
+      if (a.sparse) {
+        // Create base data array if no bufferView
+        if (!a.bufferView) {
+          // @ts-ignore
+          a.data = new buftype(compcount * a.count);
+          // Fill with zeros or default values if specified
+          if (a.normalized) {
+            a.data.fill(0);
+          }
+        } else {
+          // Load base data as normal
+          let bufview = gltf.bufferViews[a.bufferView];
+          if (!bufview) {
+            console.error("error: gltf, missing bufferView for base accessor data");
+            return;
+          }
+          // @ts-ignore
+          a.data = new buftype(gltf.buffers[bufview.buffer], 
+            (bufview.byteOffset || 0) + (a.byteOffset || 0), 
+            compcount * a.count);
+        }
+
+        // Process sparse values
+        const sparse = a.sparse;
+        const indicesBufferView = gltf.bufferViews[sparse.indices.bufferView];
+        const valuesBufferView = gltf.bufferViews[sparse.values.bufferView];
+        
+        // Get indices
+        let indicesType = null;
+        switch (sparse.indices.componentType) {
+          case 5121: indicesType = Uint8Array; break;
+          case 5123: indicesType = Uint16Array; break;
+          case 5125: indicesType = Uint32Array; break;
+          default: console.error("Unsupported sparse indices type"); return;
+        }
+        
+        const indices = new indicesType(
+          gltf.buffers[indicesBufferView.buffer],
+          (indicesBufferView.byteOffset || 0) + (sparse.indices.byteOffset || 0),
+          sparse.count
+        );
+
+        // Get values
+        // @ts-ignore
+        const values = new buftype(
+          gltf.buffers[valuesBufferView.buffer],
+          (valuesBufferView.byteOffset || 0) + (sparse.values.byteOffset || 0),
+          sparse.count * compcount
+        );
+
+        // Apply sparse values
+        for (let j = 0; j < sparse.count; j++) {
+          const targetIndex = indices[j];
+          for (let k = 0; k < compcount; k++) {
+            a.data[targetIndex * compcount + k] = values[j * compcount + k];
+          }
+        }
+        
+        continue; // Skip normal accessor processing
+      }
+
+      let bufview = gltf.bufferViews[a.bufferView];
       if (!bufview) {
         alert("error: gltf, unhandled bufferView, try exporting gltf without using sparse accessors")
         console.error("error: gltf, unhandled bufferView", a)
