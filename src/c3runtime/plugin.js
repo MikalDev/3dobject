@@ -21,6 +21,8 @@
             `in highp vec3 aColor;`,
             `in highp vec3 aNormal;`,
             `out highp vec2 vTex;`,
+            `out highp vec2 vNPTex;`,
+            `out highp float vNPW;`,
             `out highp vec3 vColor;`,
             `out highp vec3 vNormal;`,
             `uniform highp mat4 matP;`,
@@ -41,6 +43,7 @@
             `uniform mat2 uUVRotate;`,
             `uniform vec2 uUVRotateCenter;`,
             `uniform float uPhongEnable;`,
+            `uniform float uNPUVEnable;`,
             `void main(void) {`,
             `    pos = aPos;`,
             `    vNormal = aNormal;`, // Default normal
@@ -96,8 +99,12 @@
             `        rotatedUV.x = rotatedUV.x + uUVOffset.x;`,
             `        rotatedUV.y = rotatedUV.y + uUVOffset.y;`,
             `        vTex = rotatedUV;`,
+            `        vNPTex = aTex * gl_Position.w;`,
+            `        vNPW = gl_Position.w;`,
             `    } else {`,
             `        vTex = aTex;`,
+            `        vNPTex = aTex * gl_Position.w;`,
+            `        vNPW = gl_Position.w;`,
             `    }`,
             `    vColor = aColor;`,
             `}`,
@@ -111,12 +118,14 @@
         if (shader) {
           shader.glslWebGL2 = shader.glslWebGL2.replace(
             "in mediump vec2 vTex;",
-            "in mediump vec2 vTex;\nin highp vec3 pos;\nin highp vec3 vColor;\nin highp vec3 vNormal;\nuniform highp float uPhongEnable;"
+            "in highp float vNPW;\nin mediump vec2 vTex;\nin highp vec3 pos;\nin highp vec3 vColor;\nin highp vec3 vNormal;\nuniform highp float uPhongEnable;\nin highp vec2 vNPTex;"
           )
           shader.glslWebGL2 = shader.glslWebGL2.replace("highp vec3 pos = vec3(0.0, 0.0, 0.0);", "")
           shader.glslWebGL2 = shader.glslWebGL2.replace("highp vec3 vColor = vec3(0.0, 1.0, 0.0);", "")
           shader.glslWebGL2 = shader.glslWebGL2.replace("highp vec3 vNormal = vec3(0.0, 0.0, 0.0);", "")
           shader.glslWebGL2 = shader.glslWebGL2.replace("highp float uPhongEnable = 0.0;", "")
+          shader.glslWebGL2 = shader.glslWebGL2.replace("highp vec2 vNPTex = vec2(0.0, 0.0);", "")
+          shader.glslWebGL2 = shader.glslWebGL2.replace("highp float vNPW = 0.0;", "")
         } else {
           console.warn("[3DObject] shader mikal_frag_light-8 not found")
         }
