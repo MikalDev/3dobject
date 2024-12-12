@@ -24,7 +24,7 @@
       this._info.SetHasImage(true)
       this._info.SetSupportsEffects(true) // allow effects
       this._info.SetMustPreDraw(false)
-      this._info.SetCanBeBundled(false)
+      this._info.SetCanBeBundled(true)
       this._info.SetIs3D(true)
       this._info.SetSupportsColor(true)
       this._info.AddCommonPositionACEs()
