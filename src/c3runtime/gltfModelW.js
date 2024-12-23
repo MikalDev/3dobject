@@ -37,7 +37,7 @@ class GltfModelWTop {
     this.drawLightsEnable = false
     this.workerReady = false
     this.boundingBoxInit = false
-    this.maxBones = 50
+    this.maxBones = 64
     this.boneBufferViews = []
   }
 

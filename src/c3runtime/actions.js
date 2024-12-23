@@ -481,5 +481,24 @@
         this.renderOnce = true
       }
     },
+    SetTargetToPosition(x, y, z, upX, upY, upZ) {
+      const mat4 = globalThis.glMatrix3D.mat4
+      const quat = globalThis.glMatrix3D.quat
+      const mat3 = globalThis.glMatrix3D.mat3
+      const targetToQuat = quat.create()
+      const wi = this.GetWorldInfo()
+      const eye = [wi.GetX(), wi.GetY(), wi.GetTotalZElevation()]
+      const target = [x, y, z]
+      const up = [upX, upY, upZ]
+      const targetTo = mat4.create()
+      mat4.targetTo(targetTo, target, eye, up)
+      const targetToMat3 = mat3.create()
+      mat3.fromMat4(targetToMat3, targetTo)
+      quat.fromMat3(targetToQuat, targetToMat3)
+      this.enableQuaternion = true
+      quat.copy(this.quaternion, targetToQuat)
+      this.renderOnce = true
+    },
   }
 }
+

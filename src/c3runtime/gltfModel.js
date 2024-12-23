@@ -30,7 +30,7 @@ class GltfModelTop {
     this.locANormalMatrix = null
     this.meshNames = new Map()
     this.viewPos = [0, 0, 0]
-    this.maxBones = 50
+    this.maxBones = 64
   }
 
   async init() {

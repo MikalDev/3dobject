@@ -946,8 +946,38 @@
                 "desc": "Enable phong lighting, requires model normals."
               }
             }
+          },
+          "set-target-to-position": {
+            "list-name": "Set target to position",
+            "display-text": "Set target to position [i]({0}, {1}, {2})[/i], up [i]({3}, {4}, {5})[/i]",
+            "description": "Set target to position.",
+            "params": {
+              "x": {
+                "name": "X",
+                "desc": "X."
+                },
+              "y": {
+                "name": "Y",
+                "desc": "Y."
+              },
+              "z": {
+                "name": "Z",
+                "desc": "Z."
+              },
+              "up-x": {
+                "name": "Up X",
+                "desc": "Up X."
+              },
+              "up-y": {
+                "name": "Up Y",
+                "desc": "Up Y."
+              },
+              "up-z": {
+                "name": "Up Z",
+                "desc": "Up Z."
+              }
+            }
           }
-
         },
         "expressions": {
           "animation-names": {

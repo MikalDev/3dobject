@@ -579,6 +579,43 @@
             "initialValue": "false"
           }
         ]
+      },
+      {
+        "id": "set-target-to-position",
+        "scriptName": "SetTargetToPosition",
+        "highlight": false,
+        "params": [
+          {
+            "id": "x",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "y",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "z",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "up-x",
+            "type": "number",
+            "initialValue": "0"
+          },
+          {
+            "id": "up-y",
+            "type": "number",
+            "initialValue": "1"
+          },
+          {
+            "id": "up-z",
+            "type": "number",
+            "initialValue": "0"
+          }
+        ]
       }
     ],
     "expressions": [
