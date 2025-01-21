@@ -497,7 +497,6 @@
       quat.fromMat3(targetToQuat, targetToMat3)
       this.enableQuaternion = true
       quat.copy(this.quaternion, targetToQuat)
-      this.renderOnce = true
     },
   }
 }
