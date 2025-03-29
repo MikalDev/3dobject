@@ -117,6 +117,10 @@ class ObjectBufferTop {
       gl.deleteBuffer(this.texcoordBuffer)
       this.texcoordBuffer = null
     }
+    if (this.indexBuffer) {
+      gl.deleteBuffer(this.indexBuffer)
+      this.indexBuffer = null
+    }
     if (this.vao) {
       gl.deleteVertexArray(this.vao)
       this.vao = null
@@ -129,17 +133,31 @@ class ObjectBufferTop {
       gl.deleteBuffer(this.normalBuffer)
       this.normalBuffer = null
     }
+    if (this.weightsBuffer) {
+      gl.deleteBuffer(this.weightsBuffer)
+      this.weightsBuffer = null
+    }
+    if (this.jointsBuffer) {
+      gl.deleteBuffer(this.jointsBuffer)
+      this.jointsBuffer = null
+    }
     this.gl = null
-    this.vao = null
     this.vertexData = null
     this.texcoordData = null
     this.indexData = null
     this.colorData = null
     this.normalData = null
+    this.weightsData = null
+    this.jointsData = null
     this.locAPos = null
     this.locATex = null
     this.locAColor = null
     this.locANormal = null
+    this.locAWeights = null
+    this.locAJoints = null
+    this.nodeXform = null
+    this.vao = null
+    console.log("ObjectBuffer released")
   }
 
   _ExecuteBatch(renderer) {

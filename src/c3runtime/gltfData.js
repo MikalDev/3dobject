@@ -10,6 +10,92 @@ class GltfData {
     this.imageBitmap = {}
   }
 
+  release() {
+    // Release gltf data structure contents
+    if (this.gltf) {
+      // Release buffers
+      if (this.gltf.buffers) {
+        this.gltf.buffers = null
+      }
+
+      // Release boneBuffers in each node
+      if (this.gltf.nodes) {
+        for (let i = 0; i < this.gltf.nodes.length; i++) {
+          if (this.gltf.nodes[i]) {
+            if (this.gltf.nodes[i].boneBuffer && typeof this.gltf.nodes[i].boneBuffer.release === 'function') {
+              this.gltf.nodes[i].boneBuffer.release()
+            }
+          }
+        }
+      }
+
+      // Release accessors data
+      if (this.gltf.accessors) {
+        for (let i = 0; i < this.gltf.accessors.length; i++) {
+          if (this.gltf.accessors[i]) {
+            this.gltf.accessors[i].data = null
+          }
+        }
+      }
+
+      // Release skinned nodes
+      if (this.gltf.skinnedNodes) {
+        for (let i = 0; i < this.gltf.skinnedNodes.length; i++) {
+          if (this.gltf.skinnedNodes[i]) {
+            this.gltf.skinnedNodes[i].invMatrix = null
+            this.gltf.skinnedNodes[i].boneMatrix = null
+          }
+        }
+      }
+
+      // Release matrices
+      if (this.gltf.skins) {
+        for (let i = 0; i < this.gltf.skins.length; i++) {
+          const skin = this.gltf.skins[i]
+          if (skin) {
+            skin.inverseBindMatrices = null
+            if (skin.joints) {
+              for (let j = 0; j < skin.joints.length; j++) {
+                if (skin.joints[j]) {
+                  skin.joints[j].invBindMatrix = null
+                  skin.joints[j].boneMatrix = null
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // Release image bitmaps
+    for (const key in this.imageBitmap) {
+      if (this.imageBitmap[key]) {
+        if (typeof this.imageBitmap[key].close === 'function') {
+          this.imageBitmap[key].close();
+        }
+        this.imageBitmap[key] = null;
+      }
+    }
+
+    // Release white image bitmap
+    if (this.whiteImageBitmap) {
+      if (typeof this.whiteImageBitmap.close === 'function') {
+        this.whiteImageBitmap.close();
+      }
+      this.whiteImageBitmap = null;
+    }
+
+    // Release references
+    // @ts-ignore
+    this.gltf = null
+    // @ts-ignore
+    this.imageBitmap = null
+    this._runtime = null
+    this._sdkType = null
+    // @ts-ignore
+    this.dynamicTexturesLoaded = null
+  }
+
   /*
 	Requests an url as a json file, then does some processing on that, and finally calls a js or c2 function.
 	Expects an "embeded" gltf file.
@@ -81,6 +167,7 @@ class GltfData {
     let binBuffer
 
     if (debug) console.info("loadGLTF", uri)
+    console.debug("loadGLTF", uri)
 
     if (isRuntime) {
       if (isBinary) {

@@ -33,13 +33,10 @@ class GltfModelTop {
     this.maxBones = 64
   }
 
+  
+
   async init() {
-    // Deep copy
-    // For instance version, may only need points, others remain stable, full copy for now
-    this._sdkType.gltfData.gltf.buffers = null
-    console.log("copying gltfData")
-    this.gltfData = await this.structuralClone(this._sdkType.gltfData.gltf)
-    console.log("gltfData copied")
+    this.gltfData = this.copyGltfData(this._sdkType.gltfData.gltf)
     if ("buffers" in this.gltfData) {
       this.gltfData.buffers = null
     }
@@ -87,20 +84,57 @@ class GltfModelTop {
     // @ts-ignore
     this.nodeMeshMap = null
     this.modelRotate = null
+    this.normalMatrix = null
     // @ts-ignore
     this.meshNames = null
     // @ts-ignore
     this.verts = null
     // @ts-ignore
+    this.bones = null
+    // @ts-ignore
     this.updateDrawVerts = null
+    // @ts-ignore
+    this.activeNodes = null
+    // @ts-ignore
+    this.drawLights = null
+    // @ts-ignore
+    this.drawLightsBufferViews = null
+    // @ts-ignore
+    this.drawLightsEnable = null
+    // @ts-ignore
+    this.workerReady = null
+    // @ts-ignore
+    this.boundingBoxInit = null
+    // @ts-ignore
+    this.buffBones = null
+    // @ts-ignore
+    this.buffNodesMat = null
+    // @ts-ignore
+    this.nodesMat = null
+    // @ts-ignore
+    this.buffLights = null
+    // @ts-ignore
+    this.boneBufferViews = null
+    // @ts-ignore
+    this.locuModelRotateEnable = null
+    // @ts-ignore
+    this.locUSkinEnable = null
+    // @ts-ignore
+    this.locUNodeXformEnable = null
+    // @ts-ignore
+    this.locAPos = null
+    // @ts-ignore
+    this.locATex = null
+    // @ts-ignore
+    this.locANormalMatrix = null
+    // @ts-ignore
+    this.msgPort = null
   }
 
-  structuralClone(obj) {
-    return new Promise((resolve) => {
-      const { port1, port2 } = new MessageChannel()
-      port2.onmessage = (ev) => resolve(ev.data)
-      port1.postMessage(obj)
-    })
+  copyGltfData(sourceGltf) {
+    // Create completely new object (no direct references to source)
+    const targetGltf = structuredClone(sourceGltf);
+    return targetGltf;
   }
 
   _smoothstep(min, max, value) {

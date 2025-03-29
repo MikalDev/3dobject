@@ -105,8 +105,13 @@ function release() {
     msgPort.close()
     msgPort = null
   }
+  buff = null
+  buffBones = null
   buffLights = null
+  drawVerts = null
+  drawBones = null
   drawLights = null
+  drawLightsBufferViews = []
   // @ts-ignore
   index = null
   gltf = null
@@ -116,6 +121,20 @@ function release() {
   maxBB = null
   // @ts-ignore
   buffLength = null
+  // @ts-ignore
+  buffBonesLength = null
+  disabledNodes.clear()
+  nodeMorphWeights.clear()
+  // @ts-ignore
+  activeNodes = null
+  // @ts-ignore
+  nodeIndex = null
+  // @ts-ignore
+  bonesIndex = null
+  // @ts-ignore
+  nodeMatsIndex = null
+  // @ts-ignore
+  drawMeshes = null
 }
 
 function OnReady() {}

@@ -23,6 +23,28 @@ class BoneBufferTop {
     this.locANodeXform = -1
   }
 
+  release() {
+    // Release typed arrays
+    this.bones = null
+    this.nodeXform = null
+    this.rootNodeXform = null
+    
+    // Reset shader locations
+    this.locURotateMatrix = null
+    this.locURotateCenter = null
+    this.locUOffsetUV = null
+    this.locUVXformEnable = null
+    this.locABones = null
+    this.locUSkinEnable = null
+    this.locARootNodeXform = null
+    this.locUNodeXformEnable = null
+    this.locANodeXform = null
+    
+    // Reset state variables
+    this.skinAnimation = null
+    this.bonesLoaded = null
+  }
+
   setBone(jointIndex, matrix) {
     if (this.bones) {
       const offset = jointIndex * 16

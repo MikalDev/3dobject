@@ -142,9 +142,7 @@
           this.gltf = new globalThis.GltfModel(this._runtime, this.sdkType, this)
         }
       }
-      console.log("init gltf")
       await this.gltf.init()
-      console.log("init gltf done")
 
       // If needed load textures
       let textures = this.instanceModel ? this.texture : this.sdkType.texture
@@ -166,8 +164,6 @@
       }
       this.gltf.updateModelRotate(wi.GetX(), wi.GetY(), wi.GetTotalZElevation())
       this._updateBoundingBox(wi.GetX(), wi.GetY(), 0, this.gpuSkinning)
-      console.log("update bounding box and call trigger")
-      console.log("length of skinnedNodes", this.gltf.gltfData.skinnedNodes.length)
       this.Trigger(C3.Plugins.Mikal_3DObject.Cnds.OnLoaded)
     }
 
@@ -750,6 +746,20 @@
 
     setCannonBody(body, setRotaion = true) {
       map.get(this)._setCannonBody(body, setRotaion)
+    }
+
+    getNodePointPosition(nodeName, pointIndex) {
+      const vec3 = globalThis.glMatrix3D.vec3
+      let rotatedPoint = [0,0,0]
+      let mapThis = map.get(this)
+      if (!mapThis?.gltf?.gltfData) return  rotatedPoint;
+      if (!mapThis?.gltf?.meshNames?.has(nodeName)) return  rotatedPoint;
+      if (!mapThis?.gltf?.modelRotate) return rotatedPoint;
+      const drawVerts = mapThis.gltf.drawMeshes[mapThis.gltf.meshNames.get(nodeName)].drawVerts[0]
+      if (!drawVerts) return rotatedPoint;
+      const point = vec3.fromValues(drawVerts[pointIndex*3], drawVerts[pointIndex*3+1], drawVerts[pointIndex*3+2])
+      vec3.transformMat4(rotatedPoint, point, mapThis.gltf.modelRotate)
+      return rotatedPoint
     }
 
     removeCannonBody() {
