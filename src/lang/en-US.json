@@ -390,8 +390,8 @@
             "description": "Load material from path.",
             "params": {
               "material-path": {
-                  "name": "Material path",
-                  "desc": "Material project filename or URL to material (.png) file."
+                  "name": "Image path",
+                  "desc": "Image project filename or URL to material (.png) file."
               },
               "material-name": {
                 "name": "Material name",

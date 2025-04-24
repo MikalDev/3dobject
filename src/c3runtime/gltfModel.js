@@ -5,6 +5,8 @@ const BoneBuffer = globalThis.BoneBuffer
 // @ts-ignore
 const ObjectBuffer = globalThis.ObjectBuffer
 
+const MAX_BONES = 56
+
 class GltfModelTop {
   constructor(runtime, sdkType, inst) {
     const mat4 = globalThis.glMatrix3D.mat4
@@ -30,13 +32,14 @@ class GltfModelTop {
     this.locANormalMatrix = null
     this.meshNames = new Map()
     this.viewPos = [0, 0, 0]
-    this.maxBones = 64
+    this.maxBones = MAX_BONES
   }
 
   
 
   async init() {
     this.gltfData = this.copyGltfData(this._sdkType.gltfData.gltf)
+    await new Promise(resolve => setTimeout(resolve, 66));  // Allow time for texture initialization
     if ("buffers" in this.gltfData) {
       this.gltfData.buffers = null
     }
@@ -136,6 +139,56 @@ class GltfModelTop {
     const targetGltf = structuredClone(sourceGltf);
     return targetGltf;
   }
+
+  _findNodeByName(nodeName) {
+    const nodes = this.gltfData?.nodes;
+    if (nodes) {
+        for (let i = 0; i < nodes.length; i++) {
+            // Nodes within skinned meshes are also in the main nodes list
+            if (nodes[i].name === nodeName) {
+                return nodes[i];
+            }
+        }
+    }
+    console.warn(`[GltfModel] Node not found: ${nodeName}`);
+    return null;
+ }
+
+ getNodeWorldPosition(nodeName) {
+    const mat4 = globalThis.glMatrix3D.mat4;
+    const vec3 = globalThis.glMatrix3D.vec3;
+
+    const node = this._findNodeByName(nodeName);
+
+    if (!node) {
+      // Warning already logged in _findNodeByName
+      return null;
+    }
+
+    // Ensure the node's matrix and the model's world matrix are calculated and valid.
+    // These matrices are typically updated during getPolygons() or render().
+    // Calling this function before the model has been processed in a tick might result in null.
+    if (!node.matrix) {
+        console.warn(`[GltfModel] Node matrix not calculated yet for: ${nodeName}. Ensure getPolygons() or updateAnimation() has run.`);
+        return null;
+    }
+    // this.modelRotate is updated in render() or updateModelRotate()
+    if (!this.modelRotate) {
+        console.warn(`[GltfModel] Model world rotation matrix (modelRotate) not calculated yet. Ensure the model has been rendered or updated.`);
+        return null;
+    }
+
+    const nodeWorldMatrix = mat4.create();
+    // node.matrix holds the transform relative to the model root after hierarchy and animation updates.
+    // this.modelRotate transforms the model root to world space.
+    mat4.multiply(nodeWorldMatrix, this.modelRotate, node.matrix);
+
+    // Extract translation component (world position) from the combined matrix.
+    const worldPos = vec3.fromValues(nodeWorldMatrix[12], nodeWorldMatrix[13], nodeWorldMatrix[14]);
+
+    // Return as a plain array [x, y, z]
+    return [worldPos[0], worldPos[1], worldPos[2]];
+ }
 
   _smoothstep(min, max, value) {
     var x = Math.max(0, Math.min(1, (value - min) / (max - min)))

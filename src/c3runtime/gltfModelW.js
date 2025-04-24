@@ -37,7 +37,7 @@ class GltfModelWTop {
     this.drawLightsEnable = false
     this.workerReady = false
     this.boundingBoxInit = false
-    this.maxBones = 64
+    this.maxBones = MAX_BONES
     this.boneBufferViews = []
   }
 
@@ -185,6 +185,7 @@ class GltfModelWTop {
     // For instance version, may only need points, others remain stable, full copy for now
     this._sdkType.gltfData.gltf.buffers = null
     this.gltfData = this.copyGltfData(this._sdkType.gltfData.gltf)
+    await new Promise(resolve => setTimeout(resolve, 66));  // Allow time for texture initialization
     if ("buffers" in this.gltfData) {
       this.gltfData.buffers = null
     }

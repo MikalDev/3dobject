@@ -1,0 +1,51 @@
+{
+  "id": "nodevertexlength",
+  "scriptName": "NodeVertexLength",
+  "name": "Node vertex length",
+  "params": [
+    {
+      "id": "nodename",
+      "name": "Node name",
+      "type": "string",
+      "desc": "The name of the node to get vertex length from."
+    }
+  ],
+  "returnType": "number",
+  "isAsync": false,
+  "category": "nodes",
+  "description": "Get the number of vertices in a node."
+},
+{
+  "id": "nodeworldposition",
+  "scriptName": "NodeWorldPosition",
+  "name": "Node world position",
+  "params": [
+    {
+      "id": "nodename",
+      "name": "Node name",
+      "type": "string",
+      "desc": "The name of the node (or bone) to get the world position for."
+    }
+  ],
+  "returnType": "string",
+  "isAsync": false,
+  "category": "nodes",
+  "description": "Get the world position {\\"x\\": x, \\"y\\": y, \\"z\\": z} of a specific node (or bone), accounting for object position, rotation, scale, and animation."
+},
+{
+  "id": "animationblendtime",
+  "scriptName": "AnimationBlendTime",
+  "name": "Animation blend time",
+  "params": [
+    {
+      "id": "animationname",
+      "name": "Animation name",
+      "type": "string",
+      "desc": "The name of the animation to get blend time from."
+    }
+  ],
+  "returnType": "number",
+  "isAsync": false,
+  "category": "animation",
+  "description": "Get the blend time of a specific animation."
+} 

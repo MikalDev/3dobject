@@ -163,10 +163,21 @@
                 if (!this.gltf) return 0;
                 if (!this.gltf.gltfData) return 0;
                 if (!this.gltf.meshNames.has(nodeName)) return 0;
-                const drawVerts = this.gltf?.drawMeshes[this.gltf.meshNames.get(nodeName)]?.drawVerts[0]
-                if (!Array.isArray(drawVerts)) return 0
+                const drawVerts = this.gltf?.drawMeshes?.[this.gltf.meshNames.get(nodeName)]?.drawVerts?.[0]
+                if (!drawVerts) return 0
                 // x,y,z per vertex
                 return drawVerts.length/3;
+            },
+            NodeWorldPosition(nodeName) {
+                let worldPos = [0, 0, 0];
+                if (this.gltf) {
+                    const pos = this.gltf.getNodeWorldPosition(nodeName);
+                    if (pos) {
+                        worldPos = pos;
+                    }
+                }
+                // Return as JSON string for consistency with NodePointPosition
+                return `{"x": ${worldPos[0]}, "y": ${worldPos[1]}, "z": ${worldPos[2]}}`;
             },
             AnimationBlendTime() {
                 return this.animationBlend;
