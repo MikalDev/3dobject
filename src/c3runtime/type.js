@@ -64,6 +64,65 @@
             }
         }
 
+        CreateBonesTexture(renderer) {
+            const gl = renderer._gl;
+            const NUM_TEXTURES = 3; // Triple buffering
+            const MAX_BONES = 256; // Maximum bones anticipated across all models
+            const PIXELS_PER_BONE = 4;
+            const BONE_TEXTURE_WIDTH = MAX_BONES * PIXELS_PER_BONE; // Width = 1024 for MAX_BONES=256
+            const BONE_TEXTURE_HEIGHT = 1; // Height is always 1
+
+            // Check if the textures array already exists
+            if (!globalThis.boneTextures) {
+                console.log(`Creating ${NUM_TEXTURES} global bone textures (${BONE_TEXTURE_WIDTH}x${BONE_TEXTURE_HEIGHT} float)...`);
+
+                if (!gl || !(gl instanceof WebGLRenderingContext || gl instanceof WebGL2RenderingContext)) {
+                   console.error("Invalid WebGL context provided for bone texture creation.");
+                   return;
+                }
+
+                const textureType = gl.FLOAT;
+                const internalFormat = gl.RGBA32F;
+                
+                globalThis.boneTextures = [];
+
+                for (let i = 0; i < NUM_TEXTURES; ++i) {
+                    const texture = gl.createTexture();
+                    gl.bindTexture(gl.TEXTURE_2D, texture);
+
+                    gl.texImage2D(
+                        gl.TEXTURE_2D,
+                        0,
+                        internalFormat,
+                        BONE_TEXTURE_WIDTH,
+                        BONE_TEXTURE_HEIGHT,
+                        0,
+                        gl.RGBA,
+                        textureType,
+                        null // Initialize with no data
+                    );
+
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+                    
+                    globalThis.boneTextures.push(texture);
+                }
+
+                gl.bindTexture(gl.TEXTURE_2D, null); // Unbind after loop
+
+                // Store dimensions and unit (same for all textures in the buffer)
+                globalThis.boneTextureWidth = BONE_TEXTURE_WIDTH;
+                globalThis.boneTextureHeight = BONE_TEXTURE_HEIGHT; // Will be 1
+                globalThis.boneTextureUnit = 6; // Use the same unit for all
+                globalThis.currentBoneTextureIndex = 0; // Start with the first texture
+
+                 console.log(`3DObject: ${NUM_TEXTURES} Global bone textures created (${BONE_TEXTURE_WIDTH}x${BONE_TEXTURE_HEIGHT}) on unit ${globalThis.boneTextureUnit}`);
+
+            }
+        }
+
         LoadTextures(renderer)
         {
             return this.GetImageInfo().LoadStaticTexture(renderer, {

@@ -37,7 +37,6 @@ class GltfModelWTop {
     this.drawLightsEnable = false
     this.workerReady = false
     this.boundingBoxInit = false
-    this.maxBones = MAX_BONES
     this.boneBufferViews = []
   }
 
@@ -864,7 +863,10 @@ class GltfModelWTop {
       // Check if the node has a mesh and is not a skinned mesh
       if (node.mesh && !node.skin) {
         if (!node.hasOwnProperty("boneBuffer")) {
-          const boneBuffer = new BoneBufferW(this.inst.renderer, this.maxBones, false)
+          // Use the constant directly from BoneBuffer if available
+          // @ts-ignore - Linter doesn't know globalThis structure
+          const maxBonesForBuffer = globalThis.BoneBuffer?.MAX_BONES || 256; // Default to 256
+          const boneBuffer = new BoneBufferW(this.inst.renderer, maxBonesForBuffer, false)
           node.boneBuffer = boneBuffer
         }
         const start = boneBufferViews[bufferViewIndex].start
@@ -876,7 +878,10 @@ class GltfModelWTop {
     // Iterate through all skinned nodes
     for (let skinnedNode of this.gltfData.skinnedNodes) {
       if (!skinnedNode.hasOwnProperty("boneBuffer")) {
-        const boneBuffer = new BoneBufferW(this.inst.renderer, this.maxBones, true)
+        // Use the constant directly from BoneBuffer if available
+        // @ts-ignore - Linter doesn't know globalThis structure
+        const maxBonesForBuffer = globalThis.BoneBuffer?.MAX_BONES || 256; // Default to 256
+        const boneBuffer = new BoneBufferW(this.inst.renderer, maxBonesForBuffer, true)
         skinnedNode.boneBuffer = boneBuffer
       }
       const length = boneBufferViews[bufferViewIndex].length

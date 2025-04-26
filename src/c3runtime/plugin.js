@@ -14,7 +14,8 @@
           const texPrecision = useHighP ? "highp" : "mediump"
           return [
             `#version 300 es`,
-            `const int MAX_BONES = 64; // Adjust based on your needs`,
+            `// Increased max bones for UBO`,
+            `const int MAX_BONES = 256;`,
 
             `in highp vec3 aPos;`,
             `in highp vec2 aTex;`,
@@ -32,7 +33,6 @@
             `out highp vec3 pos;`,
             `out highp vec3 norm;`,
             `uniform highp mat4 uModelRotate;`,
-            `uniform mat4 uBones[MAX_BONES];`,
             `uniform mat4 uRootNodeXform;`,
             `uniform mat4 uNodeXform;`,
             `uniform float uSkinEnable;`,
@@ -44,6 +44,15 @@
             `uniform vec2 uUVRotateCenter;`,
             `uniform float uPhongEnable;`,
             `uniform float uNPUVEnable;`,
+
+            `// --- Uniform Block for Bone Matrices ---`,
+            `layout(std140) uniform Bones {`,
+            `    mat4 uBones[MAX_BONES];`,
+            `};`,
+            `// --- End Uniform Block ---`,
+
+            `// --- REMOVED Bone Texture Uniforms & Function ---`,
+
             `void main(void) {`,
             `    pos = aPos;`,
             `    vNormal = aNormal;`, // Default normal
@@ -53,9 +62,11 @@
             `        highp vec3 skinnedNormal = vec3(0.0);`,
             `        for (int i = 0; i < 4; i++) {`,
             `            int joint = int(aJoints[i]);`,
-            `            skinVertex += aWeights[i] * (uBones[joint] * vec4(aPos, 1.0));`,
+            `            // Access bone matrix directly from UBO`,
+            `            mat4 boneMatrix = uBones[joint];`,
+            `            skinVertex += aWeights[i] * (boneMatrix * vec4(aPos, 1.0));`,
             `            if (uPhongEnable > 0.5) {`,
-            `                skinnedNormal += aWeights[i] * (mat3(uBones[joint]) * aNormal);`, // Apply skinning to normals
+            `                skinnedNormal += aWeights[i] * (mat3(boneMatrix) * aNormal);`, // Apply skinning to normals
             `            }`,
             `        }`,
             `        highp vec4 position = matP * matMV * uRootNodeXform * skinVertex;`,
