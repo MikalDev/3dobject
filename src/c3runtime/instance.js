@@ -149,6 +149,7 @@
       let whiteTextureOwner = this.instanceModel ? this : this.sdkType
       let gltfData = this.instanceModel ? this.gltfData : this.sdkType.gltfData
       let renderer = this.renderer
+      this.sdkType.CreateBonesTexture(renderer)
       if (gltfData.dynamicTexturesLoaded !== true) {
         this.sdkType.LoadDynamicTextures(renderer, gltfData, textures, whiteTextureOwner, this.instanceModel)
       }
@@ -262,6 +263,7 @@
       // z elevation handles offset on draw
       const z = wi.GetTotalZElevation()
 
+      this.sdkType.CreateBonesTexture(renderer)
       let textures = this.instanceModel ? this.texture : this.sdkType.texture
       let whiteTextureOwner = this.instanceModel ? this : this.sdkType
       let gltfData = this.instanceModel ? this.gltfData : this.sdkType.gltfData

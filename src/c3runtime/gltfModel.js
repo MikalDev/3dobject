@@ -5,8 +5,6 @@ const BoneBuffer = globalThis.BoneBuffer
 // @ts-ignore
 const ObjectBuffer = globalThis.ObjectBuffer
 
-const MAX_BONES = 56
-
 class GltfModelTop {
   constructor(runtime, sdkType, inst) {
     const mat4 = globalThis.glMatrix3D.mat4
@@ -32,7 +30,6 @@ class GltfModelTop {
     this.locANormalMatrix = null
     this.meshNames = new Map()
     this.viewPos = [0, 0, 0]
-    this.maxBones = MAX_BONES
   }
 
   
@@ -782,7 +779,10 @@ class GltfModelTop {
     if (node.mesh != undefined && node.skin == undefined) {
       if (gpuSkinning) {
         if (!node.hasOwnProperty("boneBuffer")) {
-          const boneBuffer = new BoneBuffer(this.inst.renderer, this.maxBones, false)
+          // Use the constant directly from BoneBuffer if available
+          // @ts-ignore - Linter doesn't know globalThis structure
+          const maxBonesForBuffer = globalThis.BoneBuffer?.MAX_BONES || 256; // Default to 256 if needed
+          const boneBuffer = new BoneBuffer(this.inst.renderer, maxBonesForBuffer, false)
           node.boneBuffer = boneBuffer
         }
         node.boneBuffer.setNodeXform(node.matrix)
@@ -1008,7 +1008,10 @@ class GltfModelTop {
       //update bone matrixes
       if (gpuSkinning) {
         if (!node.hasOwnProperty("boneBuffer")) {
-          const boneBuffer = new BoneBuffer(this.inst.renderer, this.maxBones, true)
+          // Use the constant directly from BoneBuffer if available
+          // @ts-ignore - Linter doesn't know globalThis structure
+          const maxBonesForBuffer = globalThis.BoneBuffer?.MAX_BONES || 256; // Default to 256 if needed
+          const boneBuffer = new BoneBuffer(this.inst.renderer, maxBonesForBuffer, true)
           node.boneBuffer = boneBuffer
         }
         node.boneBuffer.setRootNodeXform(parentMatrix)

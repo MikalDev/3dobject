@@ -302,29 +302,75 @@ class ObjectBufferTop {
   }
 
   draw(renderer, boneBuffer, rotateMaterial, offsetMaterial, phongEnable) {
-    const gl = renderer._gl
-    this._ExecuteBatch(renderer)
+    const gl = renderer._gl;
+    this._ExecuteBatch(renderer);
     if (this.vao === null) {
-      this.vao = this.createVao(renderer)
+      this.vao = this.createVao(renderer);
     }
-    gl.bindVertexArray(this.vao)
-    const uvXform = this.createUVXform(rotateMaterial, offsetMaterial)
-    // upload bones and enable skinning
+    gl.bindVertexArray(this.vao);
+    const uvXform = this.createUVXform(rotateMaterial, offsetMaterial);
+
+    // Determine path based on boneBuffer and skinAnimation
     if (boneBuffer) {
       if (boneBuffer.skinAnimation) {
-        boneBuffer.uploadUniforms(renderer, uvXform, phongEnable)
+        // --- Skinning Path (Now using UBO) ---
+        // Upload uniforms, including UBO data and binding
+        boneBuffer.uploadUniforms(renderer, uvXform, phongEnable); // Pass uvXform and phongEnable
+
+        // Setup UV Xform if needed
+        if (uvXform.enable) {
+            // This is now handled within boneBuffer.uploadUniforms if enabled
+            // this.uploadUVXformUniforms(renderer, uvXform);
+        } else {
+            // This is now handled within boneBuffer.uploadUniforms if disabled
+            // this.disableUVXformUniforms(renderer);
+        }
+        // Note: NodeXform is not used in skinning path, handled by bone transforms
+
+        // --- Draw Call (Skinned) ---
+        gl.drawElements(gl.TRIANGLES, this.indexDataLength, gl.UNSIGNED_SHORT, 0);
+
+        // --- Restore State (Skinned) ---
+        // REMOVED restoring active texture unit
+
+        // Unbinding UBO happens implicitly on next bind/draw or can be done manually if needed,
+        // but bindBufferBase in uploadUniforms handles binding per draw.
+        // Unbinding UV Xform if it was enabled is handled within uploadUniforms logic.
       } else {
-        boneBuffer.uploadUniformsNonSkin(renderer, uvXform, phongEnable)
+        // --- Non-Skinning Path --- // (No changes needed here regarding bones)
+        boneBuffer.uploadUniformsNonSkin(renderer, uvXform, phongEnable);
+
+        // Setup other uniforms (UV handled within uploadUniformsNonSkin)
+         this.uploadNodeXformUniforms(renderer); // Use node transform
+
+        // --- Draw Call (Non-Skinned) ---
+        gl.drawElements(gl.TRIANGLES, this.indexDataLength, gl.UNSIGNED_SHORT, 0);
+
+        // UV Xform disable handled in uploadUniformsNonSkin
       }
+    } else {
+      // --- No Bone Buffer Path --- // (No changes needed here)
+      // Setup necessary uniforms
+       if (uvXform.enable) {
+         this.uploadUVXformUniforms(renderer, uvXform);
+       } else {
+         this.disableUVXformUniforms(renderer); // Ensure disabled if no boneBuffer
+       }
+       this.uploadNodeXformUniforms(renderer); // Assuming standard node transform
+
+      // Draw Call (No Bone Buffer)
+      gl.drawElements(gl.TRIANGLES, this.indexDataLength, gl.UNSIGNED_SHORT, 0);
+
+       // Unbinding UV Xform if it was enabled - Redundant due to check above?
+       // Handled by disableUVXformUniforms if necessary.
     }
-    if (uvXform.enable) {
-      this.uploadUVXformUniforms(renderer, uvXform)
-    }
-    this.uploadNodeXformUniforms(renderer)
-    gl.drawElements(gl.TRIANGLES, this.indexDataLength, gl.UNSIGNED_SHORT, 0)
-    gl.bindVertexArray(null)
-    if (uvXform.enable) {
-      this.disableUVXformUniforms(renderer)
+
+    // Unbind VAO once after all drawing paths
+    gl.bindVertexArray(null);
+    // Unbind UBO from the binding point (optional, good practice)
+    // Check if skinning was active to avoid unnecessary unbinds
+    if (boneBuffer && boneBuffer.skinAnimation) {
+        gl.bindBufferBase(gl.UNIFORM_BUFFER, globalThis.BoneBuffer.BONE_UBO_BINDING_POINT || 0, null);
     }
   }
 }
