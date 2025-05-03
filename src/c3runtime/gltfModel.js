@@ -741,6 +741,46 @@ class GltfModelTop {
       renderer._vertexPtr = 0
       renderer._texPtr = 0
     }
+    
+    // --- Final Dummy UBO Bind (Cleanup) ---
+    // After rendering all meshes, bind the dummy UBO in case subsequent C3 rendering
+    // uses a shader that expects the 'Bones' block.
+    // @ts-ignore
+    if (!this.inst.isEditor && globalThis.BoneBuffer) {
+        const gl = renderer._gl;
+        const currentShader = renderer._batchState?.currentShader?._shaderProgram;
+        if (currentShader) {
+            // Assume the shader requires the 'Bones' block. Directly get and bind dummy UBO.
+            // const blockIndex = gl.getUniformBlockIndex(currentShader, "Bones");
+            // if (blockIndex !== gl.INVALID_INDEX && blockIndex !== -1) { // Assume always true
+                // @ts-ignore
+                const dummyUBO = globalThis.BoneBuffer._getOrCreateDummyUBO(gl);
+                if (dummyUBO) {
+                    // Ensure block binding point association (idempotent)
+                    // We still need the block index for uniformBlockBinding.
+                    const blockIndex = gl.getUniformBlockIndex(currentShader, "Bones");
+                    if (blockIndex !== gl.INVALID_INDEX && blockIndex !== -1) {
+                        // @ts-ignore
+                        gl.uniformBlockBinding(currentShader, blockIndex, globalThis.BoneBuffer.BONE_UBO_BINDING_POINT);
+                    } else {
+                         console.warn("[GltfModel Cleanup] 'Bones' block not found for uniformBlockBinding.");
+                    }
+                    // Bind the dummy UBO
+                    // @ts-ignore
+                    gl.bindBufferBase(gl.UNIFORM_BUFFER, globalThis.BoneBuffer.BONE_UBO_BINDING_POINT, dummyUBO);
+                    // console.log("[GltfModel Cleanup] Bound dummy UBO for subsequent rendering.");
+                } else {
+                    console.error("[GltfModel Cleanup] Shader expects 'Bones' UBO, but dummy UBO is unavailable.");
+                }
+            // } // else: Shader doesn't expect 'Bones', no cleanup bind needed.
+        } else {
+            console.warn("[GltfModel Cleanup] Could not get current shader program to perform dummy UBO cleanup bind.");
+        }
+    // @ts-ignore
+    } else if (!globalThis.BoneBuffer) {
+        console.warn("[GltfModel Cleanup] globalThis.BoneBuffer not found, cannot perform dummy UBO cleanup bind.");
+    }
+    // --- End Final Dummy UBO Bind ---
   }
 
   /*
