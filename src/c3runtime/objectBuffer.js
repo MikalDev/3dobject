@@ -363,30 +363,36 @@ class ObjectBufferTop {
       const shaderProgram = renderer._batchState.currentShader._shaderProgram;
       // Check if globalThis.BoneBuffer exists before accessing its static members
       if (globalThis.BoneBuffer) {
-         const blockIndex = gl.getUniformBlockIndex(shaderProgram, "Bones");
-         if (blockIndex !== gl.INVALID_INDEX && blockIndex !== -1) {
-            // Shader expects the Bones UBO, bind the dummy one
-            const dummyUBO = globalThis.BoneBuffer._getOrCreateDummyUBO(gl);
-            if (dummyUBO) {
-               // Ensure the block is bound to the correct point (idempotent)
-               gl.uniformBlockBinding(shaderProgram, blockIndex, globalThis.BoneBuffer.BONE_UBO_BINDING_POINT);
-               // Bind the dummy UBO
-               gl.bindBufferBase(gl.UNIFORM_BUFFER, globalThis.BoneBuffer.BONE_UBO_BINDING_POINT, dummyUBO);
-            } else {
-               console.error("ObjectBuffer: Shader expects 'Bones' UBO, but dummy UBO is unavailable.");
-            }
-         } else {
-            // Shader does not expect Bones UBO, potentially unbind if needed?
-            // gl.bindBufferBase(gl.UNIFORM_BUFFER, globalThis.BoneBuffer.BONE_UBO_BINDING_POINT, null);
-         }
-      } else {
-          // BoneBuffer class not found, cannot bind dummy UBO.
-          // Check if shader expects it and warn if so.
-          const blockIndex = gl.getUniformBlockIndex(shaderProgram, "Bones");
-          if (blockIndex !== gl.INVALID_INDEX && blockIndex !== -1) {
-              console.warn("ObjectBuffer: globalThis.BoneBuffer not found, cannot bind dummy UBO even though shader expects 'Bones' block.");
-          }
-      }
+            // Assume the shader requires the 'Bones' block. Directly get and bind dummy UBO.
+            // Re-check the block index here as the shader might be different from the one
+            // cached in a potential boneBuffer instance from the Non-Skinning path.
+            // const blockIndex = gl.getUniformBlockIndex(shaderProgram, "Bones");
+            // if (blockIndex !== gl.INVALID_INDEX && blockIndex !== -1) { // Assume always true
+               // Shader expects the Bones UBO, bind the dummy one
+               const dummyUBO = globalThis.BoneBuffer._getOrCreateDummyUBO(gl);
+               if (dummyUBO) {
+                  // Ensure the block is bound to the correct point (idempotent check, but binding is crucial)
+                  // We still need the block index for uniformBlockBinding, so get it once
+                  const blockIndex = gl.getUniformBlockIndex(shaderProgram, "Bones");
+                  if (blockIndex !== gl.INVALID_INDEX && blockIndex !== -1) {
+                      gl.uniformBlockBinding(shaderProgram, blockIndex, globalThis.BoneBuffer.BONE_UBO_BINDING_POINT);
+                  } else {
+                      console.warn("ObjectBuffer: 'Bones' block not found in shader for uniformBlockBinding, though binding was attempted.");
+                  }
+                  // Bind the dummy UBO
+                  gl.bindBufferBase(gl.UNIFORM_BUFFER, globalThis.BoneBuffer.BONE_UBO_BINDING_POINT, dummyUBO);
+               } else {
+                  console.error("ObjectBuffer: Shader expects 'Bones' UBO, but dummy UBO is unavailable.");
+               }
+            // } // else: Shader doesn't expect 'Bones', no need to bind dummy.
+        } else {
+            // BoneBuffer class not found, cannot bind dummy UBO.
+            // Check if shader expects it and warn if so.
+            // const blockIndex = gl.getUniformBlockIndex(shaderProgram, "Bones");
+            // if (blockIndex !== gl.INVALID_INDEX && blockIndex !== -1) {
+                console.warn("ObjectBuffer: globalThis.BoneBuffer not found, cannot bind dummy UBO even though shader expects 'Bones' block.");
+            // }
+        }
       // --- End Dummy UBO Check --- //
 
       // Draw Call (No Bone Buffer)

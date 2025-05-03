@@ -6,19 +6,27 @@ class BoneBufferTop {
   // Static properties for shared resources
   static BONE_UBO_BINDING_POINT = 0;
   static dummyUBO = null;
-  static _DUMMY_UBO_SIZE = 1 * 16 * 4; // Size for 1 matrix * 16 floats/matrix * 4 bytes/float
+  static _DUMMY_UBO_SIZE = MAX_BONES * 16 * 4; // Size for MAX_BONES matrices * 16 floats/matrix * 4 bytes/float
 
   // Static method to get or create the dummy UBO
   static _getOrCreateDummyUBO(gl) {
     if (!BoneBufferTop.dummyUBO) {
-      console.log("Creating dummy Bone UBO");
+      console.log(`Creating dummy Bone UBO (Size: ${BoneBufferTop._DUMMY_UBO_SIZE} bytes for ${MAX_BONES} bones)`);
       BoneBufferTop.dummyUBO = gl.createBuffer();
+      // Create dummy data array large enough for the full UBO size
       const dummyData = new Float32Array(BoneBufferTop._DUMMY_UBO_SIZE / 4).fill(0);
-      // Could fill with identity: const dummyData = new Float32Array([1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1]);
+      // Optionally fill the first matrix with identity if needed for non-skinned defaults
+      // const identity = [1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1];
+      // dummyData.set(identity, 0);
 
       gl.bindBuffer(gl.UNIFORM_BUFFER, BoneBufferTop.dummyUBO);
+      // Allocate storage and initialize with zeros
       gl.bufferData(gl.UNIFORM_BUFFER, dummyData, gl.STATIC_DRAW);
       gl.bindBuffer(gl.UNIFORM_BUFFER, null);
+      
+      // Bind the newly created dummy UBO to the designated binding point immediately
+      console.log(`Binding newly created dummy UBO to binding point ${BoneBufferTop.BONE_UBO_BINDING_POINT}`);
+      gl.bindBufferBase(gl.UNIFORM_BUFFER, BoneBufferTop.BONE_UBO_BINDING_POINT, BoneBufferTop.dummyUBO);
 
       if (!BoneBufferTop.dummyUBO) {
          console.error("Failed to create dummy Bone UBO!");
