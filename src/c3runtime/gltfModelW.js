@@ -265,6 +265,7 @@ class GltfModelWTop {
             drawWeights: [],
             disabled: false,
             objectBuffers: [],
+            maxJointIndexUsed: -1
           })
         }
         this.drawMeshes[this.drawMeshesIndex].node = node
@@ -300,7 +301,16 @@ class GltfModelWTop {
           drawNormals.push(new Float32Array(node.mesh.primitives[i].attributes.NORMAL.data))
         }
         if (gpuSkinning && drawJoints.length === 0 && "JOINTS_0" in node.mesh.primitives[i].attributes) {
-          drawJoints.push(new Uint16Array(node.mesh.primitives[i].attributes.JOINTS_0.data))
+          const jointsData = new Uint16Array(node.mesh.primitives[i].attributes.JOINTS_0.data);
+          drawJoints.push(jointsData);
+           // Calculate maxJointIndexUsed
+          let maxIndex = -1;
+          for (let k = 0; k < jointsData.length; k++) {
+            if (jointsData[k] > maxIndex) {
+              maxIndex = jointsData[k];
+            }
+          }
+          this.drawMeshes[this.drawMeshesIndex].maxJointIndexUsed = maxIndex;
         }
         if (gpuSkinning && drawWeights.length === 0 && "WEIGHTS_0" in node.mesh.primitives[i].attributes) {
           drawWeights.push(new Float32Array(node.mesh.primitives[i].attributes.WEIGHTS_0.data))

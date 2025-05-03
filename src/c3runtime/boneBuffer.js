@@ -1,8 +1,42 @@
 // @ts-nocheck
 const MAX_BONES = 256;
-const BONE_UBO_BINDING_POINT = 0; // Assign a binding point for the bone UBO
+// REMOVED: const BONE_UBO_BINDING_POINT = 0;
 
 class BoneBufferTop {
+  // Static properties for shared resources
+  static BONE_UBO_BINDING_POINT = 0;
+  static dummyUBO = null;
+  static _DUMMY_UBO_SIZE = 1 * 16 * 4; // Size for 1 matrix * 16 floats/matrix * 4 bytes/float
+
+  // Static method to get or create the dummy UBO
+  static _getOrCreateDummyUBO(gl) {
+    if (!BoneBufferTop.dummyUBO) {
+      console.log("Creating dummy Bone UBO");
+      BoneBufferTop.dummyUBO = gl.createBuffer();
+      const dummyData = new Float32Array(BoneBufferTop._DUMMY_UBO_SIZE / 4).fill(0);
+      // Could fill with identity: const dummyData = new Float32Array([1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1]);
+
+      gl.bindBuffer(gl.UNIFORM_BUFFER, BoneBufferTop.dummyUBO);
+      gl.bufferData(gl.UNIFORM_BUFFER, dummyData, gl.STATIC_DRAW);
+      gl.bindBuffer(gl.UNIFORM_BUFFER, null);
+
+      if (!BoneBufferTop.dummyUBO) {
+         console.error("Failed to create dummy Bone UBO!");
+         return null; // Explicitly return null on failure
+      }
+    }
+    return BoneBufferTop.dummyUBO;
+  }
+
+  // Static method to release shared resources (call on context loss/shutdown)
+  static releaseSharedResources(gl) {
+      if (BoneBufferTop.dummyUBO) {
+          console.log("Deleting dummy Bone UBO");
+          gl.deleteBuffer(BoneBufferTop.dummyUBO);
+          BoneBufferTop.dummyUBO = null;
+      }
+  }
+
   constructor(renderer, numBones, skinAnimation = false) {
     const gl = renderer._gl;
     this.gl = gl; // Store gl context
@@ -138,7 +172,7 @@ class BoneBufferTop {
     if (this.locUVXformEnable) gl.uniform1f(this.locUVXformEnable, 1.0);
   }
 
-  uploadUniforms(renderer, uvXform, phongEnable) {
+  uploadUniforms(renderer, uvXform, phongEnable, maxJointIndexToUpload = -1) {
     const gl = renderer._gl;
     const shaderProgram = renderer._batchState.currentShader._shaderProgram;
 
@@ -157,7 +191,8 @@ class BoneBufferTop {
         } else {
             // Associate the shader's uniform block with the binding point
             // This only needs to happen once per shader program
-            gl.uniformBlockBinding(shaderProgram, this.blockIndex, BONE_UBO_BINDING_POINT);
+            // Use static binding point
+            gl.uniformBlockBinding(shaderProgram, this.blockIndex, BoneBufferTop.BONE_UBO_BINDING_POINT);
         }
         this.boundProgram = shaderProgram; // Cache the program
     }
@@ -165,14 +200,27 @@ class BoneBufferTop {
     if (this.blockIndex !== -1) { // Proceed only if block index is valid
         // Bind the UBO
         gl.bindBuffer(gl.UNIFORM_BUFFER, this.ubo);
-        // Upload the bone data (only the portion needed, though uploading the whole buffer is often fine)
-        // Using bufferSubData allows updating parts, but here we update the whole tracked array.
-        gl.bufferSubData(gl.UNIFORM_BUFFER, 0, this.bones);
+        // Upload the bone data
+        let dataToUpload = this.bones; // Default to full buffer
+        if (maxJointIndexToUpload >= 0 && (maxJointIndexToUpload + 1) * 16 < this.bones.length) {
+            // Calculate the number of matrices (bones) to upload
+            const numMatricesToUpload = maxJointIndexToUpload + 1;
+            // Ensure we don't try to upload more than MAX_BONES (safety check)
+            if (numMatricesToUpload <= MAX_BONES) {
+                 // Create a subarray view for the necessary part
+                 dataToUpload = this.bones.subarray(0, numMatricesToUpload * 16);
+            } else {
+                console.warn(`BoneBuffer: maxJointIndexToUpload (${maxJointIndexToUpload}) exceeds MAX_BONES (${MAX_BONES}). Uploading full buffer.`);
+            }
+        }
+        // Using bufferSubData allows updating parts, but here we upload the relevant section from the start.
+        gl.bufferSubData(gl.UNIFORM_BUFFER, 0, dataToUpload);
         // Unbind the UBO from the general binding point
         gl.bindBuffer(gl.UNIFORM_BUFFER, null);
 
         // Bind the UBO to the specific binding point for this draw call
-        gl.bindBufferBase(gl.UNIFORM_BUFFER, BONE_UBO_BINDING_POINT, this.ubo);
+        // Use static binding point
+        gl.bindBufferBase(gl.UNIFORM_BUFFER, BoneBufferTop.BONE_UBO_BINDING_POINT, this.ubo);
     }
     // --- End UBO Handling ---
 
@@ -201,7 +249,44 @@ class BoneBufferTop {
   uploadUniformsNonSkin(renderer, uvXform, phongEnable) {
     const gl = renderer._gl;
     const shaderProgram = renderer._batchState.currentShader._shaderProgram;
-    // Cache locations
+
+    // --- Bind UBO if available and shader expects it, otherwise bind dummy --- //
+    // Get and cache block index if shader program changed
+    if (this.boundProgram !== shaderProgram) {
+        this.blockIndex = gl.getUniformBlockIndex(shaderProgram, "Bones");
+        if (this.blockIndex === gl.INVALID_INDEX) {
+            this.blockIndex = -1; // Mark as invalid for this shader
+        } else {
+            // Associate the shader's uniform block with the binding point (idempotent)
+            gl.uniformBlockBinding(shaderProgram, this.blockIndex, BoneBufferTop.BONE_UBO_BINDING_POINT);
+        }
+        this.boundProgram = shaderProgram; // Cache the program associated with the block index
+    }
+
+    // If the shader has the 'Bones' block, ensure *something* is bound
+    if (this.blockIndex !== -1) {
+        if (this.ubo) {
+            // This instance has a real UBO, bind it
+            gl.bindBufferBase(gl.UNIFORM_BUFFER, BoneBufferTop.BONE_UBO_BINDING_POINT, this.ubo);
+        } else {
+            // This instance does NOT have a real UBO, bind the dummy UBO
+            const dummyUBO = BoneBufferTop._getOrCreateDummyUBO(gl);
+            if (dummyUBO) {
+               gl.bindBufferBase(gl.UNIFORM_BUFFER, BoneBufferTop.BONE_UBO_BINDING_POINT, dummyUBO);
+            } else {
+                console.error("BoneBuffer (NonSkin): Shader expects 'Bones' UBO, but dummy UBO creation failed.");
+                // Avoid drawing?
+            }
+        }
+    } else {
+        // Shader does not have the 'Bones' block, no need to bind anything here.
+        // We might want to explicitly unbind if a previous draw call bound something?
+        // However, relying on the next bind in the correct path is usually sufficient.
+        // gl.bindBufferBase(gl.UNIFORM_BUFFER, BoneBufferTop.BONE_UBO_BINDING_POINT, null); // Optional unbind
+    }
+    // --- End UBO Handling ---
+
+    // Cache locations for other uniforms
     if (this.locUSkinEnable === -1) this.locUSkinEnable = gl.getUniformLocation(shaderProgram, "uSkinEnable");
     if (this.locUNodeXformEnable === -1) this.locUNodeXformEnable = gl.getUniformLocation(shaderProgram, "uNodeXformEnable");
     if (this.locANodeXform === -1) this.locANodeXform = gl.getUniformLocation(shaderProgram, "uNodeXform");
