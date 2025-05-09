@@ -456,16 +456,24 @@ class GltfModelTop {
       if (this.inst.staticGeometry) {
         const objectBuffers = this.drawMeshes[j].objectBuffers
         // Draw
-        let boneBuffer
+        let instanceBoneBuffer
         for (let i = 0; i < objectBuffers.length; i++) {
-          boneBuffer = this.drawMeshes[j]?.boneBuffer
+          instanceBoneBuffer = this.drawMeshes[j]?.boneBuffer
           this.setVertexShaderModelRotate(renderer, this.modelRotate)
-          objectBuffers[i].draw(renderer, boneBuffer, rotateMaterial, offsetMaterial, this.inst.fragLightPhong)
+          
+          objectBuffers[i].draw(
+            renderer,
+            instanceBoneBuffer,
+            this._sdkType.gltfData,
+            rotateMaterial,
+            offsetMaterial,
+            this.inst.fragLightPhong
+          )
           totalTriangles += objectBuffers[i].indexDataLength / 3
         }
         // XXX Perhaps too often, once per mesh, better to do once per model
-        if (boneBuffer) {
-          boneBuffer.disable(renderer)
+        if (instanceBoneBuffer) {
+          instanceBoneBuffer.disable(renderer)
         }
         continue
       }

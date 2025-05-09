@@ -663,9 +663,16 @@ class GltfModelWTop {
         }
         boneBuffer = this.drawMeshes[j]?.boneBuffer
         for (let i = 0; i < objectBuffers.length; i++) {
-          boneBuffer = this.drawMeshes[j]?.boneBuffer
+          // boneBuffer is already assigned from this.drawMeshes[j]?.boneBuffer above the loop
           this.setVertexShaderModelRotate(renderer, this.modelRotate)
-          objectBuffers[i].draw(renderer, boneBuffer, rotateMaterial, offsetMaterial, this.inst.fragLightPhong)
+          objectBuffers[i].draw(
+            renderer, 
+            boneBuffer, // This is the instanceBoneBuffer (BoneBufferW)
+            this._sdkType.gltfData, // Pass the GltfData class instance
+            rotateMaterial, 
+            offsetMaterial, 
+            this.inst.fragLightPhong
+          )
           totalTriangles += objectBuffers[i].indexDataLength / 3
         }
         // XXX Perhaps too often, once per mesh, better to do once per model
@@ -869,14 +876,14 @@ class GltfModelWTop {
     let bufferViewIndex = 0
     // Unskinned nodes with mesh
     const bones = this.bones
+    const modelAssetBoneCount = this._sdkType.gltfData ? this._sdkType.gltfData.bonesPerModelAsset : 0;
+
     for (let node of this.gltfData.nodes) {
       // Check if the node has a mesh and is not a skinned mesh
       if (node.mesh && !node.skin) {
         if (!node.hasOwnProperty("boneBuffer")) {
-          // Use the constant directly from BoneBuffer if available
-          // @ts-ignore - Linter doesn't know globalThis structure
-          const maxBonesForBuffer = globalThis.BoneBuffer?.MAX_BONES || 256; // Default to 256
-          const boneBuffer = new BoneBufferW(this.inst.renderer, maxBonesForBuffer, false)
+          const actualBonesForThisNode = 0; // Non-skinned nodes don't use skinning bone arrays
+          const boneBuffer = new BoneBufferW(this.inst.renderer, actualBonesForThisNode, false)
           node.boneBuffer = boneBuffer
         }
         const start = boneBufferViews[bufferViewIndex].start
@@ -888,15 +895,17 @@ class GltfModelWTop {
     // Iterate through all skinned nodes
     for (let skinnedNode of this.gltfData.skinnedNodes) {
       if (!skinnedNode.hasOwnProperty("boneBuffer")) {
-        // Use the constant directly from BoneBuffer if available
-        // @ts-ignore - Linter doesn't know globalThis structure
-        const maxBonesForBuffer = globalThis.BoneBuffer?.MAX_BONES || 256; // Default to 256
-        const boneBuffer = new BoneBufferW(this.inst.renderer, maxBonesForBuffer, true)
+        // For skinned nodes, use the modelAssetBoneCount
+        const boneBuffer = new BoneBufferW(this.inst.renderer, modelAssetBoneCount, true)
         skinnedNode.boneBuffer = boneBuffer
       }
       const length = boneBufferViews[bufferViewIndex].length
       const start = boneBufferViews[bufferViewIndex].start
-      skinnedNode.boneBuffer.setBones(bones.slice(start, start + length - MATRIX_SIZE))
+      // The data from worker (this.bones) via buffBones might be structured differently.
+      // It seems to be a flat array of matrices.
+      // bones.slice(start, start + length - MATRIX_SIZE) is for bone matrices
+      // bones.slice(start + length - MATRIX_SIZE, start + length) is for rootNodeXform
+      skinnedNode.boneBuffer.setBones(bones.slice(start, start + length - MATRIX_SIZE)) 
       skinnedNode.boneBuffer.setRootNodeXform(bones.slice(start + length - MATRIX_SIZE, start + length))
       bufferViewIndex += 1
     }

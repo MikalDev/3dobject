@@ -1,6 +1,8 @@
 // @ts-check
 "use strict"
 
+const SHADER_MAX_BONES = 256; // Maximum bones supported by the shader's UBO definition
+
 class GltfData {
   constructor(runtime, sdkType) {
     this._runtime = runtime
@@ -8,6 +10,9 @@ class GltfData {
     this.gltf = {}
     this.dynamicTexturesLoaded = false
     this.imageBitmap = {}
+    this.sharedModelBoneUbo = null; // For the shared UBO containing bone matrices for this model asset
+    this.bonesPerModelAsset = 0; // Actual number of bones in this model asset
+    this.rendererForUbo = null; // Store renderer for UBO release
   }
 
   release() {
@@ -94,6 +99,17 @@ class GltfData {
     this._sdkType = null
     // @ts-ignore
     this.dynamicTexturesLoaded = null
+
+    // Release shared UBO if it exists
+    if (this.sharedModelBoneUbo && this.rendererForUbo) {
+      const gl = this.rendererForUbo._gl;
+      if (gl) {
+        console.log("Deleting shared Bone UBO for model asset");
+        gl.deleteBuffer(this.sharedModelBoneUbo);
+      }
+      this.sharedModelBoneUbo = null;
+    }
+    this.rendererForUbo = null;
   }
 
   /*
@@ -103,6 +119,12 @@ class GltfData {
   async load(gltfPath, isRuntime, debug) {
     let runtime = this._runtime
     let sdkType = this._sdkType
+    
+    if (isRuntime) {
+      this.rendererForUbo = runtime.GetCanvasManager().GetWebGLRenderer(); // Store renderer for UBO management only in runtime
+    } else {
+      this.rendererForUbo = null; // Ensure it's null in edittime
+    }
 
     if (debug) console.info("load gltfPath", gltfPath)
 
@@ -151,6 +173,10 @@ class GltfData {
     }
 
     this.gltf = resultgltf
+
+    // Determine bonesPerModelAsset after gltf is fully processed
+    this._calculateBonesPerModelAsset();
+
     return true
   }
 
@@ -269,31 +295,33 @@ class GltfData {
           buftype = Float32Array
           break
         default:
-          console.error("error: gltf, unhandled componentType")
+          console.error("error: gltf, unhandled componentType: " + a.componentType + " for accessor " + i);
+          return false; // Stop execution if componentType is unhandled
       }
       let compcount = { SCALAR: 1, VEC2: 2, VEC3: 3, VEC4: 4, MAT2: 4, MAT3: 9, MAT4: 16 }[a.type]
       
       // Handle sparse accessors
       if (a.sparse) {
         // Create base data array if no bufferView
-        if (!a.bufferView) {
+        if (a.bufferView === undefined || a.bufferView === null) {
           // @ts-ignore
           a.data = new buftype(compcount * a.count);
           // Fill with zeros or default values if specified
-          if (a.normalized) {
-            a.data.fill(0);
-          }
+          // if (a.normalized) { // Normalization is applied on read, not by zero-filling different types
+          // a.data.fill(0);
+          // }
         } else {
           // Load base data as normal
           let bufview = gltf.bufferViews[a.bufferView];
           if (!bufview) {
-            console.error("error: gltf, missing bufferView for base accessor data");
-            return;
+            console.error("error: gltf, missing bufferView for base accessor data in sparse accessor");
+            return false; // Critical error
           }
+          const byteOffset = (bufview.byteOffset || 0) + (a.byteOffset || 0);
+          const elementSize = buftype.BYTES_PER_ELEMENT;
+          const length = compcount * a.count;
           // @ts-ignore
-          a.data = new buftype(gltf.buffers[bufview.buffer], 
-            (bufview.byteOffset || 0) + (a.byteOffset || 0), 
-            compcount * a.count);
+          a.data = new buftype(gltf.buffers[bufview.buffer], byteOffset, length);
         }
 
         // Process sparse values
@@ -301,27 +329,36 @@ class GltfData {
         const indicesBufferView = gltf.bufferViews[sparse.indices.bufferView];
         const valuesBufferView = gltf.bufferViews[sparse.values.bufferView];
         
-        // Get indices
+        let indicesComponentType = sparse.indices.componentType;
         let indicesType = null;
-        switch (sparse.indices.componentType) {
+        switch (indicesComponentType) {
           case 5121: indicesType = Uint8Array; break;
           case 5123: indicesType = Uint16Array; break;
           case 5125: indicesType = Uint32Array; break;
-          default: console.error("Unsupported sparse indices type"); return;
+          default: console.error("Unsupported sparse indices componentType: " + indicesComponentType + " for accessor " + i); return false;
+        }
+
+        if (!indicesType) {
+            console.error("Critical error: indicesType is null after switch, should not happen. Accessor " + i);
+            return false; // Should be unreachable if switch default returns false
         }
         
+        const indicesByteOffset = (indicesBufferView.byteOffset || 0) + (sparse.indices.byteOffset || 0);
+        const indicesLength = sparse.count;
         const indices = new indicesType(
           gltf.buffers[indicesBufferView.buffer],
-          (indicesBufferView.byteOffset || 0) + (sparse.indices.byteOffset || 0),
-          sparse.count
+          indicesByteOffset,
+          indicesLength
         );
 
         // Get values
+        const valuesByteOffset = (valuesBufferView.byteOffset || 0) + (sparse.values.byteOffset || 0);
+        const valuesLength = sparse.count * compcount;
         // @ts-ignore
         const values = new buftype(
           gltf.buffers[valuesBufferView.buffer],
-          (valuesBufferView.byteOffset || 0) + (sparse.values.byteOffset || 0),
-          sparse.count * compcount
+          valuesByteOffset,
+          valuesLength
         );
 
         // Apply sparse values
@@ -337,28 +374,50 @@ class GltfData {
 
       let bufview = gltf.bufferViews[a.bufferView];
       if (!bufview) {
-        alert("error: gltf, unhandled bufferView, try exporting gltf without using sparse accessors")
-        console.error("error: gltf, unhandled bufferView", a)
-        return
+        // This check might be redundant if sparse always defines its own bufferViews for indices/values,
+        // but good as a safeguard if a non-sparse accessor somehow misses its bufferView.
+        // For sparse, this path is skipped by `continue` statement.
+        alert("error: gltf, unhandled bufferView for non-sparse accessor. Accessor index: " + i)
+        console.error("error: gltf, unhandled bufferView for non-sparse accessor", a)
+        return false; // Critical error
       }
 
       // Check for case where there is no byteOffset prop, which means byteOffset is 0.
       if (!("byteOffset" in bufview)) bufview.byteOffset = 0
+      const accessorByteOffset = a.byteOffset || 0;
 
       if ("byteStride" in bufview) {
         const stride = bufview.byteStride
-        const offset = a.byteOffset || 0
         const view = new DataView(gltf.buffers[bufview.buffer])
         // @ts-ignore
         a.data = new buftype(compcount * a.count)
         for (let j = 0; j < a.count; j++) {
           for (let k = 0; k < compcount; k++) {
-            a.data[j * compcount + k] = view.getFloat32(bufview.byteOffset + stride * j + offset + k * 4, true)
+            // Assuming componentType 5126 (Float32Array) for view.getFloat32
+            // Need to handle other types if necessary, though typically vertex data is float.
+            // The 'buftype' determines how a.data stores it, but reading from ArrayBuffer needs specific get methods.
+            // For simplicity, assuming float for now. If other types are used for positions/normals/etc. this needs adjustment.
+            if (buftype === Float32Array) {
+              a.data[j * compcount + k] = view.getFloat32(bufview.byteOffset + stride * j + accessorByteOffset + k * Float32Array.BYTES_PER_ELEMENT, true);
+            } else if (buftype === Uint16Array) {
+               a.data[j * compcount + k] = view.getUint16(bufview.byteOffset + stride * j + accessorByteOffset + k * Uint16Array.BYTES_PER_ELEMENT, true);
+            } else if (buftype === Uint8Array) {
+               a.data[j * compcount + k] = view.getUint8(bufview.byteOffset + stride * j + accessorByteOffset + k * Uint8Array.BYTES_PER_ELEMENT);
+            } else if (buftype === Uint32Array) {
+              a.data[j * compcount + k] = view.getUint32(bufview.byteOffset + stride * j + accessorByteOffset + k * Uint32Array.BYTES_PER_ELEMENT, true);
+            }
+            // Add other types as necessary (Int8, Int16, Int32)
+            else {
+              console.error("Unsupported buftype in strided accessor:", buftype);
+              // Fallback or error
+            }
           }
         }
       } else {
+        const finalByteOffset = bufview.byteOffset + accessorByteOffset;
+        const length = compcount * a.count;
         // @ts-ignore
-        a.data = new buftype(gltf.buffers[bufview.buffer], bufview.byteOffset, compcount * a.count)
+        a.data = new buftype(gltf.buffers[bufview.buffer], finalByteOffset, length);
       }
     }
 
@@ -585,6 +644,138 @@ class GltfData {
       })
       img.src = URL.createObjectURL(blob)
     })
+  }
+
+  _calculateBonesPerModelAsset() {
+    if (!this.gltf || !this.gltf.skins) {
+      this.bonesPerModelAsset = 0;
+      return;
+    }
+    let maxJointIndex = -1;
+    for (const skin of this.gltf.skins) {
+      for (const jointNode of skin.joints) {
+        // Assuming jointNode objects are the actual node objects after parsing
+        // and gltf.nodes is an array of all nodes.
+        // We need the index of the jointNode in the overall gltf.nodes list if joint indices are global.
+        // However, glTF skin.joints usually contains indices into gltf.nodes.
+        // The actual joint index for skinning often comes from JOINTS_0 attribute.
+        // For UBO sizing, we are interested in the highest joint index referenced by any skin.
+        // Let's assume skin.joints are direct references to node objects and their 'originalIndex' or similar holds the key.
+        // More robustly: iterate through accessors for JOINTS_0 and find max value if available.
+        // For now, using skin.joints directly assuming they contain relevant indices or can be mapped.
+
+        // Simpler approach: rely on inverseBindMatrices accessor related to the skin.
+        // The number of inverseBindMatrices is the number of joints for that skin.
+        // Or, if 'skeleton' root implies a set of joints, that's another way.
+        // The most direct way from spec: "The number of joints is given by the count property of the accessor referenced by inverseBindMatrices."
+        if (skin.inverseBindMatrices && skin.inverseBindMatrices.count) {
+            // A skin defines a set of joints. The UBO for this model must accommodate the largest such set if skins are independent
+            // OR if joints are shared, the max index used across all skins.
+            // Let's assume for now that we need enough space for any single skin's joint set if they are drawn independently.
+            // Or, more likely, joint indices in JOINTS_0 are global for the model.
+            // The crucial part is that 'bonesPerModelAsset' should be the size of the bone array for the shader.
+            // This is typically max_joint_index_in_attributes + 1.
+            // This requires checking all mesh primitives using this skin.
+            // For now, let's assume gltf.accessors[skin.inverseBindMatrices].count is a good proxy for a single skin.
+            // A more accurate calculation would iterate all skinned meshes, check JOINTS_0 attributes, find max index.
+        }
+      }
+    }
+
+    // A common way to define skeleton size is by the number of entries in the IBM accessor for the most complex skin
+    // or the total number of nodes that are joints if there's a global joint list for the model.
+    // For simplicity, let's find the skin with the most joints based on its IBM.
+    if (this.gltf.skins.length > 0) {
+        for (const skin of this.gltf.skins) {
+            if (skin.inverseBindMatrices && skin.inverseBindMatrices.data) {
+                 // skin.inverseBindMatrices.data is a Float32Array of size N*16 for N joints.
+                const jointCountForThisSkin = skin.inverseBindMatrices.data.length / 16;
+                if (jointCountForThisSkin > maxJointIndex) {
+                    // This isn't maxJointIndex, it's maxJoint *Count* for a skin.
+                    // We need the max *index value* from JOINTS_0 attributes across all meshes.
+                    // This calculation is complex here. For now, placeholder.
+                }
+            }
+        }
+    }
+    
+    // Placeholder: This needs to be correctly calculated by inspecting all JOINTS_0 attributes of meshes.
+    // For now, if there are skins, assume a default or parse from a custom property if available.
+    // A robust solution needs to iterate mesh primitive attributes.
+    // Let's find it from existing objectBuffer: mesh.maxJointIndexUsed
+    let modelMaxJointIndex = -1;
+    if (this.gltf.meshes) {
+        for(const mesh of this.gltf.meshes) {
+            // Placeholder for where maxJointIndexUsed might be stored after processing all its primitives
+            // This property isn't standard in gltf.meshes, it would be calculated and stored during initial processing.
+            // For now, we'll defer this calculation until we know how maxJointIndexUsed per mesh is populated.
+            // If each mesh primitive already calculates its maxJointIndexUsed (as in ObjectBuffer), we can aggregate it here.
+            
+            // Iterate primitives to find the true max index from JOINTS_0 accessors
+            for (const primitive of mesh.primitives) {
+                if (primitive.attributes.JOINTS_0) {
+                    const jointAccessor = primitive.attributes.JOINTS_0;
+                    const jointData = jointAccessor.data; // This is Uint16Array or Uint8Array
+                    for (let k=0; k < jointData.length; k++) {
+                        if (jointData[k] > modelMaxJointIndex) {
+                            modelMaxJointIndex = jointData[k];
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (modelMaxJointIndex > -1) {
+        this.bonesPerModelAsset = modelMaxJointIndex + 1;
+    } else if (this.gltf.skins && this.gltf.skins.length > 0) {
+        // Fallback if JOINTS_0 isn't found or empty, use IBM count of largest skin
+        // This is less accurate for UBO sizing if joint indices are sparse.
+        let maxSkinJoints = 0;
+        for (const skin of this.gltf.skins) {
+            if (skin.inverseBindMatrices && skin.inverseBindMatrices.data) {
+                const jointCountForThisSkin = skin.inverseBindMatrices.data.length / 16;
+                if (jointCountForThisSkin > maxSkinJoints) {
+                    maxSkinJoints = jointCountForThisSkin;
+                }
+            }
+        }
+        this.bonesPerModelAsset = maxSkinJoints;
+    } else {
+        this.bonesPerModelAsset = 0; // No skins, no bones needed for skinning UBO
+    }
+
+    if (this.bonesPerModelAsset > 0) {
+        console.log(`Calculated bonesPerModelAsset: ${this.bonesPerModelAsset} for ${this.gltf?.asset?.extras?.originalFileName || 'Unknown Model'}`);
+    }
+  }
+
+  getOrCreateModelBoneUbo(renderer) {
+    if (!this.bonesPerModelAsset) {
+        return null;
+    }
+
+    const effectiveRenderer = renderer || this.rendererForUbo;
+
+    if (!effectiveRenderer) {
+        return null; 
+    }
+    
+    const gl = effectiveRenderer._gl;
+    if (!gl) {
+        return null; 
+    }
+
+    if (!this.sharedModelBoneUbo) {
+        const uboSize = SHADER_MAX_BONES * 16 * 4; // Use defined constant for UBO size
+
+        this.sharedModelBoneUbo = gl.createBuffer();
+        gl.bindBuffer(gl.UNIFORM_BUFFER, this.sharedModelBoneUbo);
+        gl.bufferData(gl.UNIFORM_BUFFER, uboSize, gl.DYNAMIC_DRAW); 
+        gl.bindBuffer(gl.UNIFORM_BUFFER, null);
+        console.log(`Created shared Bone UBO for model: ${this.gltf?.asset?.extras?.originalFileName || 'Unknown Model'}, Shader Max Bones: ${SHADER_MAX_BONES}, Size: ${uboSize} bytes, Actual Model Bones: ${this.bonesPerModelAsset}`);
+    }
+    return this.sharedModelBoneUbo;
   }
 }
 

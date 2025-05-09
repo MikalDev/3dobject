@@ -301,116 +301,85 @@ class ObjectBufferTop {
     gl.uniform1f(locUUVXformEnable, 0.0)
   }
 
-  draw(renderer, boneBuffer, rotateMaterial, offsetMaterial, phongEnable) {
+  draw(renderer, instanceBoneBuffer, modelGltfData, rotateMaterial, offsetMaterial, phongEnable) {
     const gl = renderer._gl;
-    this._ExecuteBatch(renderer);
+    this._ExecuteBatch(renderer); // Flushes any pending C2 draw calls
     if (this.vao === null) {
       this.vao = this.createVao(renderer);
     }
     gl.bindVertexArray(this.vao);
     const uvXform = this.createUVXform(rotateMaterial, offsetMaterial);
 
-    // Determine path based on boneBuffer and skinAnimation
-    if (boneBuffer) {
-      if (boneBuffer.skinAnimation) {
-        // --- Skinning Path (Now using UBO) ---
-        // Upload uniforms, including UBO data and binding
-        // Pass the maxJointIndexUsed stored on this ObjectBuffer instance
-        boneBuffer.uploadUniforms(renderer, uvXform, phongEnable, this.maxJointIndexUsed); 
+    if (instanceBoneBuffer && instanceBoneBuffer.skinAnimation) {
+        // --- Skinning Path --- 
+        const sharedModelUbo = modelGltfData ? modelGltfData.getOrCreateModelBoneUbo(renderer) : null;
+        // instanceBoneBuffer.uploadUniforms handles UBO, skin flags, rootNodeXform, UV xform, and dummy fallback
+        instanceBoneBuffer.uploadUniforms(sharedModelUbo, uvXform, phongEnable);
+        // Note: NodeXform from ObjectBuffer is not used in the skinning path; uRootNodeXform from BoneBuffer is used.
 
-        // Setup UV Xform if needed
-        if (uvXform.enable) {
-            // This is now handled within boneBuffer.uploadUniforms if enabled
-            // this.uploadUVXformUniforms(renderer, uvXform);
-        } else {
-            // This is now handled within boneBuffer.uploadUniforms if disabled
-            // this.disableUVXformUniforms(renderer);
-        }
-        // Note: NodeXform is not used in skinning path, handled by bone transforms
-
-        // --- Draw Call (Skinned) ---
-        gl.drawElements(gl.TRIANGLES, this.indexDataLength, gl.UNSIGNED_SHORT, 0);
-
-        // --- Restore State (Skinned) ---
-        // REMOVED restoring active texture unit
-
-        // Unbinding UBO happens implicitly on next bind/draw or can be done manually if needed,
-        // but bindBufferBase in uploadUniforms handles binding per draw.
-        // Unbinding UV Xform if it was enabled is handled within uploadUniforms logic.
-      } else {
-        // --- Non-Skinning Path --- // (No changes needed here regarding bones)
-        boneBuffer.uploadUniformsNonSkin(renderer, uvXform, phongEnable);
-
-        // Setup other uniforms (UV handled within uploadUniformsNonSkin)
-         this.uploadNodeXformUniforms(renderer); // Use node transform
-
-        // --- Draw Call (Non-Skinned) ---
-        gl.drawElements(gl.TRIANGLES, this.indexDataLength, gl.UNSIGNED_SHORT, 0);
-
-        // UV Xform disable handled in uploadUniformsNonSkin
-      }
     } else {
-      // --- No Bone Buffer Path --- // (No changes needed here)
-      // Setup necessary uniforms
-       if (uvXform.enable) {
-         this.uploadUVXformUniforms(renderer, uvXform);
-       } else {
-         this.disableUVXformUniforms(renderer);
-       }
-       this.uploadNodeXformUniforms(renderer);
-
-      // --- Check if dummy UBO binding is needed --- //
-      const shaderProgram = renderer._batchState.currentShader._shaderProgram;
-      // Check if globalThis.BoneBuffer exists before accessing its static members
-      if (globalThis.BoneBuffer) {
-            // Assume the shader requires the 'Bones' block. Directly get and bind dummy UBO.
-            // Re-check the block index here as the shader might be different from the one
-            // cached in a potential boneBuffer instance from the Non-Skinning path.
-            // const blockIndex = gl.getUniformBlockIndex(shaderProgram, "Bones");
-            // if (blockIndex !== gl.INVALID_INDEX && blockIndex !== -1) { // Assume always true
-               // Shader expects the Bones UBO, bind the dummy one
-               const dummyUBO = globalThis.BoneBuffer._getOrCreateDummyUBO(gl);
-               if (dummyUBO) {
-                  // Ensure the block is bound to the correct point (idempotent check, but binding is crucial)
-                  // We still need the block index for uniformBlockBinding, so get it once
-                  const blockIndex = gl.getUniformBlockIndex(shaderProgram, "Bones");
-                  if (blockIndex !== gl.INVALID_INDEX && blockIndex !== -1) {
-                      gl.uniformBlockBinding(shaderProgram, blockIndex, globalThis.BoneBuffer.BONE_UBO_BINDING_POINT);
-                  } else {
-                      console.warn("ObjectBuffer: 'Bones' block not found in shader for uniformBlockBinding, though binding was attempted.");
-                  }
-                  // Bind the dummy UBO
-                  gl.bindBufferBase(gl.UNIFORM_BUFFER, globalThis.BoneBuffer.BONE_UBO_BINDING_POINT, dummyUBO);
-               } else {
-                  console.error("ObjectBuffer: Shader expects 'Bones' UBO, but dummy UBO is unavailable.");
-               }
-            // } // else: Shader doesn't expect 'Bones', no need to bind dummy.
+        // --- Non-Skinning Path (or no specific instanceBoneBuffer for skinning) ---
+        let nodeXformUploadedByBoneBuffer = false;
+        if (instanceBoneBuffer) { // E.g., a BoneBuffer present but skinAnimation is false
+            instanceBoneBuffer.uploadUniformsNonSkin(renderer, uvXform, phongEnable);
+            // uploadUniformsNonSkin handles dummy UBO, skin disable, UV xform, and also uploads BoneBuffer.nodeXform if present.
+            if (instanceBoneBuffer.nodeXform) {
+                 nodeXformUploadedByBoneBuffer = true; // Assume BoneBuffer handled nodeXform if it has one
+            }
         } else {
-            // BoneBuffer class not found, cannot bind dummy UBO.
-            // Check if shader expects it and warn if so.
-            // const blockIndex = gl.getUniformBlockIndex(shaderProgram, "Bones");
-            // if (blockIndex !== gl.INVALID_INDEX && blockIndex !== -1) {
-                console.warn("ObjectBuffer: globalThis.BoneBuffer not found, cannot bind dummy UBO even though shader expects 'Bones' block.");
-            // }
+            // No BoneBuffer instance provided at all.
+            // ObjectBuffer must handle UV transforms and potentially dummy UBO for "Bones" block.
+            if (uvXform.enable) {
+                this.uploadUVXformUniforms(renderer, uvXform);
+            } else {
+                this.disableUVXformUniforms(renderer);
+            }
+
+            // Manually handle dummy UBO binding if shader expects "Bones" and no BoneBuffer did it.
+            const shaderProgram = renderer._batchState.currentShader._shaderProgram;
+            // Check if globalThis.BoneBuffer (the class) exists before accessing its static members
+            if (globalThis.BoneBuffer) { // Check if BoneBuffer class is available
+                const blockIndex = gl.getUniformBlockIndex(shaderProgram, "Bones");
+                if (blockIndex !== gl.INVALID_INDEX && blockIndex !== -1) { // Shader expects the Bones UBO
+                    gl.uniformBlockBinding(shaderProgram, blockIndex, globalThis.BoneBuffer.BONE_UBO_BINDING_POINT);
+                    const dummyUBO = globalThis.BoneBuffer._getOrCreateDummyUBO(gl);
+                    if (dummyUBO) {
+                        gl.bindBufferBase(gl.UNIFORM_BUFFER, globalThis.BoneBuffer.BONE_UBO_BINDING_POINT, dummyUBO);
+                    }
+                    // Ensure uSkinEnable is off if we bound a dummy here.
+                    // This might be redundant if the shader properly defaults or if uSkinEnable is always set.
+                    const locUSkinEnable = gl.getUniformLocation(shaderProgram, "uSkinEnable");
+                    if (locUSkinEnable) gl.uniform1f(locUSkinEnable, 0.0);
+                } else {
+                    // Shader does not expect "Bones" block, do nothing for UBO.
+                }
+            } else {
+                 // BoneBuffer class not globally available, cannot manage dummy UBO here.
+                 // Check if shader expects it and warn if so, as it might lead to issues.
+                 const blockIndex = gl.getUniformBlockIndex(shaderProgram, "Bones");
+                 if (blockIndex !== gl.INVALID_INDEX && blockIndex !== -1) {
+                    console.warn("ObjectBuffer: globalThis.BoneBuffer not found, cannot bind dummy UBO even though shader expects 'Bones' block.");
+                 }
+            }
+            // Phong enable still needs to be set in this path if not handled by a BoneBuffer
+            const locUPhongEnable = gl.getUniformLocation(shaderProgram, "uPhongEnable");
+            if (locUPhongEnable) gl.uniform1f(locUPhongEnable, phongEnable ? 1.0 : 0.0);
         }
-      // --- End Dummy UBO Check --- //
 
-      // Draw Call (No Bone Buffer)
-      gl.drawElements(gl.TRIANGLES, this.indexDataLength, gl.UNSIGNED_SHORT, 0);
-
-       // Unbinding UV Xform if it was enabled - Redundant due to check above?
-       // Handled by disableUVXformUniforms if necessary.
+        // Upload node transform if not handled by a BoneBuffer instance (non-skinned path)
+        if (!nodeXformUploadedByBoneBuffer) {
+            this.uploadNodeXformUniforms(renderer);
+        }
     }
+
+    // --- Draw Call (Common for all paths) ---
+    gl.drawElements(gl.TRIANGLES, this.indexDataLength, gl.UNSIGNED_SHORT, 0);
 
     // Unbind VAO once after all drawing paths
     gl.bindVertexArray(null);
-    // Unbind UBO from the binding point (optional, good practice)
-    // Removed explicit unbind - binding is handled per-draw in BoneBuffer methods
-    /*
-    if (boneBuffer && boneBuffer.skinAnimation) {
-        gl.bindBufferBase(gl.UNIFORM_BUFFER, globalThis.BoneBuffer.BONE_UBO_BINDING_POINT || 0, null);
-    }
-    */
+    // Note: UBO unbinding from the binding point (BoneBufferTop.BONE_UBO_BINDING_POINT)
+    // is implicitly handled by the next bindBufferBase or if nothing else binds to it.
+    // No explicit unbind is strictly necessary here for bindBufferBase.
   }
 }
 

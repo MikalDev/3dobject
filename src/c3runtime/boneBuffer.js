@@ -45,43 +45,33 @@ class BoneBufferTop {
       }
   }
 
-  constructor(renderer, numBones, skinAnimation = false) {
-    const gl = renderer._gl;
-    this.gl = gl; // Store gl context
+  constructor(renderer, bonesInThisModel, skinAnimation = false) {
+    this.gl = renderer._gl;
+    this.rendererForShaderAccess = renderer; // For _batchState access
     this.skinAnimation = skinAnimation;
     this.bonesLoaded = false;
-    this.ubo = null; // Initialize UBO property
-    this.blockIndex = -1; // Initialize block index cache
-    this.boundProgram = null; // Track program for which block index is cached
+    this.blockIndex = -1;
+    this.boundProgram = null;
 
     if (skinAnimation) {
-      // Ensure bones array matches MAX_BONES for UBO compatibility
-      this.bones = new Float32Array(MAX_BONES * 16);
+      this.bonesPerModelAsset = bonesInThisModel > 0 ? bonesInThisModel : 1; // Ensure at least 1 to avoid zero-size array if bonesInThisModel is 0
+      this.bones = new Float32Array(this.bonesPerModelAsset * 16);
       this.nodeXform = null;
       this.rootNodeXform = new Float32Array(16);
-
-      // --- Create and initialize UBO ---
-      this.ubo = gl.createBuffer();
-      const uboSize = MAX_BONES * 16 * 4; // 256 matrices * 16 floats/matrix * 4 bytes/float
-      gl.bindBuffer(gl.UNIFORM_BUFFER, this.ubo);
-      // Allocate buffer storage
-      gl.bufferData(gl.UNIFORM_BUFFER, uboSize, gl.DYNAMIC_DRAW);
-      // Unbind buffer
-      gl.bindBuffer(gl.UNIFORM_BUFFER, null);
-      // ---------------------------------
-
+      this.ubo = null; // Does NOT create its own UBO for skinning path anymore
     } else {
+      this.bonesPerModelAsset = 0;
       this.nodeXform = new Float32Array(16);
       this.bones = null;
       this.rootNodeXform = null;
+      this.ubo = null; // Does not have a UBO in non-skinning path either
     }
 
-    // Removed texture-related uniform locations
+    // Uniform locations (most are instance specific, not UBO related)
     this.locURotateMatrix = -1;
     this.locURotateCenter = -1;
     this.locUOffsetUV = -1;
     this.locUVXformEnable = -1;
-    // Removed locABones
     this.locUSkinEnable = -1;
     this.locARootNodeXform = -1;
     this.locUNodeXformEnable = -1;
@@ -89,18 +79,15 @@ class BoneBufferTop {
   }
 
   release() {
-    // Delete UBO if it exists
-    if (this.ubo) {
-      this.gl.deleteBuffer(this.ubo);
-      this.ubo = null;
-    }
+    // No UBO to delete here, as it doesn't own one for skinning.
+    // The shared UBO is managed by gltfData.
     
-    // Release typed arrays
     this.bones = null;
     this.nodeXform = null;
     this.rootNodeXform = null;
-    
-    // Reset shader locations (most removed, kept relevant ones)
+    this.gl = null;
+    this.rendererForShaderAccess = null;
+    // Reset other properties as before
     this.locURotateMatrix = null;
     this.locURotateCenter = null;
     this.locUOffsetUV = null;
@@ -109,39 +96,34 @@ class BoneBufferTop {
     this.locARootNodeXform = null;
     this.locUNodeXformEnable = null;
     this.locANodeXform = null;
-    
-    // Reset state variables
     this.skinAnimation = null;
     this.bonesLoaded = null;
-    this.gl = null;
     this.blockIndex = -1;
     this.boundProgram = null;
   }
 
   setBone(jointIndex, matrix) {
-    if (this.bones && jointIndex < MAX_BONES) { // Check against MAX_BONES
+    if (this.bones && jointIndex < this.bonesPerModelAsset) { 
       const offset = jointIndex * 16;
-      this.bones.set(matrix, offset); // Use set for potential performance
+      this.bones.set(matrix, offset); 
       this.bonesLoaded = true;
-    } else if (jointIndex >= MAX_BONES) {
-        console.warn(`BoneBuffer: Joint index ${jointIndex} exceeds MAX_BONES (${MAX_BONES}).`);
-    } else {
-      console.warn("BoneBuffer: No bones array allocated or attempt to set bone without skinning enabled.");
+    } else if (this.skinAnimation && jointIndex >= this.bonesPerModelAsset) {
+        console.warn(`BoneBuffer: Joint index ${jointIndex} exceeds bonesPerModelAsset (${this.bonesPerModelAsset}).`);
+    } else if (this.skinAnimation) {
+      console.warn("BoneBuffer: Attempt to set bone, but no bones array allocated or not skinning.");
     }
   }
 
   setBones(matrices) {
-    if (this.bones) {
-        // Ensure the input doesn't exceed the buffer size
-        const numMatricesToCopy = Math.min(matrices.length / 16, MAX_BONES);
+    if (this.bones && this.skinAnimation) {
+        const numMatricesToCopy = Math.min(matrices.length / 16, this.bonesPerModelAsset);
         if (numMatricesToCopy * 16 < matrices.length) {
-            console.warn(`BoneBuffer: Input matrices count (${matrices.length / 16}) exceeds MAX_BONES (${MAX_BONES}). Truncating.`);
+            // console.warn(`BoneBuffer: Input matrices count (${matrices.length / 16}) exceeds bonesPerModelAsset (${this.bonesPerModelAsset}). Truncating.`);
         }
-        // Copy only up to MAX_BONES matrices
         this.bones.set(matrices.subarray(0, numMatricesToCopy * 16));
-        this.bonesLoaded = true; // Assume loaded if setBones is called
-    } else {
-      console.warn("BoneBuffer: No bones array allocated.");
+        this.bonesLoaded = true; 
+    } else if (this.skinAnimation) {
+      console.warn("BoneBuffer: Attempt to set bones, but no bones array allocated or not skinning.");
     }
   }
 
@@ -149,7 +131,7 @@ class BoneBufferTop {
     if (this.rootNodeXform) {
       this.rootNodeXform.set(matrix)
     } else {
-      console.warn("BoneBuffer: No rootNodeXform array allocated")
+      // console.warn("BoneBuffer: No rootNodeXform array allocated") // Can be noisy if called for non-skinned
     }
   }
 
@@ -157,18 +139,17 @@ class BoneBufferTop {
     if (this.nodeXform) {
       this.nodeXform.set(matrix)
     } else {
-      console.warn("BoneBuffer: No nodeXform array allocated")
+      // console.warn("BoneBuffer: No nodeXform array allocated") // Can be noisy if called for skinned
     }
   }
 
   uploadUVXformUniforms(renderer, uvXform) {
-    const gl = renderer._gl;
+    const gl = renderer._gl; // Use passed renderer consistently
     const shaderProgram = renderer._batchState.currentShader._shaderProgram;
-    // Removed redundant check for uvXform.enable here as it's checked before calling
     const rotateMatrix = uvXform.rotateMatrix;
     const rotateCenter = uvXform.rotateCenter;
     const offsetUV = uvXform.offsetUV;
-    // Cache uniform locations
+    
     if (this.locURotateMatrix === -1) this.locURotateMatrix = gl.getUniformLocation(shaderProgram, "uUVRotate");
     if (this.locURotateCenter === -1) this.locURotateCenter = gl.getUniformLocation(shaderProgram, "uUVRotateCenter");
     if (this.locUOffsetUV === -1) this.locUOffsetUV = gl.getUniformLocation(shaderProgram, "uUVOffset");
@@ -180,149 +161,128 @@ class BoneBufferTop {
     if (this.locUVXformEnable) gl.uniform1f(this.locUVXformEnable, 1.0);
   }
 
-  uploadUniforms(renderer, uvXform, phongEnable, maxJointIndexToUpload = -1) {
-    const gl = renderer._gl;
-    const shaderProgram = renderer._batchState.currentShader._shaderProgram;
+  uploadUniforms(targetSharedGpuUbo, uvXform, phongEnable) {
+    const gl = this.gl;
+    const shaderProgram = this.rendererForShaderAccess._batchState.currentShader._shaderProgram;
 
-    // --- UBO Handling ---
-    if (!this.ubo) {
-        console.error("BoneBuffer: UBO not initialized for skinning.");
-        return; // Cannot proceed without UBO
+    // --- UBO Handling --- 
+    // This BoneBuffer instance does not own the UBO. It uploads to the targetSharedGpuUbo.
+    if (!this.skinAnimation) {
+        console.error("BoneBuffer: uploadUniforms called but skinAnimation is false. This should go via uploadUniformsNonSkin.");
+        this.uploadUniformsNonSkin(this.rendererForShaderAccess, uvXform, phongEnable); // Redirect to be safe
+        return;
     }
 
     // Get and cache block index if shader program changed
     if (this.boundProgram !== shaderProgram) {
         this.blockIndex = gl.getUniformBlockIndex(shaderProgram, "Bones");
         if (this.blockIndex === gl.INVALID_INDEX) {
-            console.error("BoneBuffer: Could not find 'Bones' uniform block in shader.");
-            this.blockIndex = -1; // Mark as invalid
+            console.warn("BoneBuffer: Could not find 'Bones' uniform block in shader. Skinning may not work.");
+            this.blockIndex = -1; // Mark as invalid for this shader
         } else {
-            // Associate the shader's uniform block with the binding point
-            // This only needs to happen once per shader program
-            // Use static binding point
             gl.uniformBlockBinding(shaderProgram, this.blockIndex, BoneBufferTop.BONE_UBO_BINDING_POINT);
         }
-        this.boundProgram = shaderProgram; // Cache the program
+        this.boundProgram = shaderProgram; 
     }
     
-    if (this.blockIndex !== -1) { // Proceed only if block index is valid
-        // Bind the UBO
-        gl.bindBuffer(gl.UNIFORM_BUFFER, this.ubo);
-        // Upload the bone data
-        let dataToUpload = this.bones; // Default to full buffer
-        if (maxJointIndexToUpload >= 0 && (maxJointIndexToUpload + 1) * 16 < this.bones.length) {
-            // Calculate the number of matrices (bones) to upload
-            const numMatricesToUpload = maxJointIndexToUpload + 1;
-            // Ensure we don't try to upload more than MAX_BONES (safety check)
-            if (numMatricesToUpload <= MAX_BONES) {
-                 // Create a subarray view for the necessary part
-                 dataToUpload = this.bones.subarray(0, numMatricesToUpload * 16);
-            } else {
-                console.warn(`BoneBuffer: maxJointIndexToUpload (${maxJointIndexToUpload}) exceeds MAX_BONES (${MAX_BONES}). Uploading full buffer.`);
-            }
-        }
-        // Using bufferSubData allows updating parts, but here we upload the relevant section from the start.
-        gl.bufferSubData(gl.UNIFORM_BUFFER, 0, dataToUpload);
-        // Unbind the UBO from the general binding point
-        gl.bindBuffer(gl.UNIFORM_BUFFER, null);
+    if (this.blockIndex !== -1) { // Proceed only if block index is valid for skinning shader
+        if (targetSharedGpuUbo && this.bones) {
+            gl.bindBuffer(gl.UNIFORM_BUFFER, targetSharedGpuUbo);
+            gl.bufferSubData(gl.UNIFORM_BUFFER, 0, this.bones); // Upload the entire instance-specific bone data
+            gl.bindBuffer(gl.UNIFORM_BUFFER, null); // Unbind from the general binding point
 
-        // Bind the UBO to the specific binding point for this draw call
-        // Use static binding point
-        gl.bindBufferBase(gl.UNIFORM_BUFFER, BoneBufferTop.BONE_UBO_BINDING_POINT, this.ubo);
+            // Bind the UBO to the specific binding point for this draw call
+            gl.bindBufferBase(gl.UNIFORM_BUFFER, BoneBufferTop.BONE_UBO_BINDING_POINT, targetSharedGpuUbo);
+        } else if (!targetSharedGpuUbo) {
+            console.warn("BoneBuffer (Skinned Path): Shader expects 'Bones' UBO, but no targetSharedGpuUbo provided. Binding dummy.");
+            const dummyUBO = BoneBufferTop._getOrCreateDummyUBO(gl);
+            if (dummyUBO) {
+               gl.bindBufferBase(gl.UNIFORM_BUFFER, BoneBufferTop.BONE_UBO_BINDING_POINT, dummyUBO);
+            }
+        } else if (!this.bones) {
+             console.warn("BoneBuffer (Skinned Path): targetSharedGpuUbo provided, but this.bones is null.");
+        }
+    } else {
+        // Shader does not have 'Bones' block, but we are in skinning path. This is unusual.
+        // console.warn("BoneBuffer (Skinned Path): Shader does not have 'Bones' UBO block. No UBO bound.");
     }
     // --- End UBO Handling ---
 
-    // --- Other Uniforms ---
-    // Cache locations
+    // --- Other Uniforms (Instance Specific) ---
     if (this.locUSkinEnable === -1) this.locUSkinEnable = gl.getUniformLocation(shaderProgram, "uSkinEnable");
     if (this.locARootNodeXform === -1) this.locARootNodeXform = gl.getUniformLocation(shaderProgram, "uRootNodeXform");
     
-    // Removed texture upload call
-    
-    if (this.locUSkinEnable) gl.uniform1f(this.locUSkinEnable, 1.0);
-    if (this.locARootNodeXform) gl.uniformMatrix4fv(this.locARootNodeXform, false, this.rootNodeXform);
+    if (this.locUSkinEnable) gl.uniform1f(this.locUSkinEnable, 1.0); // Enable skinning
+    if (this.locARootNodeXform && this.rootNodeXform) gl.uniformMatrix4fv(this.locARootNodeXform, false, this.rootNodeXform);
 
-    if (uvXform.enable) { // Check if UV transform is actually needed
-        this.uploadUVXformUniforms(renderer, uvXform);
+    if (uvXform.enable) { 
+        this.uploadUVXformUniforms(this.rendererForShaderAccess, uvXform);
     } else {
-        // Ensure UV transform is disabled if not needed for this draw
         if (this.locUVXformEnable === -1) this.locUVXformEnable = gl.getUniformLocation(shaderProgram, "uUVXformEnable");
         if (this.locUVXformEnable) gl.uniform1f(this.locUVXformEnable, 0.0);
     }
     
-    const locUPhongEnable = gl.getUniformLocation(shaderProgram, "uPhongEnable"); // Less likely to be static, get each time?
+    const locUPhongEnable = gl.getUniformLocation(shaderProgram, "uPhongEnable"); 
     if (locUPhongEnable) gl.uniform1f(locUPhongEnable, phongEnable ? 1.0 : 0.0);
   }
 
   uploadUniformsNonSkin(renderer, uvXform, phongEnable) {
-    const gl = renderer._gl;
+    const gl = renderer._gl; // Use passed renderer
     const shaderProgram = renderer._batchState.currentShader._shaderProgram;
 
-    // --- Bind UBO if available and shader expects it, otherwise bind dummy --- //
-    // Get and cache block index if shader program changed
-    if (this.boundProgram !== shaderProgram) {
+    // --- Bind Dummy UBO if shader expects 'Bones' block --- //
+    if (this.boundProgram !== shaderProgram) { // Check/update block index cache
         this.blockIndex = gl.getUniformBlockIndex(shaderProgram, "Bones");
-        if (this.blockIndex === gl.INVALID_INDEX) {
-            this.blockIndex = -1; // Mark as invalid for this shader
-        } else {
-            // Associate the shader's uniform block with the binding point (idempotent)
+        if (this.blockIndex !== gl.INVALID_INDEX && this.blockIndex !== -1) {
+             // Associate the shader's uniform block with the binding point if it exists.
             gl.uniformBlockBinding(shaderProgram, this.blockIndex, BoneBufferTop.BONE_UBO_BINDING_POINT);
+        } else {
+            this.blockIndex = -1; // Mark as invalid for this shader (no 'Bones' block)
         }
-        this.boundProgram = shaderProgram; // Cache the program associated with the block index
+        this.boundProgram = shaderProgram; 
     }
 
-    // If the shader has the 'Bones' block, ensure *something* is bound
-    if (this.blockIndex !== -1) {
-        if (this.ubo) {
-            // This instance has a real UBO, bind it
-            gl.bindBufferBase(gl.UNIFORM_BUFFER, BoneBufferTop.BONE_UBO_BINDING_POINT, this.ubo);
+    if (this.blockIndex !== -1) { // Shader has the 'Bones' block
+        const dummyUBO = BoneBufferTop._getOrCreateDummyUBO(gl);
+        if (dummyUBO) {
+           gl.bindBufferBase(gl.UNIFORM_BUFFER, BoneBufferTop.BONE_UBO_BINDING_POINT, dummyUBO);
         } else {
-            // This instance does NOT have a real UBO, bind the dummy UBO
-            const dummyUBO = BoneBufferTop._getOrCreateDummyUBO(gl);
-            if (dummyUBO) {
-               gl.bindBufferBase(gl.UNIFORM_BUFFER, BoneBufferTop.BONE_UBO_BINDING_POINT, dummyUBO);
-            } else {
-                console.error("BoneBuffer (NonSkin): Shader expects 'Bones' UBO, but dummy UBO creation failed.");
-                // Avoid drawing?
-            }
+            console.error("BoneBuffer (NonSkin): Shader expects 'Bones' UBO, but dummy UBO creation failed.");
         }
     } else {
-        // Shader does not have the 'Bones' block, no need to bind anything here.
-        // We might want to explicitly unbind if a previous draw call bound something?
-        // However, relying on the next bind in the correct path is usually sufficient.
-        // gl.bindBufferBase(gl.UNIFORM_BUFFER, BoneBufferTop.BONE_UBO_BINDING_POINT, null); // Optional unbind
+        // Shader does not have the 'Bones' block, no need to bind anything to that point.
     }
-    // --- End UBO Handling ---
+    // --- End Dummy UBO Handling ---
 
-    // Cache locations for other uniforms
+    // --- Other Uniforms for Non-Skinned Path ---
     if (this.locUSkinEnable === -1) this.locUSkinEnable = gl.getUniformLocation(shaderProgram, "uSkinEnable");
     if (this.locUNodeXformEnable === -1) this.locUNodeXformEnable = gl.getUniformLocation(shaderProgram, "uNodeXformEnable");
     if (this.locANodeXform === -1) this.locANodeXform = gl.getUniformLocation(shaderProgram, "uNodeXform");
 
-    if (this.locUSkinEnable) gl.uniform1f(this.locUSkinEnable, 0.0);
-    if (this.locUNodeXformEnable) gl.uniform1f(this.locUNodeXformEnable, 1.0);
-    if (this.locANodeXform) gl.uniformMatrix4fv(this.locANodeXform, false, this.nodeXform);
+    if (this.locUSkinEnable) gl.uniform1f(this.locUSkinEnable, 0.0); // Disable skinning
+    if (this.locUNodeXformEnable) gl.uniform1f(this.locUNodeXformEnable, 1.0); // Enable node transform
+    if (this.locANodeXform && this.nodeXform) gl.uniformMatrix4fv(this.locANodeXform, false, this.nodeXform);
 
-    if (uvXform.enable) { // Check if UV transform is actually needed
-        this.uploadUVXformUniforms(renderer, uvXform);
+    if (uvXform.enable) { 
+        this.uploadUVXformUniforms(renderer, uvXform); // Pass renderer
     } else {
-        // Ensure UV transform is disabled if not needed for this draw
         if (this.locUVXformEnable === -1) this.locUVXformEnable = gl.getUniformLocation(shaderProgram, "uUVXformEnable");
         if (this.locUVXformEnable) gl.uniform1f(this.locUVXformEnable, 0.0);
     }
 
-    const locUPhongEnable = gl.getUniformLocation(shaderProgram, "uPhongEnable"); // Less likely to be static
+    const locUPhongEnable = gl.getUniformLocation(shaderProgram, "uPhongEnable");
     if (locUPhongEnable) gl.uniform1f(locUPhongEnable, phongEnable ? 1.0 : 0.0);
   }
 
   disable(renderer) {
-      // This method might not be necessary anymore if state is managed per draw.
-      // If still needed, ensure it only disables uniforms relevant outside skinning/node paths.
        const gl = renderer._gl;
        const shaderProgram = renderer._batchState.currentShader._shaderProgram;
-       // Example: Ensure UV XForm is off if this buffer is disabled generally
        if (this.locUVXformEnable === -1) this.locUVXformEnable = gl.getUniformLocation(shaderProgram, "uUVXformEnable");
        if (this.locUVXformEnable) gl.uniform1f(this.locUVXformEnable, 0.0);
+       // Potentially disable other things if this method is still used broadly.
+       // If skinning was active and this instance is being disabled, ensure skinning uniform is off.
+       // if (this.locUSkinEnable === -1) this.locUSkinEnable = gl.getUniformLocation(shaderProgram, "uSkinEnable");
+       // if (this.locUSkinEnable) gl.uniform1f(this.locUSkinEnable, 0.0);
   }
 }
 
