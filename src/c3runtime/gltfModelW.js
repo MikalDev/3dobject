@@ -38,6 +38,13 @@ class GltfModelWTop {
     this.workerReady = false
     this.boundingBoxInit = false
     this.boneBufferViews = []
+    this.locUModelRotate = null
+    this.locUModelRotateEnable = null
+    this.locUPhongEnable = null
+    this.locUSkinEnable = null
+    this.locUNodeXformEnable = null
+    this.locAPos = null
+    this.locATex = null
   }
 
   release() {
@@ -137,7 +144,11 @@ class GltfModelWTop {
     // @ts-ignore
     this.boneBufferViews = null
     // @ts-ignore
-    this.locuModelRotateEnable = null
+    this.locUModelRotate = null
+    // @ts-ignore
+    this.locUModelRotateEnable = null
+    // @ts-ignore
+    this.locUPhongEnable = null
     // @ts-ignore
     this.locUSkinEnable = null
     // @ts-ignore
@@ -456,30 +467,34 @@ class GltfModelWTop {
     const gl = renderer._gl
     const batchState = renderer._batchState
     const shaderProgram = batchState.currentShader._shaderProgram
-    const locUModelRotate = gl.getUniformLocation(shaderProgram, "uModelRotate")
-    const locUModelRotateEnable = gl.getUniformLocation(shaderProgram, "uModelRotateEnable")
-    gl.uniformMatrix4fv(locUModelRotate, false, modelRotate)
-    gl.uniform1f(locUModelRotateEnable, 1)
+    if (this.locUModelRotate === null) {
+      this.locUModelRotate = gl.getUniformLocation(shaderProgram, "uModelRotate");
+      this.locUModelRotateEnable = gl.getUniformLocation(shaderProgram, "uModelRotateEnable");
+      this.locUPhongEnable = gl.getUniformLocation(shaderProgram, "uPhongEnable");
+    }
+    gl.uniformMatrix4fv(this.locUModelRotate, false, modelRotate)
+    gl.uniform1f(this.locUModelRotateEnable, 1)
+    gl.uniform1f(this.locUPhongEnable, this.inst.fragLightPhong ? 1 : 0)
   }
 
   disableVertexShaderModelRotate(renderer) {
     const gl = renderer._gl
-    if (!this.locuModelRotateEnable) {
-      const batchState = renderer._batchState
-      const shaderProgram = batchState.currentShader._shaderProgram
-      this.locuModelRotateEnable = gl.getUniformLocation(shaderProgram, "uModelRotateEnable")
+    const batchState = renderer._batchState
+    const shaderProgram = batchState.currentShader._shaderProgram;
+    if (this.locUModelRotateEnable === null) {
+        this.locUModelRotateEnable = gl.getUniformLocation(shaderProgram, "uModelRotateEnable");
+        this.locUPhongEnable = gl.getUniformLocation(shaderProgram, "uPhongEnable");
     }
-    gl.uniform1f(this.locuModelRotateEnable, 0)
+    gl.uniform1f(this.locUModelRotateEnable, 0)
+    gl.uniform1f(this.locUPhongEnable, 0)
   }
 
   _disableGPUSkinning(renderer) {
     const gl = renderer._gl
     const shaderProgram = renderer._batchState.currentShader._shaderProgram
-    if (!this.locUSkinEnable) this.locUSkinEnable = gl.getUniformLocation(shaderProgram, "uSkinEnable")
-    if (!this.locUNodeXformEnable) this.locUNodeXformEnable = gl.getUniformLocation(shaderProgram, "uNodeXformEnable")
-    if (this.locUNodeXformEnable == -1 || this.locUSkinEnable == -1) {
-      console.error("locUNodeXformEnable == -1", this.locUNodeXformEnable)
-      console.error("locUSkinEnable == -1", this.locUSkinEnable)
+    if (this.locUSkinEnable === null) {
+      this.locUSkinEnable = gl.getUniformLocation(shaderProgram, "uSkinEnable")
+      this.locUNodeXformEnable = gl.getUniformLocation(shaderProgram, "uNodeXformEnable")
     }
     gl.uniform1f(this.locUSkinEnable, 0.0)
     gl.uniform1f(this.locUNodeXformEnable, 0.0)
@@ -664,7 +679,6 @@ class GltfModelWTop {
         boneBuffer = this.drawMeshes[j]?.boneBuffer
         for (let i = 0; i < objectBuffers.length; i++) {
           // boneBuffer is already assigned from this.drawMeshes[j]?.boneBuffer above the loop
-          this.setVertexShaderModelRotate(renderer, this.modelRotate)
           objectBuffers[i].draw(
             renderer, 
             boneBuffer, // This is the instanceBoneBuffer (BoneBufferW)
@@ -854,8 +868,8 @@ class GltfModelWTop {
       const gl = renderer._gl
       const batchState = renderer._batchState
       const shaderProgram = batchState.currentShader._shaderProgram
-      if (!this.locAPos) this.locAPos = gl.getAttribLocation(shaderProgram, "aPos")
-      if (!this.locATex) this.locATex = gl.getAttribLocation(shaderProgram, "aTex")
+      if (this.locAPos === null) this.locAPos = gl.getAttribLocation(shaderProgram, "aPos")
+      if (this.locATex === null) this.locATex = gl.getAttribLocation(shaderProgram, "aTex")
       gl.bindBuffer(gl.ARRAY_BUFFER, renderer._vertexBuffer)
       gl.vertexAttribPointer(this.locAPos, 3, gl.FLOAT, false, 0, 0)
       gl.enableVertexAttribArray(this.locAPos)
@@ -881,13 +895,15 @@ class GltfModelWTop {
     for (let node of this.gltfData.nodes) {
       // Check if the node has a mesh and is not a skinned mesh
       if (node.mesh && !node.skin) {
-        if (!node.hasOwnProperty("boneBuffer")) {
-          const actualBonesForThisNode = 0; // Non-skinned nodes don't use skinning bone arrays
-          const boneBuffer = new BoneBufferW(this.inst.renderer, actualBonesForThisNode, false)
-          node.boneBuffer = boneBuffer
+        if (!this.inst.staticGeometry) {
+          if (!node.hasOwnProperty("boneBuffer")) {
+            const actualBonesForThisNode = 0; // Non-skinned nodes don't use skinning bone arrays
+            const boneBuffer = new BoneBufferW(this.inst.renderer, actualBonesForThisNode, false)
+            node.boneBuffer = boneBuffer
+          }
+          const start = boneBufferViews[bufferViewIndex].start
+          node.boneBuffer.setNodeXform(bones.slice(start, start + MATRIX_SIZE))
         }
-        const start = boneBufferViews[bufferViewIndex].start
-        node.boneBuffer.setNodeXform(bones.slice(start, start + MATRIX_SIZE))
         bufferViewIndex += 1
       }
     }

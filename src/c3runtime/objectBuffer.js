@@ -85,79 +85,10 @@ class ObjectBufferTop {
     }
 
     // vao created at draw time to insure the correct shader is used
-  }
-
-  createDefaultTexcoordData(length) {
-    const texcoordData = new Float32Array(length)
-    for (let i = 0; i < length; i++) {
-      texcoordData[i] = 0.5
-    }
-    return texcoordData
-  }
-
-  setNodeXform(nodeXform) {
-    this.nodeXform = nodeXform
-  }
-
-  updateVertexData(renderer, mesh, primitiveIndex) {
-    const gl = renderer._gl
-    const vertexData = mesh.drawVerts[primitiveIndex]
-
-    // Fill only vertex buffer
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer)
-    gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.STATIC_DRAW)
-  }
-
-  release() {
-    const gl = this.gl
-    if (this.vertexBuffer) {
-      gl.deleteBuffer(this.vertexBuffer)
-      this.vertexBuffer = null
-    }
-    if (this.texcoordBuffer) {
-      gl.deleteBuffer(this.texcoordBuffer)
-      this.texcoordBuffer = null
-    }
-    if (this.indexBuffer) {
-      gl.deleteBuffer(this.indexBuffer)
-      this.indexBuffer = null
-    }
-    if (this.vao) {
-      gl.deleteVertexArray(this.vao)
-      this.vao = null
-    }
-    if (this.colorBuffer) {
-      gl.deleteBuffer(this.colorBuffer)
-      this.colorBuffer = null
-    }
-    if (this.normalBuffer) {
-      gl.deleteBuffer(this.normalBuffer)
-      this.normalBuffer = null
-    }
-    if (this.weightsBuffer) {
-      gl.deleteBuffer(this.weightsBuffer)
-      this.weightsBuffer = null
-    }
-    if (this.jointsBuffer) {
-      gl.deleteBuffer(this.jointsBuffer)
-      this.jointsBuffer = null
-    }
-    this.gl = null
-    this.vertexData = null
-    this.texcoordData = null
-    this.indexData = null
-    this.colorData = null
-    this.normalData = null
-    this.weightsData = null
-    this.jointsData = null
-    this.locAPos = null
-    this.locATex = null
-    this.locAColor = null
-    this.locANormal = null
-    this.locAWeights = null
-    this.locAJoints = null
-    this.nodeXform = null
-    this.vao = null
+    this.locURotateMatrix = null;
+    this.locURotateCenter = null;
+    this.locUOffsetUV = null;
+    this.locUVXformEnable = null;
   }
 
   _ExecuteBatch(renderer) {
@@ -172,6 +103,17 @@ class ObjectBufferTop {
     renderer._texPtr = 0
     renderer._pointPtr = 0
     renderer._topOfBatch = 0
+  }
+
+  _updateShader(shaderProgram) {
+    if (this.boundProgram === shaderProgram) return;
+
+    this.boundProgram = shaderProgram;
+    const gl = this.gl;
+    this.locURotateMatrix = gl.getUniformLocation(shaderProgram, "uUVRotate");
+    this.locURotateCenter = gl.getUniformLocation(shaderProgram, "uUVRotateCenter");
+    this.locUOffsetUV = gl.getUniformLocation(shaderProgram, "uUVOffset");
+    this.locUVXformEnable = gl.getUniformLocation(shaderProgram, "uUVXformEnable");
   }
 
   createVao(renderer) {
@@ -271,16 +213,18 @@ class ObjectBufferTop {
       const rotateMatrix = uvXform.rotateMatrix
       const rotateCenter = uvXform.rotateCenter
       const offsetUV = uvXform.offsetUV
-      this.locURotateMatrix = gl.getUniformLocation(shaderProgram, "uUVRotate")
-      this.locURotateCenter = gl.getUniformLocation(shaderProgram, "uUVRotateCenter")
-      this.locUOffsetUV = gl.getUniformLocation(shaderProgram, "uUVOffset")
-      this.locUVXformEnable = gl.getUniformLocation(shaderProgram, "uUVXformEnable")
+      if (this.locURotateMatrix === null) {
+        this.locURotateMatrix = gl.getUniformLocation(shaderProgram, "uUVRotate")
+        this.locURotateCenter = gl.getUniformLocation(shaderProgram, "uUVRotateCenter")
+        this.locUOffsetUV = gl.getUniformLocation(shaderProgram, "uUVOffset")
+        this.locUVXformEnable = gl.getUniformLocation(shaderProgram, "uUVXformEnable")
+      }
       gl.uniformMatrix2fv(this.locURotateMatrix, false, rotateMatrix)
       gl.uniform2fv(this.locURotateCenter, rotateCenter)
       gl.uniform2fv(this.locUOffsetUV, offsetUV)
       gl.uniform1f(this.locUVXformEnable, 1.0)
     } else {
-      this.locUVXformEnable = gl.getUniformLocation(shaderProgram, "uUVXformEnable")
+      if (this.locUVXformEnable === null) this.locUVXformEnable = gl.getUniformLocation(shaderProgram, "uUVXformEnable")
       gl.uniform1f(this.locUVXformEnable, 0.0)
     }
   }
@@ -297,8 +241,8 @@ class ObjectBufferTop {
   disableUVXformUniforms(renderer) {
     const gl = renderer._gl
     const shaderProgram = renderer._batchState.currentShader._shaderProgram
-    const locUUVXformEnable = gl.getUniformLocation(shaderProgram, "uUVXformEnable")
-    gl.uniform1f(locUUVXformEnable, 0.0)
+    if (this.locUVXformEnable === null) this.locUVXformEnable = gl.getUniformLocation(shaderProgram, "uUVXformEnable")
+    gl.uniform1f(this.locUVXformEnable, 0.0)
   }
 
   draw(renderer, instanceBoneBuffer, modelGltfData, rotateMaterial, offsetMaterial, phongEnable) {
@@ -329,6 +273,7 @@ class ObjectBufferTop {
         } else {
             // No BoneBuffer instance provided at all.
             // ObjectBuffer must handle UV transforms and potentially dummy UBO for "Bones" block.
+            this._disableGPUSkinning(renderer);
             if (uvXform.enable) {
                 this.uploadUVXformUniforms(renderer, uvXform);
             } else {
@@ -380,6 +325,92 @@ class ObjectBufferTop {
     // Note: UBO unbinding from the binding point (BoneBufferTop.BONE_UBO_BINDING_POINT)
     // is implicitly handled by the next bindBufferBase or if nothing else binds to it.
     // No explicit unbind is strictly necessary here for bindBufferBase.
+  }
+
+  _disableGPUSkinning(renderer) {
+    const gl = renderer._gl;
+    const shaderProgram = renderer._batchState.currentShader._shaderProgram;
+    const locUSkinEnable = gl.getUniformLocation(shaderProgram, "uSkinEnable");
+    const locUNodeXformEnable = gl.getUniformLocation(shaderProgram, "uNodeXformEnable");
+    if (locUSkinEnable) gl.uniform1f(locUSkinEnable, 0.0);
+    if (locUNodeXformEnable) gl.uniform1f(locUNodeXformEnable, 0.0);
+  }
+
+  createDefaultTexcoordData(length) {
+    const texcoordData = new Float32Array(length)
+    for (let i = 0; i < length; i++) {
+      texcoordData[i] = 0.5
+    }
+    return texcoordData
+  }
+
+  setNodeXform(nodeXform) {
+    this.nodeXform = nodeXform
+  }
+
+  updateVertexData(renderer, mesh, primitiveIndex) {
+    const gl = renderer._gl
+    const vertexData = mesh.drawVerts[primitiveIndex]
+
+    // Fill only vertex buffer
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer)
+    gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.STATIC_DRAW)
+  }
+
+  release() {
+    const gl = this.gl
+    if (this.vertexBuffer) {
+      gl.deleteBuffer(this.vertexBuffer)
+      this.vertexBuffer = null
+    }
+    if (this.texcoordBuffer) {
+      gl.deleteBuffer(this.texcoordBuffer)
+      this.texcoordBuffer = null
+    }
+    if (this.indexBuffer) {
+      gl.deleteBuffer(this.indexBuffer)
+      this.indexBuffer = null
+    }
+    if (this.vao) {
+      gl.deleteVertexArray(this.vao)
+      this.vao = null
+    }
+    if (this.colorBuffer) {
+      gl.deleteBuffer(this.colorBuffer)
+      this.colorBuffer = null
+    }
+    if (this.normalBuffer) {
+      gl.deleteBuffer(this.normalBuffer)
+      this.normalBuffer = null
+    }
+    if (this.weightsBuffer) {
+      gl.deleteBuffer(this.weightsBuffer)
+      this.weightsBuffer = null
+    }
+    if (this.jointsBuffer) {
+      gl.deleteBuffer(this.jointsBuffer)
+      this.jointsBuffer = null
+    }
+    this.gl = null
+    this.vertexData = null
+    this.texcoordData = null
+    this.indexData = null
+    this.colorData = null
+    this.normalData = null
+    this.weightsData = null
+    this.jointsData = null
+    this.locAPos = null
+    this.locATex = null
+    this.locAColor = null
+    this.locANormal = null
+    this.locAWeights = null
+    this.locAJoints = null
+    this.nodeXform = null
+    this.vao = null
+    this.locURotateMatrix = null;
+    this.locURotateCenter = null;
+    this.locUOffsetUV = null;
+    this.locUVXformEnable = null;
   }
 }
 
