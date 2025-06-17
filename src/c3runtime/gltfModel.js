@@ -30,9 +30,18 @@ class GltfModelTop {
     this.locANormalMatrix = null
     this.meshNames = new Map()
     this.viewPos = [0, 0, 0]
+    this.boundProgram = null
+    this.locUModelRotate = null
+    this.locUModelRotateEnable = null
+    this.locUPhongEnable = null
+    this.locUSkinEnable = null
+    this.locUNodeXformEnable = null
   }
 
-  
+  _smoothstep(min, max, value) {
+    var x = Math.max(0, Math.min(1, (value - min) / (max - min)))
+    return x * x * (3 - 2 * x)
+  }
 
   async init() {
     this.gltfData = this.copyGltfData(this._sdkType.gltfData.gltf)
@@ -137,110 +146,41 @@ class GltfModelTop {
     return targetGltf;
   }
 
-  _findNodeByName(nodeName) {
-    const nodes = this.gltfData?.nodes;
-    if (nodes) {
-        for (let i = 0; i < nodes.length; i++) {
-            // Nodes within skinned meshes are also in the main nodes list
-            if (nodes[i].name === nodeName) {
-                return nodes[i];
-            }
-        }
-    }
-    console.warn(`[GltfModel] Node not found: ${nodeName}`);
-    return null;
- }
-
- getNodeWorldPosition(nodeName) {
-    const mat4 = globalThis.glMatrix3D.mat4;
-    const vec3 = globalThis.glMatrix3D.vec3;
-
-    const node = this._findNodeByName(nodeName);
-
-    if (!node) {
-      // Warning already logged in _findNodeByName
-      return null;
-    }
-
-    // Ensure the node's matrix and the model's world matrix are calculated and valid.
-    // These matrices are typically updated during getPolygons() or render().
-    // Calling this function before the model has been processed in a tick might result in null.
-    if (!node.matrix) {
-        console.warn(`[GltfModel] Node matrix not calculated yet for: ${nodeName}. Ensure getPolygons() or updateAnimation() has run.`);
-        return null;
-    }
-    // this.modelRotate is updated in render() or updateModelRotate()
-    if (!this.modelRotate) {
-        console.warn(`[GltfModel] Model world rotation matrix (modelRotate) not calculated yet. Ensure the model has been rendered or updated.`);
-        return null;
-    }
-
-    const nodeWorldMatrix = mat4.create();
-    // node.matrix holds the transform relative to the model root after hierarchy and animation updates.
-    // this.modelRotate transforms the model root to world space.
-    mat4.multiply(nodeWorldMatrix, this.modelRotate, node.matrix);
-
-    // Extract translation component (world position) from the combined matrix.
-    const worldPos = vec3.fromValues(nodeWorldMatrix[12], nodeWorldMatrix[13], nodeWorldMatrix[14]);
-
-    // Return as a plain array [x, y, z]
-    return [worldPos[0], worldPos[1], worldPos[2]];
- }
-
-  _smoothstep(min, max, value) {
-    var x = Math.max(0, Math.min(1, (value - min) / (max - min)))
-    return x * x * (3 - 2 * x)
-  }
-
-  _cullPoint(cameraPos, cameraDir, point, fov, cullDistance) {
-    const vec3 = globalThis.glMatrix3D.vec3
-    // Find angle between vector of camera pos to point and camera dir
-    // Create a new vector for the result of the subtraction
-    let direction = vec3.create()
-    vec3.subtract(direction, point, cameraPos) // Subtract cameraPos from point, store in direction
-
-    // Calculate the angle between cameraDir and the new direction vector
-    const angle = vec3.angle(cameraDir, direction)
-    if (angle > fov) return false
-    // Find distance from camera pos to point
-    const distance = vec3.distance(cameraPos, point)
-    if (distance > cullDistance) return false
-    return true
-  }
-
   setVertexShaderModelRotate(renderer, modelRotate) {
     const gl = renderer._gl
     const batchState = renderer._batchState
     const shaderProgram = batchState.currentShader._shaderProgram
-    const locUModelRotate = gl.getUniformLocation(shaderProgram, "uModelRotate")
-    const locUModelRotateEnable = gl.getUniformLocation(shaderProgram, "uModelRotateEnable")
-    gl.uniformMatrix4fv(locUModelRotate, false, modelRotate)
-    gl.uniform1f(locUModelRotateEnable, 1)
-    const locUPhongEnable = gl.getUniformLocation(shaderProgram, "uPhongEnable")
-    gl.uniform1f(locUPhongEnable, this.inst.fragLightPhong ? 1 : 0)
+    if (this.locUModelRotate === null) {
+      this.locUModelRotate = gl.getUniformLocation(shaderProgram, "uModelRotate")
+      this.locUModelRotateEnable = gl.getUniformLocation(shaderProgram, "uModelRotateEnable")
+      this.locUPhongEnable = gl.getUniformLocation(shaderProgram, "uPhongEnable")
+    }
+    gl.uniformMatrix4fv(this.locUModelRotate, false, modelRotate)
+    gl.uniform1f(this.locUModelRotateEnable, 1)
+    gl.uniform1f(this.locUPhongEnable, this.inst.fragLightPhong ? 1 : 0)
   }
 
   disableVertexShaderModelRotate(renderer) {
     const gl = renderer._gl
     const batchState = renderer._batchState
     const shaderProgram = batchState.currentShader._shaderProgram
-    const locuModelRotateEnable = gl.getUniformLocation(shaderProgram, "uModelRotateEnable")
-    gl.uniform1f(locuModelRotateEnable, 0)
-    const locUPhongEnable = gl.getUniformLocation(shaderProgram, "uPhongEnable")
-    gl.uniform1f(locUPhongEnable, 0)
+    if (this.locUModelRotateEnable === null) {
+      this.locUModelRotateEnable = gl.getUniformLocation(shaderProgram, "uModelRotateEnable")
+      this.locUPhongEnable = gl.getUniformLocation(shaderProgram, "uPhongEnable")
+    }
+    gl.uniform1f(this.locUModelRotateEnable, 0)
+    gl.uniform1f(this.locUPhongEnable, 0)
   }
 
   _disableGPUSkinning(renderer) {
     const gl = renderer._gl
     const shaderProgram = renderer._batchState.currentShader._shaderProgram
-    const locUSkinEnable = gl.getUniformLocation(shaderProgram, "uSkinEnable")
-    const locUNodeXformEnable = gl.getUniformLocation(shaderProgram, "uNodeXformEnable")
-    if (locUNodeXformEnable == -1 || locUSkinEnable == -1) {
-      console.error("locUNodeXformEnable == -1", locUNodeXformEnable)
-      console.error("locUSkinEnable == -1", locUSkinEnable)
+    if (this.locUSkinEnable === null) {
+      this.locUSkinEnable = gl.getUniformLocation(shaderProgram, "uSkinEnable");
+      this.locUNodeXformEnable = gl.getUniformLocation(shaderProgram, "uNodeXformEnable");
     }
-    gl.uniform1f(locUSkinEnable, 0.0)
-    gl.uniform1f(locUNodeXformEnable, 0.0)
+    gl.uniform1f(this.locUSkinEnable, 0.0)
+    gl.uniform1f(this.locUNodeXformEnable, 0.0)
   }
 
   render(renderer, x, y, z, tempQuad, whiteTexture, instanceC3Color, textures, instanceTexture, opacity) {
@@ -283,11 +223,9 @@ class GltfModelTop {
     const finalColor = vec4.create()
 
     const tmpModelView = mat4.create()
-    // const tmpProjection = mat4.create()
     const modelRotate = mat4.create()
     if (!this.inst.isEditor) {
       mat4.copy(tmpModelView, renderer._matMV)
-      // if (this.inst.fragLight && !this.inst.isWebGPU) mat4.copy(tmpProjection, renderer._matP)
       const xAngle = this.inst.xAngle
       const yAngle = this.inst.yAngle
       const zAngle = this.inst.zAngle
@@ -308,7 +246,6 @@ class GltfModelTop {
       } else {
         quat.fromEuler(rotate, xAngle, yAngle, zAngle)
       }
-      // XXX mat4.fromRotationTranslationScale(modelRotate, rotate, [x,y,z], [xScale,-yScale,zScale]);
       mat4.fromRotationTranslationScaleOrigin(
         modelRotate,
         rotate,
@@ -316,9 +253,7 @@ class GltfModelTop {
         [xScale, -yScale, zScale],
         this.inst.localCenter
       )
-      // from rotationtranslationscaleorigin
       mat4.copy(this.modelRotate, modelRotate)
-      // Create inverse transpose normal matrix from modelRotate
       if (this.inst.normalVertex) {
         mat4.invert(this.normalMatrix, modelRotate)
         mat4.transpose(this.normalMatrix, this.normalMatrix)
@@ -337,6 +272,10 @@ class GltfModelTop {
 
     // If vertexNormals used set the shader program uniform aNormalMatrix
     if (this.inst.normalMatrix) {
+      if (this.locANormalMatrix === null) {
+        const shaderProgram = renderer._batchState.currentShader._shaderProgram;
+        this.locANormalMatrix = renderer._gl.getUniformLocation(shaderProgram, "aNormalMatrix");
+      }
       renderer.SetUniformMatrix4fv(this.locANormalMatrix, this.normalMatrix)
     }
 
@@ -379,9 +318,6 @@ class GltfModelTop {
         rOffsetX = textureRect.getLeft()
         rOffsetY = textureRect.getTop()
       }
-
-      // Check if the map this.inst.materialsModify contains the key material.name
-      // If it does, then we need to offset the UVs
 
       let color
       if (material && "pbrMetallicRoughness" in material && "baseColorFactor" in material.pbrMetallicRoughness) {
@@ -564,9 +500,6 @@ class GltfModelTop {
               tempQuad.setBly(tempQuad.getBly() * rHeight + rOffsetY)
               tempQuad.setBrx(tempQuad.getBrx() * rWidth + rOffsetX)
               tempQuad.setBry(tempQuad.getBry() * rHeight + rOffsetY)
-              /*
-            const rcTex = imageInfo.GetTexRect();
-            */
             }
           } else {
             // Set face to color if possible
@@ -667,7 +600,6 @@ class GltfModelTop {
                   vec3.scale(dotNI, dotNI, 2.0)
                   vec3.mul(dotNI, dotNI, normal)
                   vec3.sub(reflectDir, dotNI, lightDir)
-                  // I - 2.0 * dot(N, I) * N.
                   vec3.sub(reflectDir, lightDir, normal)
                   vec3.normalize(reflectDir, reflectDir)
                   const spec = Math.pow(Math.max(vec3.dot(reflectDir, viewDir), 0.0), light.specularPower)
@@ -716,7 +648,6 @@ class GltfModelTop {
     // Restore modelview matrix
     if (!(this.inst.isEditor || this.inst.cpuXform) && !(this.inst.fragLight && this.inst.isWebGPU)) {
       renderer.SetModelViewMatrix(tmpModelView)
-      // if (this.inst.fragLight && !this.inst.isWebGPU) renderer.SetProjectionMatrix(tmpProjection)
     }
     this.inst.totalTriangles = totalTriangles
     // Restore renderer buffers
@@ -724,15 +655,13 @@ class GltfModelTop {
     renderer._texcoordData = rendererTexcoordData
 
     if (!this.inst.isEditor) {
-      renderer.EndBatch()
       this.disableVertexShaderModelRotate(renderer)
       this._disableGPUSkinning(renderer)
+      renderer.EndBatch()
     }
 
     // Restore attrib
     if (this.inst.staticGeometry) {
-      // Restore for other C3 objects
-      // XXX may no longer be needed with new  object buffer and separate vertex/texcoord buffers
       const gl = renderer._gl
       const batchState = renderer._batchState
       const shaderProgram = batchState.currentShader._shaderProgram
@@ -744,7 +673,6 @@ class GltfModelTop {
       gl.bindBuffer(gl.ARRAY_BUFFER, renderer._texcoordBuffer)
       gl.vertexAttribPointer(locATex, 2, gl.FLOAT, false, 0, 0)
       gl.enableVertexAttribArray(locATex)
-      // Restore index buffer
       gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, renderer._indexBuffer)
       renderer._vertexPtr = 0
       renderer._texPtr = 0
@@ -826,14 +754,17 @@ class GltfModelTop {
     // unskinned meshes
     if (node.mesh != undefined && node.skin == undefined) {
       if (gpuSkinning) {
-        if (!node.hasOwnProperty("boneBuffer")) {
-          // Use the constant directly from BoneBuffer if available
-          // @ts-ignore - Linter doesn't know globalThis structure
-          const maxBonesForBuffer = globalThis.BoneBuffer?.MAX_BONES || 256; // Default to 256 if needed
-          const boneBuffer = new BoneBuffer(this.inst.renderer, maxBonesForBuffer, false)
-          node.boneBuffer = boneBuffer
+        if (!staticGeometry)
+        {
+          if (!node.hasOwnProperty("boneBuffer")) {
+            // Use the constant directly from BoneBuffer if available
+            // @ts-ignore - Linter doesn't know globalThis structure
+            const maxBonesForBuffer = globalThis.BoneBuffer?.MAX_BONES || 256; // Default to 256 if needed
+            const boneBuffer = new BoneBuffer(this.inst.renderer, maxBonesForBuffer, false)
+            node.boneBuffer = boneBuffer
+          }
+          node.boneBuffer.setNodeXform(node.matrix)
         }
-        node.boneBuffer.setNodeXform(node.matrix)
       }
 
       for (let i = 0; i < node.mesh.primitives.length; i++) {
@@ -877,7 +808,7 @@ class GltfModelTop {
           this.meshNames.set(node.name, this.drawMeshesIndex)
         }
 
-        if (gpuSkinning) this.drawMeshes[this.drawMeshesIndex].boneBuffer = node.boneBuffer
+        if (gpuSkinning && !staticGeometry) this.drawMeshes[this.drawMeshesIndex].boneBuffer = node.boneBuffer
 
         this.drawMeshes[this.drawMeshesIndex].disabled = node.disabled
         if (node.offsetUV) this.drawMeshes[this.drawMeshesIndex].offsetUV = node.offsetUV
