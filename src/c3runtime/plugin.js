@@ -44,6 +44,7 @@
             `uniform vec2 uUVRotateCenter;`,
             `uniform float uPhongEnable;`,
             `uniform float uNPUVEnable;`,
+            `uniform highp mat4 uNormalMatrix;`,
 
             `// --- Uniform Block for Bone Matrices ---`,
             `layout(std140) uniform Bones {`,
@@ -94,8 +95,7 @@
             `        pos = rotatedPos.xyz;`,
             `        gl_Position = matP * matMV * vec4(aPos, 1.0);`,
             `        if (uPhongEnable > 0.5) {`,
-            `            mat4 comboXform = uModelRotate;`,
-            `            vNormal = mat3(transpose(inverse(comboXform))) * aNormal;`, // Adjust normal for model rotation
+            `            vNormal = mat3(uNormalMatrix) * aNormal;`, // Adjust normal for model rotation
             `            vNormal.x = -vNormal.x;`,
             `        }`,
             `    } else {`,

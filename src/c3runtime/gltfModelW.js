@@ -45,6 +45,7 @@ class GltfModelWTop {
     this.locUNodeXformEnable = null
     this.locAPos = null
     this.locATex = null
+    this.locUNormalMatrix = null
   }
 
   release() {
@@ -158,7 +159,7 @@ class GltfModelWTop {
     // @ts-ignore
     this.locATex = null
     // @ts-ignore
-    this.locANormalMatrix = null
+    this.locUNormalMatrix = null
   }
 
   createBoneBufferViews() {
@@ -570,9 +571,16 @@ class GltfModelWTop {
       mat4.fromRotationTranslationScale(modelRotate, rotate, [x, y, z], [xScale, -yScale, zScale])
       mat4.copy(this.modelRotate, modelRotate)
       // Create inverse transpose normal matrix from modelRotate
-      if (this.inst.normalVertex) {
-        mat4.invert(this.normalMatrix, modelRotate)
+      if (this.inst.fragLightPhong) {
+        mat4.invert(this.normalMatrix, this.modelRotate)
         mat4.transpose(this.normalMatrix, this.normalMatrix)
+        if (this.locUNormalMatrix === null) {
+          const shaderProgram = renderer._batchState.currentShader._shaderProgram;
+          this.locUNormalMatrix = renderer._gl.getUniformLocation(shaderProgram, "uNormalMatrix");
+        }
+        if (this.locUNormalMatrix) {
+          renderer.SetUniformMatrix4fv(this.locUNormalMatrix, this.normalMatrix)
+        }
       }
       mat4.multiply(modelRotate, tmpModelView, modelRotate)
       renderer.SetModelViewMatrix(modelRotate)
