@@ -36,6 +36,7 @@ class GltfModelTop {
     this.locUPhongEnable = null
     this.locUSkinEnable = null
     this.locUNodeXformEnable = null
+    this.locUNormalMatrix = null
   }
 
   _smoothstep(min, max, value) {
@@ -135,7 +136,7 @@ class GltfModelTop {
     // @ts-ignore
     this.locATex = null
     // @ts-ignore
-    this.locANormalMatrix = null
+    this.locUNormalMatrix = null
     // @ts-ignore
     this.msgPort = null
   }
@@ -254,11 +255,18 @@ class GltfModelTop {
         this.inst.localCenter
       )
       mat4.copy(this.modelRotate, modelRotate)
-      if (this.inst.normalVertex) {
-        mat4.invert(this.normalMatrix, modelRotate)
+      // Create inverse transpose normal matrix from modelRotate
+      if (this.inst.fragLightPhong) {
+        mat4.invert(this.normalMatrix, this.modelRotate)
         mat4.transpose(this.normalMatrix, this.normalMatrix)
+        if (this.locUNormalMatrix === null) {
+          const shaderProgram = renderer._batchState.currentShader._shaderProgram;
+          this.locUNormalMatrix = renderer._gl.getUniformLocation(shaderProgram, "uNormalMatrix");
+        }
+        if (this.locUNormalMatrix) {
+          renderer.SetUniformMatrix4fv(this.locUNormalMatrix, this.normalMatrix)
+        }
       }
-
       mat4.multiply(modelRotate, tmpModelView, modelRotate)
       renderer.SetModelViewMatrix(modelRotate)
       this.setVertexShaderModelRotate(renderer, this.modelRotate)
@@ -269,15 +277,6 @@ class GltfModelTop {
     vec4.copy(currentColor, instanceColor)
     let baseColorChanged = false
     if (!vec4.equals(currentColor, [1, 1, 1, 1])) baseColorChanged = true
-
-    // If vertexNormals used set the shader program uniform aNormalMatrix
-    if (this.inst.normalMatrix) {
-      if (this.locANormalMatrix === null) {
-        const shaderProgram = renderer._batchState.currentShader._shaderProgram;
-        this.locANormalMatrix = renderer._gl.getUniformLocation(shaderProgram, "aNormalMatrix");
-      }
-      renderer.SetUniformMatrix4fv(this.locANormalMatrix, this.normalMatrix)
-    }
 
     for (let j = 0; j <= this.drawMeshesIndex; j++) {
       // Skip render if disabled
