@@ -5,10 +5,48 @@
   C3.Plugins.Mikal_3DObject = class Object3DPlugin extends C3.SDKPluginBase {
     constructor(opts) {
       super(opts)
+      console.log("opts", opts)
       const C3 = self.C3
+      const runtime = opts.runtime
+      const MAX_BONES = 256;
+      const _DUMMY_UBO_SIZE = MAX_BONES * 16 * 4;
 
       if (!globalThis.vertexShaderGPUSkinningEnabledXYZ) {
         globalThis.vertexShaderGPUSkinningEnabledXYZ = true
+        // Choose a binding point for the bones UBO. Using a high number
+        // to reduce potential conflicts with C3's internal bindings.
+        globalThis.bonesBindingPoint = 0
+        globalThis.dummyBonesUboBuffer = null
+
+        // In the C3 runtime, we can get the renderer from the runtime instance.
+        // However, the plugin instance isn't available here. We can listen for
+        // the "afterfirstlayoutstart" event to get the runtime and renderer.
+        runtime._iRuntime.addEventListener("afterprojectstart", () => {
+          const renderer = runtime.GetCanvasManager().GetRenderer()
+            const gl = renderer._gl
+
+            if (gl && !globalThis.dummyBonesUboBuffer) {
+              // Create a dummy UBO buffer once and bind it.
+              // This buffer will be used by default for any shader program
+              // that has the "Bones" uniform block.
+              const dummyData = new Float32Array(_DUMMY_UBO_SIZE) // A single mat4 is enough.
+              const uboBuffer = gl.createBuffer()
+              gl.bindBuffer(gl.UNIFORM_BUFFER, uboBuffer)
+              gl.bufferData(gl.UNIFORM_BUFFER, dummyData, gl.STATIC_DRAW)
+              gl.bindBuffer(gl.UNIFORM_BUFFER, null)
+
+              globalThis.dummyBonesUboBuffer = uboBuffer
+
+              // Bind the dummy buffer to the chosen binding point.
+              // This binding will persist until another buffer is bound to this point.
+              gl.bindBufferBase(
+                gl.UNIFORM_BUFFER,
+                globalThis.bonesBindingPoint,
+                globalThis.dummyBonesUboBuffer
+              )
+              console.info("[3DObject] Dummy UBO for bones created and bound.")
+            }
+        })
 
         function GetDefaultVertexShaderSource_WebGL2(useHighP) {
           const texPrecision = useHighP ? "highp" : "mediump"
@@ -45,6 +83,7 @@
             `uniform float uPhongEnable;`,
             `uniform float uNPUVEnable;`,
             `uniform highp mat4 uNormalMatrix;`,
+            `uniform float uHasVertexColors;`,
 
             `// --- Uniform Block for Bone Matrices ---`,
             `layout(std140) uniform Bones {`,
@@ -101,6 +140,9 @@
             `    } else {`,
             `    	    pos = aPos;`,
             `	        gl_Position = matP * matMV * vec4(aPos, 1.0);`,
+            `          if (uPhongEnable > 0.5) {`,
+            `              vNormal = aNormal;`, // Default normal
+            `          }`,
             `    }`,
             `    if (uUVXformEnable > 0.5) {`,
             `        vec2 uv = aTex;`,
@@ -117,7 +159,12 @@
             `        vNPTex = aTex * gl_Position.w;`,
             `        vNPW = gl_Position.w;`,
             `    }`,
-            `    vColor = aColor;`,
+            `    // Handle vertex colors - use white as default if no vertex colors`,
+            `    if (uHasVertexColors > 0.5) {`,
+            `        vColor = aColor;`,
+            `    } else {`,
+            `        vColor = vec4(1.0, 1.0, 1.0, 1.0);`,
+            `    }`,
             `}`,
           ].join("\n")
         }

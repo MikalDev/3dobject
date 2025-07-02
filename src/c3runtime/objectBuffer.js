@@ -126,6 +126,7 @@ class ObjectBufferTop {
     this.locANormal = gl.getAttribLocation(shaderProgram, "aNormal")
     this.locAWeights = gl.getAttribLocation(shaderProgram, "aWeights")
     this.locAJoints = gl.getAttribLocation(shaderProgram, "aJoints")
+    this.locHasVertexColors = gl.getUniformLocation(shaderProgram, "uHasVertexColors")
 
     const locAPos = this.locAPos
     const locATex = this.locATex
@@ -160,6 +161,9 @@ class ObjectBufferTop {
       gl.bindBuffer(gl.ARRAY_BUFFER, cB)
       gl.vertexAttribPointer(locAColor, 3, gl.FLOAT, false, 0, 0)
       gl.enableVertexAttribArray(locAColor)
+      gl.uniform1f(this.locHasVertexColors, 1.0)
+    } else {
+      gl.uniform1f(this.locHasVertexColors, 0.0)
     }
     if (nB != null && locANormal != -1) {
       gl.bindBuffer(gl.ARRAY_BUFFER, nB)
