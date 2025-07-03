@@ -13,6 +13,8 @@ class GltfData {
     this.sharedModelBoneUbo = null; // For the shared UBO containing bone matrices for this model asset
     this.bonesPerModelAsset = 0; // Actual number of bones in this model asset
     this.rendererForUbo = null; // Store renderer for UBO release
+    this.dracoDecoder = null
+    this.dracoModule = null
   }
 
   release() {
@@ -110,6 +112,11 @@ class GltfData {
       this.sharedModelBoneUbo = null;
     }
     this.rendererForUbo = null;
+    if (this.dracoDecoder) {
+      this.dracoModule.destroy(this.dracoDecoder)
+      this.dracoDecoder = null
+      this.dracoModule = null
+    }
   }
 
   /*
@@ -117,6 +124,7 @@ class GltfData {
 	Expects an "embeded" gltf file.
     */
   async load(gltfPath, isRuntime, debug) {
+    await this._initDraco()
     let runtime = this._runtime
     let sdkType = this._sdkType
     
@@ -269,6 +277,45 @@ class GltfData {
         // @ts-ignore
         gltf.buffers[i] = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0)).buffer
       }
+    }
+
+    // Phase 1 & 2: Detect, Isolate, and Decompress Primitives
+    const dracoModule = this.dracoModule;
+    const dracoDecoder = this.dracoDecoder;
+
+    if (dracoDecoder) { // Only attempt if Draco is available
+        for (const mesh of gltf.meshes) {
+            for (const primitive of mesh.primitives) {
+                if (primitive.extensions && primitive.extensions.KHR_draco_mesh_compression) {
+                    console.log("Found Draco compressed primitive in mesh:", mesh.name);
+                    
+                    const dracoExtension = primitive.extensions.KHR_draco_mesh_compression;
+                    const bufferView = gltf.bufferViews[dracoExtension.bufferView];
+                    const buffer = gltf.buffers[bufferView.buffer];
+                    const compressedData = new Uint8Array(buffer, bufferView.byteOffset || 0, bufferView.byteLength);
+
+                    // Phase 2: Decompress the Geometry
+                    const dracoMesh = new dracoModule.Mesh();
+                    const status = dracoDecoder.DecodeArrayToMesh(compressedData, compressedData.byteLength, dracoMesh);
+
+                    if (!status.ok()) {
+                        const errorMsg = status.error_msg();
+                        console.error("Draco decompression failed:", errorMsg);
+                        dracoModule.destroy(dracoMesh);
+                        dracoModule.destroy(status);
+                        throw new Error(`Draco decompression failed: ${errorMsg}`);
+                    }
+                    
+                    console.log("Draco decompression successful for mesh:", mesh.name);
+                    console.log("- Decoded mesh has", dracoMesh.num_points(), "points and", dracoMesh.num_faces(), "faces.");
+
+                    // For now, just decode and clean up as per phase 2.
+                    // Later phases will extract data from dracoMesh.
+                    dracoModule.destroy(dracoMesh);
+                    dracoModule.destroy(status);
+                }
+            }
+        }
     }
 
     // accessors
@@ -776,6 +823,20 @@ class GltfData {
         console.log(`Created shared Bone UBO for model: ${this.gltf?.asset?.extras?.originalFileName || 'Unknown Model'}, Shader Max Bones: ${SHADER_MAX_BONES}, Size: ${uboSize} bytes, Actual Model Bones: ${this.bonesPerModelAsset}`);
     }
     return this.sharedModelBoneUbo;
+  }
+
+  async _initDraco() {
+    if (this.dracoDecoder) return;
+
+    console.info("[3DObject] Initializing Draco decoder module.");
+
+    if (globalThis.DracoDecoderModule) {
+        this.dracoModule = await globalThis.DracoDecoderModule();
+        this.dracoDecoder = new this.dracoModule.Decoder();
+        console.info("[3DObject] Draco decoder module initialized successfully.");
+    } else {
+        console.log("[3DObject] DracoDecoderModule not found. Draco compression is not supported.");
+    }
   }
 }
 

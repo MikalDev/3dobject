@@ -36,6 +36,8 @@
     "c3runtime/gltfModelW.js",
     "c3runtime/gltfWorker.js",
     "c3runtime/boneBuffer.js",
-    "c3runtime/objectBuffer.js"
+    "c3runtime/objectBuffer.js",
+    "c3runtime/draco_decoder.js",
+    "c3runtime/draco_decoder.wasm"
   ]
 }
