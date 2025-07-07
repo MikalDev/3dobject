@@ -135,7 +135,19 @@
         type: "copy-to-output",
         fileType: "text",
       })
-
+      this._info.AddFileDependency({
+        filename: "c3runtime/draco_wasm_wrapper.js",
+        type: "external-runtime-script",
+      })
+      this._info.AddFileDependency({
+        filename: "c3runtime/draco_decoder.wasm",
+        type: "copy-to-output",
+        fileType: "application/wasm",
+      })
+      this._info.AddFileDependency({
+        filename: "c3runtime/DRACOLoader.js",
+        type: "external-runtime-script",
+      })
       SDK.Lang.PopContext() //.properties
       SDK.Lang.PopContext()
     }

@@ -1,17 +1,6 @@
 // @ts-check
 "use strict"
 
-/**
- * @typedef {Object} DRACODecoderInstance
- * @property {(path: string) => DRACODecoderInstance} setDecoderPath
- * @property {() => Promise<void>} preload
- * @property {(buffer: Uint8Array, attributeIDs: any, attributeTypes: any) => Promise<any>} decodePrimitive
- */
-
-/**
- * @typedef {new (runtime: any) => DRACODecoderInstance} DRACODecoderConstructor
- */
-
 const SHADER_MAX_BONES = 256; // Maximum bones supported by the shader's UBO definition
 
 class GltfData {
@@ -314,10 +303,18 @@ class GltfData {
       }
     }
 
-    // Process meshes - bypass Draco in editor environment
+    // Store runtime mode for use in other methods
+    this._isRuntime = isRuntime;
+    
+    // Process meshes - handle Draco in both editor and runtime environments  
     if (isEditorEnvironment && hasDracoCompression) {
-      console.warn('⚠️ EDITOR BYPASS: Skipping Draco processing, using standard GLTF processing')
-      await this._processStandardPrimitivesOnly(gltf)
+      console.log('🔥 EDITOR MODE: Initializing Draco with JavaScript decoder for editor compatibility')
+      // Initialize Draco decoder with JS code for editor mode
+      await this._initEditorDracoDecoder()
+      // Process meshes with Draco support enabled
+      await this._processMeshes(gltf)
+      // Now process remaining accessors (non-Draco ones)
+      await this._processAccessors(gltf)
     } else {
       // Process meshes first to handle Draco compression, then process accessors
       await this._processMeshes(gltf)
@@ -623,6 +620,28 @@ class GltfData {
     }
   }
 
+  // Initialize Draco decoder for editor mode with embedded JavaScript decoder
+  async _initEditorDracoDecoder() {
+    if (this._dracoDecoder) {
+      return // Already initialized
+    }
+
+    try {
+      console.log('🔥 Initializing Draco decoder for editor mode with embedded JS decoder...')
+      
+      // Create DRACODecoder instance for editor mode
+      // Uses embedded JS decoder string from globalThis.dracoDecoderGltfString
+      this._dracoDecoder = new DRACODecoder(this._runtime, true)
+      
+      await this._dracoDecoder.preload()
+      console.log('🔥 Successfully initialized Draco decoder for editor mode')
+      
+    } catch (error) {
+      console.error('❌ Failed to initialize editor Draco decoder:', error)
+      throw error
+    }
+  }
+
   // Process Draco compressed primitive
   async _processDracoPrimitive(primitive, gltf) {
     console.log('[DEBUG] Starting Draco primitive processing...')
@@ -633,10 +652,17 @@ class GltfData {
     try {
       // Initialize Draco decoder if not already done
       if (!this._dracoDecoder) {
-        /** @type {DRACODecoderConstructor} */
-        const DRACODecoder = (/** @type {any} */(globalThis)).DRACODecoder;
-        this._dracoDecoder = new DRACODecoder(this._runtime)
-        this._dracoDecoder.setDecoderPath('') // Path is handled by our wrapper
+        // Determine if we're in editor mode using stored runtime state
+        const isEditorMode = !this._isRuntime
+        
+        if (isEditorMode) {
+          console.warn('⚠️ Draco decoder not initialized in editor mode, creating editor-mode decoder')
+          this._dracoDecoder = new DRACODecoder(this._runtime, true)
+        } else {
+          console.warn('⚠️ Draco decoder not initialized in runtime mode, creating runtime-mode decoder')
+          this._dracoDecoder = new DRACODecoder(this._runtime)
+          this._dracoDecoder.setDecoderPath('') // Path is handled by our wrapper
+        }
         await this._dracoDecoder.preload()
       }
 
@@ -878,15 +904,21 @@ class GltfData {
         
         const indicesByteOffset = (indicesBufferView.byteOffset || 0) + (sparse.indices.byteOffset || 0);
         const indicesLength = sparse.count;
-        // @ts-ignore
-        const indices = new indicesType(gltf.buffers[indicesBufferView.buffer], indicesByteOffset, indicesLength);
+        const indices = new indicesType(
+          gltf.buffers[indicesBufferView.buffer],
+          indicesByteOffset,
+          indicesLength
+        );
 
         // Get values
         const valuesByteOffset = (valuesBufferView.byteOffset || 0) + (sparse.values.byteOffset || 0);
         const valuesLength = sparse.count * compcount;
         // @ts-ignore
-        // @ts-ignore
-        const values = new buftype(gltf.buffers[valuesBufferView.buffer], valuesByteOffset, valuesLength);
+        const values = new buftype(
+          gltf.buffers[valuesBufferView.buffer],
+          valuesByteOffset,
+          valuesLength
+        );
 
         // Apply sparse values
         for (let j = 0; j < sparse.count; j++) {
@@ -1080,7 +1112,6 @@ class GltfData {
           const byteOffset = (bufview.byteOffset || 0) + (a.byteOffset || 0);
           const elementSize = buftype.BYTES_PER_ELEMENT;
           const length = compcount * a.count;
-          // @ts-ignore
           a.data = new buftype(gltf.buffers[bufview.buffer], byteOffset, length);
         }
 
@@ -1104,13 +1135,19 @@ class GltfData {
         
         const indicesByteOffset = (indicesBufferView.byteOffset || 0) + (sparse.indices.byteOffset || 0);
         const indicesLength = sparse.count;
-        // @ts-ignore
-        const indices = new indicesType(gltf.buffers[indicesBufferView.buffer], indicesByteOffset, indicesLength);
+        const indices = new indicesType(
+          gltf.buffers[indicesBufferView.buffer],
+          indicesByteOffset,
+          indicesLength
+        );
 
         const valuesByteOffset = (valuesBufferView.byteOffset || 0) + (sparse.values.byteOffset || 0);
         const valuesLength = sparse.count * compcount;
-        // @ts-ignore
-        const values = new buftype(gltf.buffers[valuesBufferView.buffer], valuesByteOffset, valuesLength);
+        const values = new buftype(
+          gltf.buffers[valuesBufferView.buffer],
+          valuesByteOffset,
+          valuesLength
+        );
 
         for (let j = 0; j < sparse.count; j++) {
           const targetIndex = indices[j];
@@ -1157,7 +1194,6 @@ class GltfData {
       } else {
         const finalByteOffset = bufview.byteOffset + accessorByteOffset;
         const length = compcount * a.count;
-        // @ts-ignore
         a.data = new buftype(gltf.buffers[bufview.buffer], finalByteOffset, length);
       }
     }

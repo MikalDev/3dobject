@@ -5,8 +5,16 @@ const _taskCache = new WeakMap();
 
 class DRACODecoder {
 
-	constructor(runtime = null) {
+	/**
+	 * Creates a new DRACODecoder instance.
+	 * @param {Object} runtime - The C3 runtime instance
+	 * @param {boolean} isEditorMode - Whether we're running in editor mode
+	 * @param {string} jsDecoderString - The embedded JS decoder string for editor mode
+	 */
+	constructor(runtime = null, isEditorMode = false, jsDecoderString = null) {
 		this.runtime = runtime;
+		this.isEditorMode = isEditorMode;
+		this.jsDecoderString = jsDecoderString;
 		this.decoderPath = '';
 		this.decoderConfig = {};
 		this.decoderBinary = null;
@@ -16,6 +24,7 @@ class DRACODecoder {
 		this.workerPool = [];
 		this.workerNextTaskID = 1;
 		this.workerSourceURL = '';
+		this.dracoDecoderGltfString = globalThis.dracoDecoderGltfString;
 
 		this.defaultAttributeIDs = {
 			position: 'POSITION',
@@ -29,6 +38,11 @@ class DRACODecoder {
 			color: 'Float32Array',
 			uv: 'Float32Array'
 		};
+		
+		// Use provided JS decoder string or fallback to global for editor mode
+		if (isEditorMode) {
+			this.jsDecoderString = jsDecoderString || this.dracoDecoderGltfString;
+		}
 	}
 
 	setDecoderPath( path ) {
@@ -217,16 +231,38 @@ class DRACODecoder {
 		return loader;
 	}
 
-	preload() {
-		if ( this.decoderPending ) return this.decoderPending;
-		this.decoderPending = this._initDecoder();
-		return this.decoderPending;
+	/**
+	 * Initialize the Draco decoder for editor mode using embedded JS string.
+	 * No external file fetching, CSP-safe approach.
+	 * @returns {Promise} Promise that resolves when decoder is ready
+	 */
+	async _initEditorDecoder() {
+		console.log('🔥 DRACOLoader: Initializing EDITOR mode decoder with JS string');
+		
+		if (!this.jsDecoderString) {
+			throw new Error('DRACOLoader: No JS decoder string provided for editor mode');
+		}
+
+		// Set config for JS-only mode
+		this.decoderConfig.type = 'js';
+		this.decoderConfig.embedded = true;
+
+		// Create worker source with embedded Draco module
+		this.workerSourceURL = this._createEditorWorker();
+		
+		console.log('🔥 DRACOLoader: Editor mode decoder initialized successfully');
+		return Promise.resolve();
 	}
 
-	async _initDecoder() {
+	/**
+	 * Initialize the Draco decoder for runtime mode using URL-based loading.
+	 * Existing WASM/JS fallback approach.
+	 * @returns {Promise} Promise that resolves when decoder is ready
+	 */
+	async _initRuntimeDecoder() {
 		const scope = this;
 		
-		console.log('🔥 DRACOLoader: Initializing decoder with runtime:', !!this.runtime);
+		console.log('🔥 DRACOLoader: Initializing RUNTIME mode decoder with URL loading');
 		
 		// Use GetProjectFileUrl method like gltfWorker.min.js
 		let wasmURL, jsURL;
@@ -278,6 +314,61 @@ class DRACODecoder {
 		} );
 	}
 
+	/**
+	 * Create a worker for editor mode with embedded JS decoder.
+	 * @returns {string} Blob URL for the worker
+	 */
+	_createEditorWorker() {
+		console.log('🔥 DRACOLoader: Creating editor mode worker with embedded JS decoder');
+		
+		const fn = DRACOWorker.toString();
+		
+		// Decode the Base64-encoded decoder string to get the actual JavaScript
+		let decoderCode = '';
+		try {
+			if (this.jsDecoderString) {
+				// The decoder string is Base64-encoded to safely handle any JavaScript content
+				decoderCode = atob(this.jsDecoderString);
+				console.log('🔥 DRACOLoader: Successfully decoded Base64 decoder string, length:', decoderCode.length);
+			} else {
+				throw new Error('No embedded decoder string found');
+			}
+		} catch (error) {
+			console.error('🚨 DRACOLoader: Failed to decode Base64 decoder string:', error);
+			throw new Error('Invalid embedded Draco decoder string: ' + error.message);
+		}
+		
+		const body = [
+			'/* embedded draco decoder for editor mode */',
+			decoderCode,
+			'',
+			'/* worker logic */',
+			fn.substring( fn.indexOf( '{' ) + 1, fn.lastIndexOf( '}' ) )
+		].join( '\n' );
+
+		return URL.createObjectURL( new Blob( [ body ], { type: 'application/javascript' } ) );
+	}
+
+	preload() {
+		if ( this.decoderPending ) return this.decoderPending;
+		this.decoderPending = this._initDecoder();
+		return this.decoderPending;
+	}
+
+	/**
+	 * Router method that calls appropriate initialization based on mode.
+	 * @returns {Promise} Promise that resolves when decoder is ready
+	 */
+	async _initDecoder() {
+		if (this.isEditorMode) {
+			console.log('🔥 DRACOLoader: Routing to editor mode initialization');
+			return this._initEditorDecoder();
+		} else {
+			console.log('🔥 DRACOLoader: Routing to runtime mode initialization');
+			return this._initRuntimeDecoder();
+		}
+	}
+
 	_getWorker( taskID, taskCost ) {
 		return this._initDecoder().then( () => {
 			if ( this.workerPool.length < this.workerLimit ) {
@@ -286,19 +377,30 @@ class DRACODecoder {
 				worker._taskCosts = {};
 				worker._taskLoad = 0;
 
-				// WASM binary'yi Worker'a gönder (clone yaparak, transfer etmeyerek)
+				// Send appropriate config based on mode
 				let configToSend = { ...this.decoderConfig };
 				
-				if (this.decoderBinary && this.decoderBinary instanceof ArrayBuffer) {
-					// WASM binary'yi config'e ekle (clone edilecek)
-					configToSend.wasmBinary = this.decoderBinary.slice();
+				if (this.isEditorMode) {
+					console.log('🔥 DRACOLoader: Initializing editor mode worker');
+					// Editor mode: simple config, no WASM binary
+					worker.postMessage( {
+						type: 'init',
+						decoderConfig: configToSend
+					} );
+				} else {
+					console.log('🔥 DRACOLoader: Initializing runtime mode worker');
+					// Runtime mode: handle WASM binary if available
+					if (this.decoderBinary && this.decoderBinary instanceof ArrayBuffer) {
+						// Clone WASM binary for worker
+						configToSend.wasmBinary = this.decoderBinary.slice();
+					}
+					
+					worker.postMessage( {
+						type: 'init',
+						decoderConfig: configToSend,
+						decoderBinary: this.decoderBinary
+					} );
 				}
-				
-				worker.postMessage( {
-					type: 'init',
-					decoderConfig: configToSend,
-					decoderBinary: this.decoderBinary
-				} );
 
 				worker.onmessage = function( e ) {
 					const message = e.data;
@@ -364,31 +466,47 @@ function DRACOWorker() {
 			case 'init':
 				decoderConfig = message.decoderConfig;
 				
-				// WASM binary doğrudan gelirse blob URL yaratıp kullan
-				if (decoderConfig.wasmBinary) {
-					console.log('🔥 Worker: Creating blob URL for WASM binary');
-					const wasmBlob = new Blob([decoderConfig.wasmBinary], { type: 'application/wasm' });
-					const wasmBlobURL = URL.createObjectURL(wasmBlob);
-					
-					decoderConfig.locateFile = function(path) {
-						console.log('🔥 Worker: locateFile called with:', path);
-						if (path.endsWith('.wasm') || path === 'draco_decoder.wasm') {
-							console.log('🔥 Worker: Returning blob URL for WASM');
-							return wasmBlobURL;
-						}
-						return path;
-					};
-					
-					// wasmBinary'yi temizle, locateFile ile blob URL kullanılacak
-					delete decoderConfig.wasmBinary;
-				}
+				console.log('🔥 Worker: Initializing with config type:', decoderConfig.type);
 				
-				decoderPending = new Promise( function ( resolve ) {
-					decoderConfig.onModuleLoaded = function ( draco ) {
-						resolve( { draco: draco } );
-					};
-					DracoDecoderModule( decoderConfig );
-				} );
+				if (decoderConfig.embedded) {
+					console.log('🔥 Worker: Using embedded decoder for editor mode');
+					// Editor mode: embedded decoder, no external file loading
+					decoderPending = new Promise( function ( resolve ) {
+						decoderConfig.onModuleLoaded = function ( draco ) {
+							console.log('🔥 Worker: Embedded decoder loaded successfully');
+							resolve( { draco: draco } );
+						};
+						DracoDecoderModule( decoderConfig );
+					} );
+				} else {
+					console.log('🔥 Worker: Using runtime decoder with external files');
+					// Runtime mode: handle WASM binary if available
+					if (decoderConfig.wasmBinary) {
+						console.log('🔥 Worker: Creating blob URL for WASM binary');
+						const wasmBlob = new Blob([decoderConfig.wasmBinary], { type: 'application/wasm' });
+						const wasmBlobURL = URL.createObjectURL(wasmBlob);
+						
+						decoderConfig.locateFile = function(path) {
+							console.log('🔥 Worker: locateFile called with:', path);
+							if (path.endsWith('.wasm') || path === 'draco_decoder.wasm') {
+								console.log('🔥 Worker: Returning blob URL for WASM');
+								return wasmBlobURL;
+							}
+							return path;
+						};
+						
+						// Clean up wasmBinary, locateFile will use blob URL
+						delete decoderConfig.wasmBinary;
+					}
+					
+					decoderPending = new Promise( function ( resolve ) {
+						decoderConfig.onModuleLoaded = function ( draco ) {
+							console.log('🔥 Worker: Runtime decoder loaded successfully');
+							resolve( { draco: draco } );
+						};
+						DracoDecoderModule( decoderConfig );
+					} );
+				}
 				break;
 
 			case 'decode':
@@ -515,6 +633,4 @@ function DRACOWorker() {
 }
 
 // Global instance
-if (!globalThis.DRACODecoder) {
-	globalThis.DRACODecoder = DRACODecoder;
-}
+globalThis.DRACODecoder = DRACODecoder;
