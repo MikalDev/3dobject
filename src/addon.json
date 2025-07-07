@@ -14,7 +14,9 @@
     "instance.js",
     "gl-matrix.js",
     "c3runtime/gltfData.js",
-    "c3runtime/gltfModel.js"
+    "c3runtime/gltfModel.js",
+    "c3runtime/draco_decoder_gltf.js",
+    "c3runtime/DRACOLoader.js"
   ],
   "file-list": [
     "c3runtime/plugin.js",
@@ -36,6 +38,10 @@
     "c3runtime/gltfModelW.js",
     "c3runtime/gltfWorker.js",
     "c3runtime/boneBuffer.js",
-    "c3runtime/objectBuffer.js"
+    "c3runtime/objectBuffer.js",
+    "c3runtime/draco_wasm_wrapper.js",
+    "c3runtime/draco_decoder.wasm",
+    "c3runtime/draco_decoder_gltf.js",
+    "c3runtime/DRACOLoader.js"
   ]
 }
