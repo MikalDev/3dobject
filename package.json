@@ -1,0 +1,29 @@
+{
+  "name": "3dobject",
+  "version": "1.0.0",
+  "description": "3dObject plugin for Construct 3",
+  "main": "index.js",
+  "release": "2-76-0",
+  "directories": {
+    "doc": "docs",
+    "example": "examples"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "bash release-minified.sh $(node -p \"require('./package.json').release\")"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MikalDev/3dobject.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/MikalDev/3dobject/issues"
+  },
+  "homepage": "https://github.com/MikalDev/3dobject#readme",
+  "devDependencies": {
+    "terser": "^5.43.1"
+  }
+}
