@@ -711,9 +711,6 @@ class GltfModelTop {
         } else {
             console.warn("[GltfModel Cleanup] Could not get current shader program to perform dummy UBO cleanup bind.");
         }
-    // @ts-ignore
-    } else if (!globalThis.BoneBuffer) {
-        console.warn("[GltfModel Cleanup] globalThis.BoneBuffer not found, cannot perform dummy UBO cleanup bind.");
     }
     // --- End Final Dummy UBO Bind ---
   }

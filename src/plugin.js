@@ -137,7 +137,8 @@
       })
       this._info.AddFileDependency({
         filename: "c3runtime/draco_wasm_wrapper.js",
-        type: "external-runtime-script",
+        type: "copy-to-output",
+        fileType: "application/javascript",
       })
       this._info.AddFileDependency({
         filename: "c3runtime/draco_decoder.wasm",
