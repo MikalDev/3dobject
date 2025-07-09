@@ -781,7 +781,7 @@ class GltfData {
   }
 
   async _processMeshes(gltf) {
-    console.log(`[DEBUG] Processing ${gltf.meshes.length} meshes for Draco compression`)
+    // console.log(`[DEBUG] Processing ${gltf.meshes.length} meshes for Draco compression`)
     
     for (let i = 0; i < gltf.meshes.length; i++) {
       const mesh = gltf.meshes[i]
@@ -823,7 +823,7 @@ class GltfData {
     
     for (let i = 0; i < gltf.accessors.length; i++) {
       let a = gltf.accessors[i]
-      console.log(`[DEBUG] Processing accessor ${i}:`, {
+      /*console.log(`[DEBUG] Processing accessor ${i}:`, {
         componentType: a.componentType,
         type: a.type,
         count: a.count,
@@ -831,7 +831,7 @@ class GltfData {
         bufferView: a.bufferView,
         hasSparse: !!a.sparse,
         isDracoDecoded: !!a._dracoDecoded
-      })
+      })*/
       
       let buftype = null
       switch (a.componentType) {
