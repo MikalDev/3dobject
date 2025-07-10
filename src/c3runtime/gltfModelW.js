@@ -579,7 +579,7 @@ class GltfModelWTop {
           this.locUNormalMatrix = renderer._gl.getUniformLocation(shaderProgram, "uNormalMatrix");
         }
         if (this.locUNormalMatrix) {
-          renderer.SetUniformMatrix4fv(this.locUNormalMatrix, this.normalMatrix)
+          renderer._gl.uniformMatrix4fv(this.locUNormalMatrix, false, this.normalMatrix)
         }
       }
       mat4.multiply(modelRotate, tmpModelView, modelRotate)
