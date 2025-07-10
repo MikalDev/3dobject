@@ -453,7 +453,8 @@ function getPolygonsPrep(editorData) {
     const z = editorData.z
 
     quat.fromEuler(rotate, xAngle, yAngle, zAngle)
-    mat4.fromRotationTranslationScale(modelScaleRotate, rotate, [x, y, z], [xScale, -yScale, zScale])
+    const localCenter = editorData.localCenter || [0, 0, 0]
+    mat4.fromRotationTranslationScaleOrigin(modelScaleRotate, rotate, [x, y, z], [xScale, -yScale, zScale], localCenter)
   }
 
   quat.fromEuler(rotationQuat, 0, 0, 0)
@@ -833,7 +834,8 @@ function updateLight(editorData) {
   }
 
   // Need to manually create for lighting, since usually done in shader
-  mat4.fromRotationTranslationScale(modelRotate, rotate, [x, y, z], [xScale, -yScale, zScale])
+  const localCenter = editorData.localCenter || [0, 0, 0]
+  mat4.fromRotationTranslationScaleOrigin(modelRotate, rotate, [x, y, z], [xScale, -yScale, zScale], localCenter)
 
   const length = drawVerts.length
   // Calculate for each triangle
