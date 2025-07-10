@@ -25,45 +25,56 @@ class GltfData {
 
       // Release boneBuffers in each node
       if (this.gltf.nodes) {
-        for (let i = 0; i < this.gltf.nodes.length; i++) {
-          if (this.gltf.nodes[i]) {
-            if (this.gltf.nodes[i].boneBuffer && typeof this.gltf.nodes[i].boneBuffer.release === 'function') {
-              this.gltf.nodes[i].boneBuffer.release()
-            }
+        const nodes = this.gltf.nodes
+        const nodeCount = nodes.length
+        for (let i = 0; i < nodeCount; i++) {
+          const node = nodes[i]
+          if (node && node.boneBuffer && typeof node.boneBuffer.release === 'function') {
+            node.boneBuffer.release()
           }
         }
       }
 
       // Release accessors data
       if (this.gltf.accessors) {
-        for (let i = 0; i < this.gltf.accessors.length; i++) {
-          if (this.gltf.accessors[i]) {
-            this.gltf.accessors[i].data = null
+        const accessors = this.gltf.accessors
+        const accessorCount = accessors.length
+        for (let i = 0; i < accessorCount; i++) {
+          if (accessors[i]) {
+            accessors[i].data = null
           }
         }
       }
 
       // Release skinned nodes
       if (this.gltf.skinnedNodes) {
-        for (let i = 0; i < this.gltf.skinnedNodes.length; i++) {
-          if (this.gltf.skinnedNodes[i]) {
-            this.gltf.skinnedNodes[i].invMatrix = null
-            this.gltf.skinnedNodes[i].boneMatrix = null
+        const skinnedNodes = this.gltf.skinnedNodes
+        const skinnedNodeCount = skinnedNodes.length
+        for (let i = 0; i < skinnedNodeCount; i++) {
+          const skinnedNode = skinnedNodes[i]
+          if (skinnedNode) {
+            skinnedNode.invMatrix = null
+            skinnedNode.boneMatrix = null
           }
         }
       }
 
       // Release matrices
       if (this.gltf.skins) {
-        for (let i = 0; i < this.gltf.skins.length; i++) {
-          const skin = this.gltf.skins[i]
+        const skins = this.gltf.skins
+        const skinCount = skins.length
+        for (let i = 0; i < skinCount; i++) {
+          const skin = skins[i]
           if (skin) {
             skin.inverseBindMatrices = null
             if (skin.joints) {
-              for (let j = 0; j < skin.joints.length; j++) {
-                if (skin.joints[j]) {
-                  skin.joints[j].invBindMatrix = null
-                  skin.joints[j].boneMatrix = null
+              const joints = skin.joints
+              const jointCount = joints.length
+              for (let j = 0; j < jointCount; j++) {
+                const joint = joints[j]
+                if (joint) {
+                  joint.invBindMatrix = null
+                  joint.boneMatrix = null
                 }
               }
             }
@@ -104,7 +115,7 @@ class GltfData {
     if (this.sharedModelBoneUbo && this.rendererForUbo) {
       const gl = this.rendererForUbo._gl;
       if (gl) {
-        console.log("Deleting shared Bone UBO for model asset");
+        if (this._debug) console.log("Deleting shared Bone UBO for model asset");
         gl.deleteBuffer(this.sharedModelBoneUbo);
       }
       this.sharedModelBoneUbo = null;
@@ -119,6 +130,7 @@ class GltfData {
   async load(gltfPath, isRuntime, debug) {
     let runtime = this._runtime
     let sdkType = this._sdkType
+    this._debug = debug // Store debug flag for use in other methods
     
     if (isRuntime) {
       this.rendererForUbo = runtime.GetCanvasManager().GetWebGLRenderer(); // Store renderer for UBO management only in runtime
@@ -144,7 +156,7 @@ class GltfData {
 
     if (gltfURI === null) {
       alert("gltfPath not found: " + gltfPath)
-      console.warn("glfPath not found:", gltfPath)
+      if (this._debug) console.warn("glfPath not found:", gltfPath)
       return false
     }
 
@@ -159,7 +171,7 @@ class GltfData {
       resultgltf = await this.loadGLTF(gltfURI, isRuntime, debug, isBinary)
     } catch (err) {
       alert("Error loading GLTF:" + err)
-      console.error("Error loading GLTF:", err)
+      if (this._debug) console.error("Error loading GLTF:", err)
       return false
     }
 
@@ -167,7 +179,7 @@ class GltfData {
       if (debug) console.info("[3DObject] modelData:", resultgltf)
       sdkType.dataLoaded = true
     } else {
-      console.warn("[3DObject] Unable to load gltf files")
+      if (this._debug) console.warn("[3DObject] Unable to load gltf files")
       alert("Unable to load gltf files")
       return false
     }
@@ -193,7 +205,6 @@ class GltfData {
     let binBuffer
 
     if (debug) console.info("loadGLTF", uri)
-    console.debug("loadGLTF", uri)
 
     if (isRuntime) {
       if (isBinary) {
@@ -213,7 +224,7 @@ class GltfData {
           let text = await response.text()
           gltf = JSON.parse(text)
         } catch (err) {
-          console.error("[3DShape], cannot fetch/parse gltf", uri)
+          if (debug) console.error("[3DShape], cannot fetch/parse gltf", uri)
           return false
         }
       }
@@ -234,7 +245,7 @@ class GltfData {
           gltf = JSON.parse(jsonString)
           binBuffer = buffer.slice(jsonBufSize + 28)
         } catch (err) {
-          console.error("[3DShape], cannot fetch/parse gltf blob", err)
+          if (debug) console.error("[3DShape], cannot fetch/parse gltf blob", err)
           return false
         }
       } else {
@@ -245,7 +256,7 @@ class GltfData {
           if (!text) return false
           gltf = JSON.parse(text)
         } catch (err) {
-          console.error("[3DShape], cannot fetch/parse gltf blob", uri)
+          if (debug) console.error("[3DShape], cannot fetch/parse gltf blob", uri)
           return false
         }
       }
@@ -254,19 +265,21 @@ class GltfData {
     if (!gltf) return false
 
     // Debug GLTF file structure
-    console.log('[DEBUG] GLTF file structure:', {
-      asset: gltf.asset,
-      extensionsUsed: gltf.extensionsUsed,
-      extensionsRequired: gltf.extensionsRequired,
-      hasBuffers: !!gltf.buffers,
-      bufferCount: gltf.buffers?.length,
-      hasBufferViews: !!gltf.bufferViews,
-      bufferViewCount: gltf.bufferViews?.length,
-      hasAccessors: !!gltf.accessors,
-      accessorCount: gltf.accessors?.length,
-      hasMeshes: !!gltf.meshes,
-      meshCount: gltf.meshes?.length
-    })
+    if (debug) {
+      console.log('[DEBUG] GLTF file structure:', {
+        asset: gltf.asset,
+        extensionsUsed: gltf.extensionsUsed,
+        extensionsRequired: gltf.extensionsRequired,
+        hasBuffers: !!gltf.buffers,
+        bufferCount: gltf.buffers?.length,
+        hasBufferViews: !!gltf.bufferViews,
+        bufferViewCount: gltf.bufferViews?.length,
+        hasAccessors: !!gltf.accessors,
+        accessorCount: gltf.accessors?.length,
+        hasMeshes: !!gltf.meshes,
+        meshCount: gltf.meshes?.length
+      })
+    }
 
     // ⚠️ EDITOR BYPASS: Check if we're in editor environment
     const isEditorEnvironment = !isRuntime
@@ -275,25 +288,24 @@ class GltfData {
     let hasDracoCompression = false
     if (gltf.extensionsUsed && gltf.extensionsUsed.includes('KHR_draco_mesh_compression')) {
       hasDracoCompression = true
-      if (isEditorEnvironment) {
-        console.warn('⚠️ EDITOR MODE: Draco compression detected but will be bypassed in editor environment to prevent crashes')
-        console.warn('⚠️ Draco models will display correctly in preview/runtime')
-      } else {
-        console.log('🔥 GLTF file declares Draco compression in extensionsUsed')
+      if (debug) {
+        if (isEditorEnvironment) {
+          console.warn('⚠️ EDITOR MODE: Draco compression detected but will be bypassed in editor environment to prevent crashes')
+          console.warn('⚠️ Draco models will display correctly in preview/runtime')
+        } else {
+          console.log('🔥 GLTF file declares Draco compression in extensionsUsed')
+        }
       }
-    } else {
+    } else if (debug) {
       console.log('📄 GLTF file does not declare Draco compression in extensionsUsed')
     }
 
     //extra variable for a list of skinned meshes.  They need to be transformed after the rest.
     gltf.skinnedNodes = []
 
-    // buffers
-    for (
-      let i = 0;
-      i < gltf.buffers.length;
-      i++ // convert to typed arrays.
-    ) {
+    // buffers - convert to typed arrays
+    const bufferCount = gltf.buffers.length
+    for (let i = 0; i < bufferCount; i++) {
       if (isBinary) {
         gltf.buffers[i] = new Uint8Array(binBuffer).buffer
       } else {
@@ -308,7 +320,7 @@ class GltfData {
     
     // Process meshes - handle Draco in both editor and runtime environments  
     if (isEditorEnvironment && hasDracoCompression) {
-      console.log('🔥 EDITOR MODE: Initializing Draco with JavaScript decoder for editor compatibility')
+      if (debug) console.log('🔥 EDITOR MODE: Initializing Draco with JavaScript decoder for editor compatibility')
       // Initialize Draco decoder with JS code for editor mode
       await this._initEditorDracoDecoder()
       // Process meshes with Draco support enabled
@@ -327,60 +339,80 @@ class GltfData {
     gltf.scene = gltf.scenes[gltf.scene]
 
     // scenes
-    for (let i = 0; i < gltf.scenes.length; i++) {
-      let s = gltf.scenes[i]
-      for (let j = 0; j < s.nodes.length; j++) s.nodes[j] = gltf.nodes[s.nodes[j]]
+    const sceneCount = gltf.scenes.length
+    const nodes = gltf.nodes
+    for (let i = 0; i < sceneCount; i++) {
+      const s = gltf.scenes[i]
+      const nodeCount = s.nodes.length
+      for (let j = 0; j < nodeCount; j++) {
+        s.nodes[j] = nodes[s.nodes[j]]
+      }
     }
 
     // nodes
-    for (let i = 0; i < gltf.nodes.length; i++) {
-      let n = gltf.nodes[i]
+    const nodeCount = gltf.nodes.length
+    const nodeMeshes = gltf.meshes
+    const nodeSkins = gltf.skins
+    for (let i = 0; i < nodeCount; i++) {
+      const n = gltf.nodes[i]
 
       if (n.translation == undefined) n.translation = [0, 0, 0]
       if (n.scale == undefined) n.scale = [1, 1, 1]
       if (n.rotation == undefined) n.rotation = [0, 0, 0, 1]
       if (n.matrix == undefined) n.matrix = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
-      if (n.mesh != undefined) n.mesh = gltf.meshes[n.mesh]
+      if (n.mesh != undefined) n.mesh = nodeMeshes[n.mesh]
       if (n.skin != undefined) {
-        n.skin = gltf.skins[n.skin]
+        n.skin = nodeSkins[n.skin]
         n.invMatrix = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         gltf.skinnedNodes.push(n)
       }
-      if (n.children != undefined) for (let j = 0; j < n.children.length; j++) n.children[j] = gltf.nodes[n.children[j]]
+      if (n.children != undefined) {
+        const childCount = n.children.length
+        for (let j = 0; j < childCount; j++) {
+          n.children[j] = nodes[n.children[j]]
+        }
+      }
     }
 
     // animations
     if (gltf.animations) {
-      for (let i = 0; i < gltf.animations.length; i++) {
-        let a = gltf.animations[i]
+      const animationCount = gltf.animations.length
+      const animAccessors = gltf.accessors
+      for (let i = 0; i < animationCount; i++) {
+        const a = gltf.animations[i]
 
-        for (let j = 0; j < a.channels.length; j++) {
-          let c = a.channels[j]
+        const channelCount = a.channels.length
+        for (let j = 0; j < channelCount; j++) {
+          const c = a.channels[j]
           c.sampler = a.samplers[c.sampler]
-          c.target.node = gltf.nodes[c.target.node]
+          c.target.node = nodes[c.target.node]
         }
 
-        for (let j = 0; j < a.samplers.length; j++) {
-          let s = a.samplers[j]
-          s.input = gltf.accessors[s.input]
-          s.output = gltf.accessors[s.output]
+        const samplerCount = a.samplers.length
+        for (let j = 0; j < samplerCount; j++) {
+          const s = a.samplers[j]
+          s.input = animAccessors[s.input]
+          s.output = animAccessors[s.output]
         }
       }
     }
 
     // images
     if ("images" in gltf && gltf.images.length > 0) {
-      for (let ii = 0; ii < gltf.textures.length; ii++) {
-        let t = gltf.textures[ii]
+      const textures = gltf.textures
+      const textureCount = textures.length
+      const samplers = gltf.samplers
+      for (let ii = 0; ii < textureCount; ii++) {
+        const t = textures[ii]
         t.wrapS = "repeat"
         t.wrapT = "repeat"
         // webp support
         if (t?.extensions?.EXT_texture_webp?.source != undefined) {
           t.source = t.extensions.EXT_texture_webp.source
         }
-        if (t.source != undefined && gltf.samplers != undefined && t.sampler != undefined) {
-          const sampler = gltf.samplers[t.sampler]
+        if (t.source != undefined && samplers != undefined && t.sampler != undefined) {
+          const sampler = samplers[t.sampler]
           const wrapS = sampler.wrapS
           const wrapT = sampler.wrapT
           switch (wrapS) {
@@ -411,10 +443,12 @@ class GltfData {
           }
         }
       }
-      for (let i = 0; i < gltf.images.length; i++) {
+      const images = gltf.images
+      const imageCount = images.length
+      for (let i = 0; i < imageCount; i++) {
+        const image = images[i]
         // If image has no name, set it to the index.
-        if (!("name" in gltf.images[i])) gltf.images[i].name = "image-index-" + i
-        const image = gltf.images[i]
+        if (!("name" in image)) image.name = "image-index-" + i
         let blob
         try {
           if ("bufferView" in image) {
@@ -436,7 +470,7 @@ class GltfData {
             }
           }
         } catch (err) {
-          console.error("Error loading image:", err)
+          if (debug) console.error("Error loading image:", err)
           alert("Error loading image: " + err)
           blob = null
           return
@@ -450,7 +484,7 @@ class GltfData {
         }
         // this.imageBitmap.push(imageBitmap)
         this.imageBitmap[image.name] = imageBitmap
-        const texture = gltf.textures.find((t) => t.source == i)
+        const texture = textures.find((t) => t.source == i)
         this.imageBitmap[image.name].wrapS = texture.wrapS
         this.imageBitmap[image.name].wrapT = texture.wrapT
       }
@@ -461,11 +495,14 @@ class GltfData {
 
     //skins
     if (gltf.skins) {
-      for (let i = 0; i < gltf.skins.length; i++) {
-        let s = gltf.skins[i]
-        s.inverseBindMatrices = gltf.accessors[s.inverseBindMatrices]
-        // for(let j in s.joints)
-        for (let j = 0; j < s.joints.length; j++) {
+      const skinSkins = gltf.skins
+      const skinCount = skinSkins.length
+      const skinAccessors = gltf.accessors
+      for (let i = 0; i < skinCount; i++) {
+        const s = skinSkins[i]
+        s.inverseBindMatrices = skinAccessors[s.inverseBindMatrices]
+        const jointCount = s.joints.length
+        for (let j = 0; j < jointCount; j++) {
           s.joints[j] = gltf.nodes[s.joints[j]]
           s.joints[j].invBindMatrix = s.inverseBindMatrices.data.subarray(j * 16, j * 16 + 16)
           s.joints[j].boneMatrix = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -486,8 +523,13 @@ class GltfData {
     let min = [Infinity, Infinity, Infinity]
     let max = [-Infinity, -Infinity, -Infinity]
 
-    gltf.meshes.forEach((mesh) => {
-      mesh.primitives.forEach((primitive) => {
+    const boundingMeshes = gltf.meshes
+    const boundingMeshCount = boundingMeshes.length
+    for (let i = 0; i < boundingMeshCount; i++) {
+      const mesh = boundingMeshes[i]
+      const primitiveCount = mesh.primitives.length
+      for (let j = 0; j < primitiveCount; j++) {
+        const primitive = mesh.primitives[j]
         const positionAccessor = primitive.attributes.POSITION
         if (positionAccessor) {
           const minVals = positionAccessor.min
@@ -495,8 +537,8 @@ class GltfData {
           min = min.map((val, idx) => Math.min(val, minVals[idx]))
           max = max.map((val, idx) => Math.max(val, maxVals[idx]))
         }
-      })
-    })
+      }
+    }
 
     gltf.boundingBox = { min, max }
 
@@ -555,8 +597,9 @@ class GltfData {
     // A common way to define skeleton size is by the number of entries in the IBM accessor for the most complex skin
     // or the total number of nodes that are joints if there's a global joint list for the model.
     // For simplicity, let's find the skin with the most joints based on its IBM.
-    if (this.gltf.skins.length > 0) {
-        for (const skin of this.gltf.skins) {
+    const skins = this.gltf.skins
+    if (skins.length > 0) {
+        for (const skin of skins) {
             if (skin.inverseBindMatrices && skin.inverseBindMatrices.data) {
                  // skin.inverseBindMatrices.data is a Float32Array of size N*16 for N joints.
                 const jointCountForThisSkin = skin.inverseBindMatrices.data.length / 16;
@@ -615,7 +658,7 @@ class GltfData {
         this.bonesPerModelAsset = 0; // No skins, no bones needed for skinning UBO
     }
 
-    if (this.bonesPerModelAsset > 0) {
+    if (this.bonesPerModelAsset > 0 && this._debug) {
         console.log(`Calculated bonesPerModelAsset: ${this.bonesPerModelAsset} for ${this.gltf?.asset?.extras?.originalFileName || 'Unknown Model'}`);
     }
   }
@@ -627,27 +670,31 @@ class GltfData {
     }
 
     try {
-      console.log('🔥 Initializing Draco decoder for editor mode with embedded JS decoder...')
+      if (this._debug) console.log('🔥 Initializing Draco decoder for editor mode with embedded JS decoder...')
       
       // Create DRACODecoder instance for editor mode
       // Uses embedded JS decoder string from globalThis.dracoDecoderGltfString
       this._dracoDecoder = new DRACODecoder(this._runtime, true)
       
       await this._dracoDecoder.preload()
-      console.log('🔥 Successfully initialized Draco decoder for editor mode')
+      if (this._debug) console.log('🔥 Successfully initialized Draco decoder for editor mode')
       
     } catch (error) {
-      console.error('❌ Failed to initialize editor Draco decoder:', error)
+      if (this._debug) console.error('❌ Failed to initialize editor Draco decoder:', error)
       throw error
     }
   }
 
   // Process Draco compressed primitive
   async _processDracoPrimitive(primitive, gltf) {
-    console.log('[DEBUG] Starting Draco primitive processing...')
+    if (this._debug) {
+      console.log('[DEBUG] Starting Draco primitive processing...')
+    }
     
     const dracoExtension = primitive.extensions.KHR_draco_mesh_compression
-    console.log('[DEBUG] Draco extension data:', dracoExtension)
+    if (this._debug) {
+      console.log('[DEBUG] Draco extension data:', dracoExtension)
+    }
     
     try {
       // Initialize Draco decoder if not already done
@@ -656,10 +703,10 @@ class GltfData {
         const isEditorMode = !this._isRuntime
         
         if (isEditorMode) {
-          console.warn('⚠️ Draco decoder not initialized in editor mode, creating editor-mode decoder')
+          if (this._debug) console.warn('⚠️ Draco decoder not initialized in editor mode, creating editor-mode decoder')
           this._dracoDecoder = new DRACODecoder(this._runtime, true)
         } else {
-          console.warn('⚠️ Draco decoder not initialized in runtime mode, creating runtime-mode decoder')
+          if (this._debug) console.warn('⚠️ Draco decoder not initialized in runtime mode, creating runtime-mode decoder')
           this._dracoDecoder = new DRACODecoder(this._runtime)
           this._dracoDecoder.setDecoderPath('') // Path is handled by our wrapper
         }
@@ -772,45 +819,47 @@ class GltfData {
         delete primitive.extensions
       }
 
-      console.log('Successfully decoded Draco primitive with', Object.keys(decodedGeometry.attributes).length, 'attributes')
+      if (this._debug) console.log('Successfully decoded Draco primitive with', Object.keys(decodedGeometry.attributes).length, 'attributes')
       
     } catch (error) {
-      console.error('Failed to decode Draco primitive:', error)
+      if (this._debug) console.error('Failed to decode Draco primitive:', error)
       throw error
     }
   }
 
   async _processMeshes(gltf) {
-    // console.log(`[DEBUG] Processing ${gltf.meshes.length} meshes for Draco compression`)
+    // Cache array length
+    const meshCount = gltf.meshes.length
     
-    for (let i = 0; i < gltf.meshes.length; i++) {
+    for (let i = 0; i < meshCount; i++) {
       const mesh = gltf.meshes[i]
-      console.log(`[DEBUG] Processing mesh ${i} with ${mesh.primitives.length} primitives`)
+      if (this._debug) console.log(`[DEBUG] Processing mesh ${i} with ${mesh.primitives.length} primitives`)
       
       for (let j = 0; j < mesh.primitives.length; j++) {
         const primitive = mesh.primitives[j]
         
         // Check for Draco extension
         if (primitive.extensions && primitive.extensions['KHR_draco_mesh_compression']) {
-          console.log(`🔥 Found Draco primitive in mesh ${i}, primitive ${j}`)
-          
-          const dracoExt = primitive.extensions['KHR_draco_mesh_compression']
-          console.log(`🔥 Draco extension data:`, dracoExt)
+          if (this._debug) {
+            console.log(`🔥 Found Draco primitive in mesh ${i}, primitive ${j}`)
+            const dracoExt = primitive.extensions['KHR_draco_mesh_compression']
+            console.log(`🔥 Draco extension data:`, dracoExt)
+          }
           
           try {
                          // Process Draco compression
              await this._processDracoPrimitive(primitive, gltf)
-             console.log(`✅ Successfully processed Draco primitive ${i}.${j}`)
+             if (this._debug) console.log(`✅ Successfully processed Draco primitive ${i}.${j}`)
              
              // Material processing will be done later in _processStandardPrimitives
              // after images are loaded
              
            } catch (error) {
-             console.error(`❌ Failed to process Draco primitive ${i}.${j}:`, error)
+             if (this._debug) console.error(`❌ Failed to process Draco primitive ${i}.${j}:`, error)
              return false
            }
         } else {
-          console.log(`📄 Normal primitive in mesh ${i}, primitive ${j}`)
+          if (this._debug) console.log(`📄 Normal primitive in mesh ${i}, primitive ${j}`)
         }
       }
     }
@@ -819,9 +868,14 @@ class GltfData {
   }
 
   async _processAccessors(gltf) {
-    console.log(`[DEBUG] Processing ${gltf.accessors.length} accessors`)
+    if (this._debug) console.log(`[DEBUG] Processing ${gltf.accessors.length} accessors`)
     
-    for (let i = 0; i < gltf.accessors.length; i++) {
+    // Cache array length and frequently accessed properties
+    const accessorCount = gltf.accessors.length
+    const buffers = gltf.buffers
+    const bufferViews = gltf.bufferViews
+    
+    for (let i = 0; i < accessorCount; i++) {
       let a = gltf.accessors[i]
       /*console.log(`[DEBUG] Processing accessor ${i}:`, {
         componentType: a.componentType,
@@ -854,7 +908,7 @@ class GltfData {
           buftype = Float32Array
           break
         default:
-          console.error("error: gltf, unhandled componentType: " + a.componentType + " for accessor " + i);
+          if (this._debug) console.error("error: gltf, unhandled componentType: " + a.componentType + " for accessor " + i);
           return false; // Stop execution if componentType is unhandled
       }
       let compcount = { SCALAR: 1, VEC2: 2, VEC3: 3, VEC4: 4, MAT2: 4, MAT3: 9, MAT4: 16 }[a.type]
@@ -871,9 +925,9 @@ class GltfData {
           // }
         } else {
           // Load base data as normal
-          let bufview = gltf.bufferViews[a.bufferView];
+          let bufview = bufferViews[a.bufferView];
           if (!bufview) {
-            console.error("error: gltf, missing bufferView for base accessor data in sparse accessor");
+            if (this._debug) console.error("error: gltf, missing bufferView for base accessor data in sparse accessor");
             return false; // Critical error
           }
           const byteOffset = (bufview.byteOffset || 0) + (a.byteOffset || 0);
@@ -885,8 +939,8 @@ class GltfData {
 
         // Process sparse values
         const sparse = a.sparse;
-        const indicesBufferView = gltf.bufferViews[sparse.indices.bufferView];
-        const valuesBufferView = gltf.bufferViews[sparse.values.bufferView];
+        const indicesBufferView = bufferViews[sparse.indices.bufferView];
+        const valuesBufferView = bufferViews[sparse.values.bufferView];
         
         let indicesComponentType = sparse.indices.componentType;
         let indicesType = null;
@@ -894,18 +948,18 @@ class GltfData {
           case 5121: indicesType = Uint8Array; break;
           case 5123: indicesType = Uint16Array; break;
           case 5125: indicesType = Uint32Array; break;
-          default: console.error("Unsupported sparse indices componentType: " + indicesComponentType + " for accessor " + i); return false;
+          default: if (this._debug) console.error("Unsupported sparse indices componentType: " + indicesComponentType + " for accessor " + i); return false;
         }
 
         if (!indicesType) {
-            console.error("Critical error: indicesType is null after switch, should not happen. Accessor " + i);
+            if (this._debug) console.error("Critical error: indicesType is null after switch, should not happen. Accessor " + i);
             return false; // Should be unreachable if switch default returns false
         }
         
         const indicesByteOffset = (indicesBufferView.byteOffset || 0) + (sparse.indices.byteOffset || 0);
         const indicesLength = sparse.count;
         const indices = new indicesType(
-          gltf.buffers[indicesBufferView.buffer],
+          buffers[indicesBufferView.buffer],
           indicesByteOffset,
           indicesLength
         );
@@ -915,7 +969,7 @@ class GltfData {
         const valuesLength = sparse.count * compcount;
         // @ts-ignore
         const values = new buftype(
-          gltf.buffers[valuesBufferView.buffer],
+          buffers[valuesBufferView.buffer],
           valuesByteOffset,
           valuesLength
         );
@@ -933,21 +987,21 @@ class GltfData {
 
       // Skip buffer processing for Draco decoded accessors (they already have data)
       if (a._dracoDecoded) {
-        console.log(`✅ Skipping Draco decoded accessor ${i}`)
+        if (this._debug) console.log(`✅ Skipping Draco decoded accessor ${i}`)
         continue;
       }
 
       // Check if bufferView exists
       if (a.bufferView === undefined || a.bufferView === null) {
-        console.log(`⚠️ Accessor ${i} has no bufferView, assuming it will be populated by Draco or is unused`)
+        if (this._debug) console.log(`⚠️ Accessor ${i} has no bufferView, assuming it will be populated by Draco or is unused`)
         continue; // Skip rather than error - will be handled by Draco or is unused
       }
 
-      let bufview = gltf.bufferViews[a.bufferView];
+      let bufview = bufferViews[a.bufferView];
       if (!bufview) {
-        console.error(`[ERROR] BufferView ${a.bufferView} not found for accessor ${i}:`, a)
+        if (this._debug) console.error(`[ERROR] BufferView ${a.bufferView} not found for accessor ${i}:`, a)
         alert("error: gltf, unhandled bufferView for non-sparse accessor. Accessor index: " + i)
-        console.error("error: gltf, unhandled bufferView for non-sparse accessor", a)
+        if (this._debug) console.error("error: gltf, unhandled bufferView for non-sparse accessor", a)
         return false; // Critical error
       }
 
@@ -957,7 +1011,7 @@ class GltfData {
 
       if ("byteStride" in bufview) {
         const stride = bufview.byteStride
-        const view = new DataView(gltf.buffers[bufview.buffer])
+        const view = new DataView(buffers[bufview.buffer])
         // @ts-ignore
         a.data = new buftype(compcount * a.count)
         for (let j = 0; j < a.count; j++) {
@@ -977,7 +1031,7 @@ class GltfData {
             }
             // Add other types as necessary (Int8, Int16, Int32)
             else {
-              console.error("Unsupported buftype in strided accessor:", buftype);
+              if (this._debug) console.error("Unsupported buftype in strided accessor:", buftype);
               // Fallback or error
             }
           }
@@ -986,7 +1040,7 @@ class GltfData {
         const finalByteOffset = bufview.byteOffset + accessorByteOffset;
         const length = compcount * a.count;
         // @ts-ignore
-        a.data = new buftype(gltf.buffers[bufview.buffer], finalByteOffset, length);
+        a.data = new buftype(buffers[bufview.buffer], finalByteOffset, length);
       }
     }
     
@@ -994,66 +1048,82 @@ class GltfData {
   }
 
   async _processStandardPrimitives(gltf) {
-    console.log(`[DEBUG] Processing all primitives (standard + Draco) for material setup`)
+    if (this._debug) console.log(`[DEBUG] Processing all primitives (standard + Draco) for material setup`)
     
-    for (let i = 0; i < gltf.meshes.length; i++) {
-      let m = gltf.meshes[i]
+    const meshes = gltf.meshes
+    const meshCount = meshes.length
+    const accessors = gltf.accessors
+    const materials = gltf.materials
+    const textures = gltf.textures
+    const images = gltf.images
+    
+    for (let i = 0; i < meshCount; i++) {
+      const m = meshes[i]
       
-      for (let j = 0; j < m.primitives.length; j++) {
-        let p = m.primitives[j]
+      const primitiveCount = m.primitives.length
+      for (let j = 0; j < primitiveCount; j++) {
+        const p = m.primitives[j]
         
         const isDracoPrimitive = !!(p.extensions && p.extensions.KHR_draco_mesh_compression) || p._dracoProcessed
         
         if (isDracoPrimitive) {
-          console.log(`🔥 Processing Draco primitive ${i}.${j} for materials`)
-          console.log(`🔥 Draco primitive attributes:`, Object.keys(p.attributes))
-          console.log(`🔥 Draco primitive indices:`, !!p.indices)
+          if (this._debug) {
+            console.log(`🔥 Processing Draco primitive ${i}.${j} for materials`)
+            console.log(`🔥 Draco primitive attributes:`, Object.keys(p.attributes))
+            console.log(`🔥 Draco primitive indices:`, !!p.indices)
+          }
           // Draco primitives already have their geometry decoded, just process materials
           // Their attributes are already accessor objects, not indices
         } else {
-          console.log(`📄 Processing standard primitive ${i}.${j}`)
+          if (this._debug) console.log(`📄 Processing standard primitive ${i}.${j}`)
           
           // Standard GLTF primitive processing
           if (p.indices !== undefined) {
-            p.indices = gltf.accessors[p.indices]
+            p.indices = accessors[p.indices]
           }
           
-          Object.keys(p.attributes).forEach(function (key) {
-            p.attributes[key] = gltf.accessors[p.attributes[key]]
-          })
+          const attributeKeys = Object.keys(p.attributes)
+          for (let k = 0; k < attributeKeys.length; k++) {
+            const key = attributeKeys[k]
+            p.attributes[key] = accessors[p.attributes[key]]
+          }
 
           // For ease of use point directly to the accessor data
           if ("targets" in p) {
-            for (let k = 0; k < p.targets.length; k++) {
-              Object.keys(p.targets[k]).forEach(function (key) {
-                p.targets[k][key] = gltf.accessors[p.targets[k][key]]
-              })
+            const targetCount = p.targets.length
+            for (let k = 0; k < targetCount; k++) {
+              const target = p.targets[k]
+              const targetKeys = Object.keys(target)
+              for (let l = 0; l < targetKeys.length; l++) {
+                const key = targetKeys[l]
+                target[key] = accessors[target[key]]
+              }
             }
           }
         }
         
         // Material processing (common for both Draco and standard)
         if (typeof p.material != "undefined" && p.material != null) {
-          p.material = gltf.materials[p.material]
+          p.material = materials[p.material]
           
           // Set material name to image name with safety checks
           if (p.material.pbrMetallicRoughness && p.material.pbrMetallicRoughness.baseColorTexture) {
             const textureIndex = p.material.pbrMetallicRoughness.baseColorTexture.index
-            if (gltf.textures && gltf.textures[textureIndex]) {
-              const imageIndex = gltf.textures[textureIndex].source
-              if (gltf.images && gltf.images[imageIndex] && gltf.images[imageIndex].name) {
-                p.material.name = gltf.images[imageIndex].name
-                console.log(`✅ Set material name: ${p.material.name} for primitive ${i}.${j}`)
+            if (textures && textures[textureIndex]) {
+              const imageIndex = textures[textureIndex].source
+              if (images && images[imageIndex] && images[imageIndex].name) {
+                p.material.name = images[imageIndex].name
+                if (this._debug) console.log(`✅ Set material name: ${p.material.name} for primitive ${i}.${j}`)
               } else {
-                console.log(`⚠️ Image not found for material, using default name for primitive ${i}.${j}`)
+                if (this._debug) console.log(`⚠️ Image not found for material, using default name for primitive ${i}.${j}`)
                 p.material.name = `material_${i}_${j}`
               }
             } else {
-              console.log(`⚠️ Texture not found for material, using default name for primitive ${i}.${j}`) 
+              if (this._debug) console.log(`⚠️ Texture not found for material, using default name for primitive ${i}.${j}`) 
               p.material.name = `material_${i}_${j}`
             }
           } else {
-            console.log(`⚠️ No baseColorTexture for material, using default name for primitive ${i}.${j}`)
+            if (this._debug) console.log(`⚠️ No baseColorTexture for material, using default name for primitive ${i}.${j}`)
             p.material.name = `material_${i}_${j}`
           }
         }
@@ -1065,10 +1135,10 @@ class GltfData {
 
   // 🎯 EDITOR BYPASS: Process all primitives as standard GLTF (ignore Draco extensions)
   async _processStandardPrimitivesOnly(gltf) {
-    console.warn('🚨 EDITOR BYPASS: Processing all primitives as standard GLTF, ignoring Draco extensions')
+    if (this._debug) console.warn('🚨 EDITOR BYPASS: Processing all primitives as standard GLTF, ignoring Draco extensions')
     
     // First, process ALL accessors (no Draco bypass)
-    console.log(`[EDITOR BYPASS] Processing ${gltf.accessors.length} accessors`)
+    if (this._debug) console.log(`[EDITOR BYPASS] Processing ${gltf.accessors.length} accessors`)
     
     for (let i = 0; i < gltf.accessors.length; i++) {
       let a = gltf.accessors[i]
@@ -1094,7 +1164,7 @@ class GltfData {
           buftype = Float32Array
           break
         default:
-          console.error("error: gltf, unhandled componentType: " + a.componentType + " for accessor " + i);
+          if (this._debug) console.error("error: gltf, unhandled componentType: " + a.componentType + " for accessor " + i);
           return false;
       }
       let compcount = { SCALAR: 1, VEC2: 2, VEC3: 3, VEC4: 4, MAT2: 4, MAT3: 9, MAT4: 16 }[a.type]
@@ -1104,9 +1174,9 @@ class GltfData {
         if (a.bufferView === undefined || a.bufferView === null) {
           a.data = new buftype(compcount * a.count);
         } else {
-          let bufview = gltf.bufferViews[a.bufferView];
+          let bufview = bufferViews[a.bufferView];
           if (!bufview) {
-            console.error("error: gltf, missing bufferView for base accessor data in sparse accessor");
+            if (this._debug) console.error("error: gltf, missing bufferView for base accessor data in sparse accessor");
             return false;
           }
           const byteOffset = (bufview.byteOffset || 0) + (a.byteOffset || 0);
@@ -1116,8 +1186,8 @@ class GltfData {
         }
 
         const sparse = a.sparse;
-        const indicesBufferView = gltf.bufferViews[sparse.indices.bufferView];
-        const valuesBufferView = gltf.bufferViews[sparse.values.bufferView];
+        const indicesBufferView = bufferViews[sparse.indices.bufferView];
+        const valuesBufferView = bufferViews[sparse.values.bufferView];
         
         let indicesComponentType = sparse.indices.componentType;
         let indicesType = null;
@@ -1125,18 +1195,18 @@ class GltfData {
           case 5121: indicesType = Uint8Array; break;
           case 5123: indicesType = Uint16Array; break;
           case 5125: indicesType = Uint32Array; break;
-          default: console.error("Unsupported sparse indices componentType: " + indicesComponentType + " for accessor " + i); return false;
+          default: if (this._debug) console.error("Unsupported sparse indices componentType: " + indicesComponentType + " for accessor " + i); return false;
         }
 
         if (!indicesType) {
-            console.error("Critical error: indicesType is null after switch, should not happen. Accessor " + i);
+            if (this._debug) console.error("Critical error: indicesType is null after switch, should not happen. Accessor " + i);
             return false;
         }
         
         const indicesByteOffset = (indicesBufferView.byteOffset || 0) + (sparse.indices.byteOffset || 0);
         const indicesLength = sparse.count;
         const indices = new indicesType(
-          gltf.buffers[indicesBufferView.buffer],
+          buffers[indicesBufferView.buffer],
           indicesByteOffset,
           indicesLength
         );
@@ -1144,7 +1214,7 @@ class GltfData {
         const valuesByteOffset = (valuesBufferView.byteOffset || 0) + (sparse.values.byteOffset || 0);
         const valuesLength = sparse.count * compcount;
         const values = new buftype(
-          gltf.buffers[valuesBufferView.buffer],
+          buffers[valuesBufferView.buffer],
           valuesByteOffset,
           valuesLength
         );
@@ -1161,13 +1231,13 @@ class GltfData {
 
       // Check if bufferView exists
       if (a.bufferView === undefined || a.bufferView === null) {
-        console.warn(`⚠️ [EDITOR BYPASS] Accessor ${i} has no bufferView, skipping`)
+        if (this._debug) console.warn(`⚠️ [EDITOR BYPASS] Accessor ${i} has no bufferView, skipping`)
         continue;
       }
 
-      let bufview = gltf.bufferViews[a.bufferView];
+      let bufview = bufferViews[a.bufferView];
       if (!bufview) {
-        console.error(`[EDITOR BYPASS ERROR] BufferView ${a.bufferView} not found for accessor ${i}`)
+        if (this._debug) console.error(`[EDITOR BYPASS ERROR] BufferView ${a.bufferView} not found for accessor ${i}`)
         return false;
       }
 
@@ -1176,7 +1246,7 @@ class GltfData {
 
       if ("byteStride" in bufview) {
         const stride = bufview.byteStride
-        const view = new DataView(gltf.buffers[bufview.buffer])
+        const view = new DataView(buffers[bufview.buffer])
         a.data = new buftype(compcount * a.count)
         for (let j = 0; j < a.count; j++) {
           for (let k = 0; k < compcount; k++) {
@@ -1194,12 +1264,12 @@ class GltfData {
       } else {
         const finalByteOffset = bufview.byteOffset + accessorByteOffset;
         const length = compcount * a.count;
-        a.data = new buftype(gltf.buffers[bufview.buffer], finalByteOffset, length);
+        a.data = new buftype(buffers[bufview.buffer], finalByteOffset, length);
       }
     }
     
     // Now process ALL primitives as standard GLTF (ignore Draco extensions)
-    console.warn(`[EDITOR BYPASS] Processing ${gltf.meshes.length} meshes with standard GLTF processing`)
+    if (this._debug) console.warn(`[EDITOR BYPASS] Processing ${gltf.meshes.length} meshes with standard GLTF processing`)
     
     for (let i = 0; i < gltf.meshes.length; i++) {
       let m = gltf.meshes[i]
@@ -1209,7 +1279,7 @@ class GltfData {
         
         // Remove Draco extension if it exists (force standard processing)
         if (p.extensions && p.extensions.KHR_draco_mesh_compression) {
-          console.warn(`🚨 [EDITOR BYPASS] Removing Draco extension from primitive ${i}.${j}, forcing standard GLTF processing`)
+          if (this._debug) console.warn(`🚨 [EDITOR BYPASS] Removing Draco extension from primitive ${i}.${j}, forcing standard GLTF processing`)
           delete p.extensions.KHR_draco_mesh_compression
           if (Object.keys(p.extensions).length === 0) {
             delete p.extensions
@@ -1254,11 +1324,11 @@ class GltfData {
           }
         }
         
-        console.log(`✅ [EDITOR BYPASS] Processed primitive ${i}.${j} as standard GLTF`)
+        if (this._debug) console.log(`✅ [EDITOR BYPASS] Processed primitive ${i}.${j} as standard GLTF`)
       }
     }
     
-    console.warn('✅ EDITOR BYPASS: Successfully processed all primitives as standard GLTF')
+    if (this._debug) console.warn('✅ EDITOR BYPASS: Successfully processed all primitives as standard GLTF')
     return true
   }
 
@@ -1285,7 +1355,7 @@ class GltfData {
         gl.bindBuffer(gl.UNIFORM_BUFFER, this.sharedModelBoneUbo);
         gl.bufferData(gl.UNIFORM_BUFFER, uboSize, gl.DYNAMIC_DRAW); 
         gl.bindBuffer(gl.UNIFORM_BUFFER, null);
-        console.log(`Created shared Bone UBO for model: ${this.gltf?.asset?.extras?.originalFileName || 'Unknown Model'}, Shader Max Bones: ${SHADER_MAX_BONES}, Size: ${uboSize} bytes, Actual Model Bones: ${this.bonesPerModelAsset}`);
+        if (this._debug) console.log(`Created shared Bone UBO for model: ${this.gltf?.asset?.extras?.originalFileName || 'Unknown Model'}, Shader Max Bones: ${SHADER_MAX_BONES}, Size: ${uboSize} bytes, Actual Model Bones: ${this.bonesPerModelAsset}`);
     }
     return this.sharedModelBoneUbo;
   }
