@@ -9,6 +9,7 @@ class ObjectBufferTop {
     this.vao = null
     this.nodeXform = new Float32Array(16)
     this.maxJointIndexUsed = mesh.maxJointIndexUsed ?? -1; // Store max index used by this mesh primitive
+    this.gpuSkinning = gpuSkinning
 
     let vertexData, texcoordData, indexData, colorData, normalData, weightsData, jointsData
     if (gpuSkinning) {
@@ -217,7 +218,7 @@ class ObjectBufferTop {
       const rotateMatrix = uvXform.rotateMatrix
       const rotateCenter = uvXform.rotateCenter
       const offsetUV = uvXform.offsetUV
-      if (this.locURotateMatrix === null) {
+      if (this.locURotateMatrix === null || true) {
         this.locURotateMatrix = gl.getUniformLocation(shaderProgram, "uUVRotate")
         this.locURotateCenter = gl.getUniformLocation(shaderProgram, "uUVRotateCenter")
         this.locUOffsetUV = gl.getUniformLocation(shaderProgram, "uUVOffset")
@@ -228,7 +229,7 @@ class ObjectBufferTop {
       gl.uniform2fv(this.locUOffsetUV, offsetUV)
       gl.uniform1f(this.locUVXformEnable, 1.0)
     } else {
-      if (this.locUVXformEnable === null) this.locUVXformEnable = gl.getUniformLocation(shaderProgram, "uUVXformEnable")
+      if (this.locUVXformEnable === null || true) this.locUVXformEnable = gl.getUniformLocation(shaderProgram, "uUVXformEnable")
       gl.uniform1f(this.locUVXformEnable, 0.0)
     }
   }
@@ -238,14 +239,15 @@ class ObjectBufferTop {
     const shaderProgram = renderer._batchState.currentShader._shaderProgram
     const locUNodeXform = gl.getUniformLocation(shaderProgram, "uNodeXform")
     gl.uniformMatrix4fv(locUNodeXform, false, this.nodeXform)
-    // const locUNodeXformEnable = gl.getUniformLocation(shaderProgram, "uNodeXformEnable")
-    // gl.uniform1f(locUNodeXformEnable, 1.0)
+
+    const locUNodeXformEnable = gl.getUniformLocation(shaderProgram, "uNodeXformEnable")
+    gl.uniform1f(locUNodeXformEnable, 1.0)
   }
 
   disableUVXformUniforms(renderer) {
     const gl = renderer._gl
     const shaderProgram = renderer._batchState.currentShader._shaderProgram
-    if (this.locUVXformEnable === null) this.locUVXformEnable = gl.getUniformLocation(shaderProgram, "uUVXformEnable")
+    if (this.locUVXformEnable === null || true) this.locUVXformEnable = gl.getUniformLocation(shaderProgram, "uUVXformEnable")
     gl.uniform1f(this.locUVXformEnable, 0.0)
   }
 
@@ -317,7 +319,9 @@ class ObjectBufferTop {
 
         // Upload node transform if not handled by a BoneBuffer instance (non-skinned path)
         if (!nodeXformUploadedByBoneBuffer) {
-            this.uploadNodeXformUniforms(renderer);
+            if (this.gpuSkinning) {
+              this.uploadNodeXformUniforms(renderer);
+            }
         }
     }
 

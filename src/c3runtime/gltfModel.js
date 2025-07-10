@@ -151,7 +151,7 @@ class GltfModelTop {
     const gl = renderer._gl
     const batchState = renderer._batchState
     const shaderProgram = batchState.currentShader._shaderProgram
-    if (this.locUModelRotate === null) {
+    if (this.locUModelRotate === null || true) {
       this.locUModelRotate = gl.getUniformLocation(shaderProgram, "uModelRotate")
       this.locUModelRotateEnable = gl.getUniformLocation(shaderProgram, "uModelRotateEnable")
       this.locUPhongEnable = gl.getUniformLocation(shaderProgram, "uPhongEnable")
@@ -165,7 +165,7 @@ class GltfModelTop {
     const gl = renderer._gl
     const batchState = renderer._batchState
     const shaderProgram = batchState.currentShader._shaderProgram
-    if (this.locUModelRotateEnable === null) {
+    if (this.locUModelRotateEnable === null || true) {
       this.locUModelRotateEnable = gl.getUniformLocation(shaderProgram, "uModelRotateEnable")
       this.locUPhongEnable = gl.getUniformLocation(shaderProgram, "uPhongEnable")
     }
@@ -176,7 +176,7 @@ class GltfModelTop {
   _disableGPUSkinning(renderer) {
     const gl = renderer._gl
     const shaderProgram = renderer._batchState.currentShader._shaderProgram
-    if (this.locUSkinEnable === null) {
+    if (this.locUSkinEnable === null || true) {
       this.locUSkinEnable = gl.getUniformLocation(shaderProgram, "uSkinEnable");
       this.locUNodeXformEnable = gl.getUniformLocation(shaderProgram, "uNodeXformEnable");
     }
@@ -259,7 +259,7 @@ class GltfModelTop {
       if (this.inst.fragLightPhong) {
         mat4.invert(this.normalMatrix, this.modelRotate)
         mat4.transpose(this.normalMatrix, this.normalMatrix)
-        if (this.locUNormalMatrix === null) {
+        if (this.locUNormalMatrix === null || true) {
           const shaderProgram = renderer._batchState.currentShader._shaderProgram;
           this.locUNormalMatrix = renderer._gl.getUniformLocation(shaderProgram, "uNormalMatrix");
         }
