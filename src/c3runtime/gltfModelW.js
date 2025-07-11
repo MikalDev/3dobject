@@ -677,16 +677,12 @@ class GltfModelWTop {
       if (this.inst.staticGeometry || this.inst.gpuSkinning) {
         const objectBuffers = this.drawMeshes[j].objectBuffers
         // Draw
-        let boneBuffer
+        const boneBuffer = this.drawMeshes[j]?.node?.boneBuffer;
         for (let i = 0; i < objectBuffers.length; i++) {
-          const nodeXform = this.drawMeshes[j]?.boneBuffer?.nodeXform
+          const nodeXform = boneBuffer?.nodeXform
           if (nodeXform) {
             objectBuffers[i].setNodeXform(nodeXform)
           }
-        }
-        boneBuffer = this.drawMeshes[j]?.boneBuffer
-        for (let i = 0; i < objectBuffers.length; i++) {
-          // boneBuffer is already assigned from this.drawMeshes[j]?.boneBuffer above the loop
           objectBuffers[i].draw(
             renderer, 
             boneBuffer, // This is the instanceBoneBuffer (BoneBufferW)
@@ -903,15 +899,13 @@ class GltfModelWTop {
     for (let node of this.gltfData.nodes) {
       // Check if the node has a mesh and is not a skinned mesh
       if (node.mesh && !node.skin) {
-        if (!this.inst.staticGeometry) {
-          if (!node.hasOwnProperty("boneBuffer")) {
-            const actualBonesForThisNode = 0; // Non-skinned nodes don't use skinning bone arrays
-            const boneBuffer = new BoneBufferW(this.inst.renderer, actualBonesForThisNode, false)
-            node.boneBuffer = boneBuffer
-          }
-          const start = boneBufferViews[bufferViewIndex].start
-          node.boneBuffer.setNodeXform(bones.slice(start, start + MATRIX_SIZE))
+        if (!node.hasOwnProperty("boneBuffer")) {
+          const actualBonesForThisNode = 0; // Non-skinned nodes don't use skinning bone arrays
+          const boneBuffer = new BoneBufferW(this.inst.renderer, actualBonesForThisNode, false)
+          node.boneBuffer = boneBuffer
         }
+        const start = boneBufferViews[bufferViewIndex].start
+        node.boneBuffer.setNodeXform(bones.slice(start, start + MATRIX_SIZE))
         bufferViewIndex += 1
       }
     }
