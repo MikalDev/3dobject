@@ -111,23 +111,23 @@ class ObjectBufferTop {
 
     this.boundProgram = shaderProgram;
     const gl = this.gl;
-    this.locURotateMatrix = gl.getUniformLocation(shaderProgram, "uUVRotate");
-    this.locURotateCenter = gl.getUniformLocation(shaderProgram, "uUVRotateCenter");
-    this.locUOffsetUV = gl.getUniformLocation(shaderProgram, "uUVOffset");
-    this.locUVXformEnable = gl.getUniformLocation(shaderProgram, "uUVXformEnable");
+    this.locURotateMatrix = globalThis.uniformCache.getLocation(gl, shaderProgram, "uUVRotate");
+    this.locURotateCenter = globalThis.uniformCache.getLocation(gl, shaderProgram, "uUVRotateCenter");
+    this.locUOffsetUV = globalThis.uniformCache.getLocation(gl, shaderProgram, "uUVOffset");
+    this.locUVXformEnable = globalThis.uniformCache.getLocation(gl, shaderProgram, "uUVXformEnable");
   }
 
   createVao(renderer) {
     const gl = renderer._gl
     const batchState = renderer._batchState
     const shaderProgram = batchState.currentShader._shaderProgram
-    this.locAPos = gl.getAttribLocation(shaderProgram, "aPos")
-    this.locATex = gl.getAttribLocation(shaderProgram, "aTex")
-    this.locAColor = gl.getAttribLocation(shaderProgram, "aColor")
-    this.locANormal = gl.getAttribLocation(shaderProgram, "aNormal")
-    this.locAWeights = gl.getAttribLocation(shaderProgram, "aWeights")
-    this.locAJoints = gl.getAttribLocation(shaderProgram, "aJoints")
-    this.locHasVertexColors = gl.getUniformLocation(shaderProgram, "uHasVertexColors")
+    this.locAPos = globalThis.uniformCache.getAttributeLocation(gl, shaderProgram, "aPos")
+    this.locATex = globalThis.uniformCache.getAttributeLocation(gl, shaderProgram, "aTex")
+    this.locAColor = globalThis.uniformCache.getAttributeLocation(gl, shaderProgram, "aColor")
+    this.locANormal = globalThis.uniformCache.getAttributeLocation(gl, shaderProgram, "aNormal")
+    this.locAWeights = globalThis.uniformCache.getAttributeLocation(gl, shaderProgram, "aWeights")
+    this.locAJoints = globalThis.uniformCache.getAttributeLocation(gl, shaderProgram, "aJoints")
+    this.locHasVertexColors = globalThis.uniformCache.getLocation(gl, shaderProgram, "uHasVertexColors")
 
     const locAPos = this.locAPos
     const locATex = this.locATex
@@ -219,17 +219,17 @@ class ObjectBufferTop {
       const rotateCenter = uvXform.rotateCenter
       const offsetUV = uvXform.offsetUV
       if (this.locURotateMatrix === null || true) {
-        this.locURotateMatrix = gl.getUniformLocation(shaderProgram, "uUVRotate")
-        this.locURotateCenter = gl.getUniformLocation(shaderProgram, "uUVRotateCenter")
-        this.locUOffsetUV = gl.getUniformLocation(shaderProgram, "uUVOffset")
-        this.locUVXformEnable = gl.getUniformLocation(shaderProgram, "uUVXformEnable")
+        this.locURotateMatrix = globalThis.uniformCache.getLocation(gl, shaderProgram, "uUVRotate")
+        this.locURotateCenter = globalThis.uniformCache.getLocation(gl, shaderProgram, "uUVRotateCenter")
+        this.locUOffsetUV = globalThis.uniformCache.getLocation(gl, shaderProgram, "uUVOffset")
+        this.locUVXformEnable = globalThis.uniformCache.getLocation(gl, shaderProgram, "uUVXformEnable")
       }
       gl.uniformMatrix2fv(this.locURotateMatrix, false, rotateMatrix)
       gl.uniform2fv(this.locURotateCenter, rotateCenter)
       gl.uniform2fv(this.locUOffsetUV, offsetUV)
       gl.uniform1f(this.locUVXformEnable, 1.0)
     } else {
-      if (this.locUVXformEnable === null || true) this.locUVXformEnable = gl.getUniformLocation(shaderProgram, "uUVXformEnable")
+      if (this.locUVXformEnable === null || true) this.locUVXformEnable = globalThis.uniformCache.getLocation(gl, shaderProgram, "uUVXformEnable")
       gl.uniform1f(this.locUVXformEnable, 0.0)
     }
   }
@@ -237,17 +237,17 @@ class ObjectBufferTop {
   uploadNodeXformUniforms(renderer) {
     const gl = renderer._gl
     const shaderProgram = renderer._batchState.currentShader._shaderProgram
-    const locUNodeXform = gl.getUniformLocation(shaderProgram, "uNodeXform")
+    const locUNodeXform = globalThis.uniformCache.getLocation(gl, shaderProgram, "uNodeXform")
     gl.uniformMatrix4fv(locUNodeXform, false, this.nodeXform)
 
-    const locUNodeXformEnable = gl.getUniformLocation(shaderProgram, "uNodeXformEnable")
+    const locUNodeXformEnable = globalThis.uniformCache.getLocation(gl, shaderProgram, "uNodeXformEnable")
     gl.uniform1f(locUNodeXformEnable, 1.0)
   }
 
   disableUVXformUniforms(renderer) {
     const gl = renderer._gl
     const shaderProgram = renderer._batchState.currentShader._shaderProgram
-    if (this.locUVXformEnable === null || true) this.locUVXformEnable = gl.getUniformLocation(shaderProgram, "uUVXformEnable")
+    if (this.locUVXformEnable === null || true) this.locUVXformEnable = globalThis.uniformCache.getLocation(gl, shaderProgram, "uUVXformEnable")
     gl.uniform1f(this.locUVXformEnable, 0.0)
   }
 
@@ -290,7 +290,7 @@ class ObjectBufferTop {
             const shaderProgram = renderer._batchState.currentShader._shaderProgram;
             // Check if globalThis.BoneBuffer (the class) exists before accessing its static members
             if (globalThis.BoneBuffer) { // Check if BoneBuffer class is available
-                const blockIndex = gl.getUniformBlockIndex(shaderProgram, "Bones");
+                const blockIndex = globalThis.uniformCache.getUniformBlockIndex(gl, shaderProgram, "Bones");
                 if (blockIndex !== gl.INVALID_INDEX && blockIndex !== -1) { // Shader expects the Bones UBO
                     gl.uniformBlockBinding(shaderProgram, blockIndex, globalThis.BoneBuffer.BONE_UBO_BINDING_POINT);
                     const dummyUBO = globalThis.BoneBuffer._getOrCreateDummyUBO(gl);
@@ -299,7 +299,7 @@ class ObjectBufferTop {
                     }
                     // Ensure uSkinEnable is off if we bound a dummy here.
                     // This might be redundant if the shader properly defaults or if uSkinEnable is always set.
-                    const locUSkinEnable = gl.getUniformLocation(shaderProgram, "uSkinEnable");
+                    const locUSkinEnable = globalThis.uniformCache.getLocation(gl, shaderProgram, "uSkinEnable");
                     if (locUSkinEnable) gl.uniform1f(locUSkinEnable, 0.0);
                 } else {
                     // Shader does not expect "Bones" block, do nothing for UBO.
@@ -307,13 +307,13 @@ class ObjectBufferTop {
             } else {
                  // BoneBuffer class not globally available, cannot manage dummy UBO here.
                  // Check if shader expects it and warn if so, as it might lead to issues.
-                 const blockIndex = gl.getUniformBlockIndex(shaderProgram, "Bones");
+                 const blockIndex = globalThis.uniformCache.getUniformBlockIndex(gl, shaderProgram, "Bones");
                  if (blockIndex !== gl.INVALID_INDEX && blockIndex !== -1) {
                     console.warn("ObjectBuffer: globalThis.BoneBuffer not found, cannot bind dummy UBO even though shader expects 'Bones' block.");
                  }
             }
             // Phong enable still needs to be set in this path if not handled by a BoneBuffer
-            const locUPhongEnable = gl.getUniformLocation(shaderProgram, "uPhongEnable");
+            const locUPhongEnable = globalThis.uniformCache.getLocation(gl, shaderProgram, "uPhongEnable");
             if (locUPhongEnable) gl.uniform1f(locUPhongEnable, phongEnable ? 1.0 : 0.0);
         }
 
@@ -338,8 +338,8 @@ class ObjectBufferTop {
   _disableGPUSkinning(renderer) {
     const gl = renderer._gl;
     const shaderProgram = renderer._batchState.currentShader._shaderProgram;
-    const locUSkinEnable = gl.getUniformLocation(shaderProgram, "uSkinEnable");
-    const locUNodeXformEnable = gl.getUniformLocation(shaderProgram, "uNodeXformEnable");
+    const locUSkinEnable = globalThis.uniformCache.getLocation(gl, shaderProgram, "uSkinEnable");
+    const locUNodeXformEnable = globalThis.uniformCache.getLocation(gl, shaderProgram, "uNodeXformEnable");
     if (locUSkinEnable) gl.uniform1f(locUSkinEnable, 0.0);
     if (locUNodeXformEnable) gl.uniform1f(locUNodeXformEnable, 0.0);
   }
