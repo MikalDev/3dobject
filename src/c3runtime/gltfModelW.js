@@ -43,8 +43,6 @@ class GltfModelWTop {
     this.locUPhongEnable = null
     this.locUSkinEnable = null
     this.locUNodeXformEnable = null
-    this.locAPos = null
-    this.locATex = null
     this.locUNormalMatrix = null
   }
 
@@ -154,10 +152,6 @@ class GltfModelWTop {
     this.locUSkinEnable = null
     // @ts-ignore
     this.locUNodeXformEnable = null
-    // @ts-ignore
-    this.locAPos = null
-    // @ts-ignore
-    this.locATex = null
     // @ts-ignore
     this.locUNormalMatrix = null
   }
@@ -468,11 +462,11 @@ class GltfModelWTop {
     const gl = renderer._gl
     const batchState = renderer._batchState
     const shaderProgram = batchState.currentShader._shaderProgram
-    if (this.locUModelRotate === null || true) {
-      this.locUModelRotate = gl.getUniformLocation(shaderProgram, "uModelRotate");
-      this.locUModelRotateEnable = gl.getUniformLocation(shaderProgram, "uModelRotateEnable");
-      this.locUPhongEnable = gl.getUniformLocation(shaderProgram, "uPhongEnable");
-    }
+    
+    this.locUModelRotate = globalThis.uniformCache.getLocation(gl, shaderProgram, "uModelRotate")
+    this.locUModelRotateEnable = globalThis.uniformCache.getLocation(gl, shaderProgram, "uModelRotateEnable")
+    this.locUPhongEnable = globalThis.uniformCache.getLocation(gl, shaderProgram, "uPhongEnable")
+    
     gl.uniformMatrix4fv(this.locUModelRotate, false, modelRotate)
     gl.uniform1f(this.locUModelRotateEnable, 1)
     gl.uniform1f(this.locUPhongEnable, this.inst.fragLightPhong ? 1 : 0)
@@ -481,11 +475,11 @@ class GltfModelWTop {
   disableVertexShaderModelRotate(renderer) {
     const gl = renderer._gl
     const batchState = renderer._batchState
-    const shaderProgram = batchState.currentShader._shaderProgram;
-    if (this.locUModelRotateEnable === null || true) {
-        this.locUModelRotateEnable = gl.getUniformLocation(shaderProgram, "uModelRotateEnable");
-        this.locUPhongEnable = gl.getUniformLocation(shaderProgram, "uPhongEnable");
-    }
+    const shaderProgram = batchState.currentShader._shaderProgram
+    
+    this.locUModelRotateEnable = globalThis.uniformCache.getLocation(gl, shaderProgram, "uModelRotateEnable")
+    this.locUPhongEnable = globalThis.uniformCache.getLocation(gl, shaderProgram, "uPhongEnable")
+    
     gl.uniform1f(this.locUModelRotateEnable, 0)
     gl.uniform1f(this.locUPhongEnable, 0)
   }
@@ -493,10 +487,10 @@ class GltfModelWTop {
   _disableGPUSkinning(renderer) {
     const gl = renderer._gl
     const shaderProgram = renderer._batchState.currentShader._shaderProgram
-    if (this.locUSkinEnable === null || true) {
-      this.locUSkinEnable = gl.getUniformLocation(shaderProgram, "uSkinEnable")
-      this.locUNodeXformEnable = gl.getUniformLocation(shaderProgram, "uNodeXformEnable")
-    }
+    
+    this.locUSkinEnable = globalThis.uniformCache.getLocation(gl, shaderProgram, "uSkinEnable")
+    this.locUNodeXformEnable = globalThis.uniformCache.getLocation(gl, shaderProgram, "uNodeXformEnable")
+    
     gl.uniform1f(this.locUSkinEnable, 0.0)
     gl.uniform1f(this.locUNodeXformEnable, 0.0)
   }
@@ -574,10 +568,8 @@ class GltfModelWTop {
       if (this.inst.fragLightPhong) {
         mat4.invert(this.normalMatrix, this.modelRotate)
         mat4.transpose(this.normalMatrix, this.normalMatrix)
-        if (this.locUNormalMatrix === null || true) {
-          const shaderProgram = renderer._batchState.currentShader._shaderProgram;
-          this.locUNormalMatrix = renderer._gl.getUniformLocation(shaderProgram, "uNormalMatrix");
-        }
+        const shaderProgram = renderer._batchState.currentShader._shaderProgram;
+        this.locUNormalMatrix = globalThis.uniformCache.getLocation(renderer._gl, shaderProgram, "uNormalMatrix");
         if (this.locUNormalMatrix) {
           renderer._gl.uniformMatrix4fv(this.locUNormalMatrix, false, this.normalMatrix)
         }
@@ -872,14 +864,14 @@ class GltfModelWTop {
       const gl = renderer._gl
       const batchState = renderer._batchState
       const shaderProgram = batchState.currentShader._shaderProgram
-      if (this.locAPos === null) this.locAPos = gl.getAttribLocation(shaderProgram, "aPos")
-      if (this.locATex === null) this.locATex = gl.getAttribLocation(shaderProgram, "aTex")
+      const locAPos = globalThis.uniformCache.getAttributeLocation(gl, shaderProgram, "aPos")
+      const locATex = globalThis.uniformCache.getAttributeLocation(gl, shaderProgram, "aTex")
       gl.bindBuffer(gl.ARRAY_BUFFER, renderer._vertexBuffer)
-      gl.vertexAttribPointer(this.locAPos, 3, gl.FLOAT, false, 0, 0)
-      gl.enableVertexAttribArray(this.locAPos)
+      gl.vertexAttribPointer(locAPos, 3, gl.FLOAT, false, 0, 0)
+      gl.enableVertexAttribArray(locAPos)
       gl.bindBuffer(gl.ARRAY_BUFFER, renderer._texcoordBuffer)
-      gl.vertexAttribPointer(this.locATex, 2, gl.FLOAT, false, 0, 0)
-      gl.enableVertexAttribArray(this.locATex)
+      gl.vertexAttribPointer(locATex, 2, gl.FLOAT, false, 0, 0)
+      gl.enableVertexAttribArray(locATex)
       // Restore index buffer
       gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, renderer._indexBuffer)
       renderer._vertexPtr = 0
