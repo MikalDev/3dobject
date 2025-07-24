@@ -90,6 +90,10 @@ class ObjectBufferTop {
     this.locURotateCenter = null;
     this.locUOffsetUV = null;
     this.locUVXformEnable = null;
+    
+    // Color uniform locations for 3DObject compatibility
+    this.locUseUniformColor = null;
+    this.locObjectColor = null;
   }
 
   _ExecuteBatch(renderer) {
@@ -128,6 +132,18 @@ class ObjectBufferTop {
     this.locAWeights = globalThis.uniformCache.getAttributeLocation(gl, shaderProgram, "aWeights")
     this.locAJoints = globalThis.uniformCache.getAttributeLocation(gl, shaderProgram, "aJoints")
     this.locHasVertexColors = globalThis.uniformCache.getLocation(gl, shaderProgram, "uHasVertexColors")
+    
+    // Get color uniform locations for 3DObject compatibility
+    this.locUseUniformColor = globalThis.uniformCache.getLocation(gl, shaderProgram, "uUseUniformColor")
+    this.locObjectColor = globalThis.uniformCache.getLocation(gl, shaderProgram, "uObjectColor")
+    
+    // Debug logging for uniform availability
+    if (this.locUseUniformColor === null) {
+      console.warn("[3DObject] uUseUniformColor uniform not found in shader")
+    }
+    if (this.locObjectColor === null) {
+      console.warn("[3DObject] uObjectColor uniform not found in shader")
+    }
 
     const locAPos = this.locAPos
     const locATex = this.locATex
@@ -251,9 +267,12 @@ class ObjectBufferTop {
     gl.uniform1f(this.locUVXformEnable, 0.0)
   }
 
-  draw(renderer, instanceBoneBuffer, modelGltfData, rotateMaterial, offsetMaterial, phongEnable) {
+  draw(renderer, instanceBoneBuffer, modelGltfData, rotateMaterial, offsetMaterial, phongEnable, instanceColor = null) {
     const gl = renderer._gl;
     this._ExecuteBatch(renderer); // Flushes any pending C2 draw calls
+    
+    // Set color uniforms for 3DObject compatibility
+    this._setColorUniforms(gl, instanceColor);
     if (this.vao === null) {
       this.vao = this.createVao(renderer);
     }
@@ -342,6 +361,28 @@ class ObjectBufferTop {
     const locUNodeXformEnable = globalThis.uniformCache.getLocation(gl, shaderProgram, "uNodeXformEnable");
     if (locUSkinEnable) gl.uniform1f(locUSkinEnable, 0.0);
     if (locUNodeXformEnable) gl.uniform1f(locUNodeXformEnable, 0.0);
+  }
+
+  // Helper method for setting color uniforms for 3DObject instance tinting
+  _setColorUniforms(gl, instanceColor) {
+    try {
+      // Enable 3DObject uniform color mode
+      if (this.locUseUniformColor !== null) {
+        gl.uniform1f(this.locUseUniformColor, 1.0);
+      }
+      
+      // Set instance color if provided
+      if (this.locObjectColor !== null) {
+        if (instanceColor && instanceColor.length >= 4) {
+          gl.uniform4fv(this.locObjectColor, instanceColor);
+        } else {
+          // Default to white/opaque if no color provided
+          gl.uniform4f(this.locObjectColor, 1.0, 1.0, 1.0, 1.0);
+        }
+      }
+    } catch (e) {
+      console.warn("[3DObject] Error setting color uniforms:", e);
+    }
   }
 
   createDefaultTexcoordData(length) {
