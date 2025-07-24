@@ -166,6 +166,18 @@ class GltfModelTop {
     gl.uniform1f(this.locUNodeXformEnable, 0.0)
   }
 
+  _resetColorUniforms(renderer) {
+    const gl = renderer._gl
+    const shaderProgram = renderer._batchState.currentShader._shaderProgram
+    
+    // Reset color uniforms for subsequent non-3D objects
+    const locUseUniformColor = globalThis.uniformCache.getLocation(gl, shaderProgram, "uUseUniformColor")
+    const locObjectColor = globalThis.uniformCache.getLocation(gl, shaderProgram, "uObjectColor")
+    
+    if (locUseUniformColor) gl.uniform1f(locUseUniformColor, 0.0)
+    if (locObjectColor) gl.uniform4f(locObjectColor, 1.0, 1.0, 1.0, 1.0)
+  }
+
   render(renderer, x, y, z, tempQuad, whiteTexture, instanceC3Color, textures, instanceTexture, opacity) {
     if (opacity === 0) return
     if (!this.inst.isEditor) renderer.EndBatch()
@@ -252,8 +264,8 @@ class GltfModelTop {
       this.setVertexShaderModelRotate(renderer, this.modelRotate)
     }
 
-    // Default color
-    renderer.SetColor(instanceC3Color)
+    // Default color - no longer set via renderer, will be passed via uniforms
+    // renderer.SetColor(instanceC3Color)
     vec4.copy(currentColor, instanceColor)
     let baseColorChanged = false
     if (!vec4.equals(currentColor, [1, 1, 1, 1])) baseColorChanged = true
@@ -309,7 +321,8 @@ class GltfModelTop {
         vec4.multiply(finalColor, instanceColor, color)
         if (vec4.equals(finalColor, currentColor) == false) {
           vec4.copy(currentColor, finalColor)
-          renderer.SetColorRgba(finalColor[0], finalColor[1], finalColor[2], finalColor[3])
+          // Remove SetColorRgba - we'll pass color via uniforms instead
+          // renderer.SetColorRgba(finalColor[0], finalColor[1], finalColor[2], finalColor[3])
           baseColorChanged = true
         }
       }
@@ -382,7 +395,8 @@ class GltfModelTop {
             this._sdkType.gltfData,
             rotateMaterial,
             offsetMaterial,
-            this.inst.fragLightPhong
+            this.inst.fragLightPhong,
+            currentColor  // Pass calculated color to draw method
           )
           totalTriangles += objectBuffers[i].indexDataLength / 3
         }
@@ -603,6 +617,9 @@ class GltfModelTop {
               const c = drawLights[i]
               if (baseColorChanged) vec4.mul(c, c, currentColor)
               renderer.SetColorRgba(c[0], c[1], c[2], 1)
+            } else {
+              // For dynamic geometry without lighting, set base color
+              renderer.SetColorRgba(currentColor[0], currentColor[1], currentColor[2], currentColor[3])
             }
             if (vertexScale != 0) {
               const xScale = (this.inst.scale / (this.inst.xScale == 0 ? 1 : this.inst.xScale)) * vertexScale
@@ -636,6 +653,7 @@ class GltfModelTop {
     if (!this.inst.isEditor) {
       this.disableVertexShaderModelRotate(renderer)
       this._disableGPUSkinning(renderer)
+      this._resetColorUniforms(renderer)
       renderer.EndBatch()
     }
 

@@ -628,7 +628,8 @@ class GltfModelWTop {
         vec4.multiply(finalColor, instanceColor, color)
         if (vec4.equals(finalColor, currentColor) == false) {
           vec4.copy(currentColor, finalColor)
-          renderer.SetColorRgba(finalColor[0], finalColor[1], finalColor[2], finalColor[3])
+          // Remove SetColorRgba - we'll pass color via uniforms instead
+          // renderer.SetColorRgba(finalColor[0], finalColor[1], finalColor[2], finalColor[3])
           baseColorChanged = true
         }
       }
@@ -681,7 +682,8 @@ class GltfModelWTop {
             this._sdkType.gltfData, // Pass the GltfData class instance
             rotateMaterial, 
             offsetMaterial, 
-            this.inst.fragLightPhong
+            this.inst.fragLightPhong,
+            currentColor  // Pass calculated color to draw method
           )
           totalTriangles += objectBuffers[i].indexDataLength / 3
         }
