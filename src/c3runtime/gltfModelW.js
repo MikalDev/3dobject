@@ -495,6 +495,18 @@ class GltfModelWTop {
     gl.uniform1f(this.locUNodeXformEnable, 0.0)
   }
 
+  _resetColorUniforms(renderer) {
+    const gl = renderer._gl
+    const shaderProgram = renderer._batchState.currentShader._shaderProgram
+    
+    // Reset color uniforms for subsequent non-3D objects
+    const locUseUniformColor = globalThis.uniformCache.getLocation(gl, shaderProgram, "uUseUniformColor")
+    const locObjectColor = globalThis.uniformCache.getLocation(gl, shaderProgram, "uObjectColor")
+    
+    if (locUseUniformColor) gl.uniform1f(locUseUniformColor, 0.0)
+    if (locObjectColor) gl.uniform4f(locObjectColor, 1.0, 1.0, 1.0, 1.0)
+  }
+
   render(renderer, x, y, z, tempQuad, whiteTexture, instanceC3Color, textures, instanceTexture, opacity) {
     if (opacity === 0) return
     renderer.EndBatch()
@@ -859,6 +871,7 @@ class GltfModelWTop {
       renderer.EndBatch()
       this.disableVertexShaderModelRotate(renderer)
       this._disableGPUSkinning(renderer)
+      this._resetColorUniforms(renderer)
     }
     // Restore attrib
     if (this.inst.staticGeometry) {
