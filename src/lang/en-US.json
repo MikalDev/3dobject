@@ -455,6 +455,18 @@
               }
             }
           },
+          "enable-all-nodes": {
+            "list-name": "Enable all nodes",
+            "display-text": "Enable all nodes",
+            "description": "Enable all nodes for render.",
+            "params": {}
+          },
+          "disable-all-nodes": {
+            "list-name": "Disable all nodes",
+            "display-text": "Disable all nodes",
+            "description": "Disable all nodes for render.",
+            "params": {}
+          },
           "delete-material": {
             "list-name": "Delete material",
             "display-text": "Delete material [i]{0}[/i]",

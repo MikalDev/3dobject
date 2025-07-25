@@ -227,6 +227,70 @@
       if (this.workerAnimation) {
         this.gltf.enableNode(nodeName, enable)
       }
+      // Clear the allNodesDisabled flag if enabling any node
+      if (enable) {
+        this.allNodesDisabled = false
+      }
+    },
+
+    EnableAllNodes() {
+      if (!this.gltf) return
+      if (!this.gltf.gltfData) return
+
+      // Enable all skinned nodes
+      if (this.gltf.gltfData.skinnedNodes?.length) {
+        for (let ii = 0; ii < this.gltf.gltfData.skinnedNodes.length; ii++) {
+          let node = this.gltf.gltfData.skinnedNodes[ii]
+          node.disabled = false
+          if (this.workerAnimation) {
+            this.gltf.enableNode(node.name, true)
+          }
+        }
+      }
+
+      // Enable all regular nodes
+      if (this.gltf.gltfData.nodes?.length) {
+        for (let ii = 0; ii < this.gltf.gltfData.nodes.length; ii++) {
+          let node = this.gltf.gltfData.nodes[ii]
+          node.disabled = false
+          if (this.workerAnimation) {
+            this.gltf.enableNode(node.name, true)
+          }
+        }
+      }
+
+      this.renderOnce = true
+      this.allNodesDisabled = false
+    },
+
+    DisableAllNodes() {
+      if (!this.gltf) return
+      if (!this.gltf.gltfData) return
+
+      // Disable all skinned nodes
+      if (this.gltf.gltfData.skinnedNodes?.length) {
+        for (let ii = 0; ii < this.gltf.gltfData.skinnedNodes.length; ii++) {
+          let node = this.gltf.gltfData.skinnedNodes[ii]
+          node.disabled = true
+          if (this.workerAnimation) {
+            this.gltf.enableNode(node.name, false)
+          }
+        }
+      }
+
+      // Disable all regular nodes
+      if (this.gltf.gltfData.nodes?.length) {
+        for (let ii = 0; ii < this.gltf.gltfData.nodes.length; ii++) {
+          let node = this.gltf.gltfData.nodes[ii]
+          node.disabled = true
+          if (this.workerAnimation) {
+            this.gltf.enableNode(node.name, false)
+          }
+        }
+      }
+
+      this.renderOnce = true
+      this.allNodesDisabled = true
     },
 
     SetNodeMorphWeight(nodeName, index, weight) {

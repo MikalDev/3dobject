@@ -425,6 +425,18 @@
         ]
       },
       {
+        "id": "enable-all-nodes",
+        "scriptName": "EnableAllNodes",
+        "highlight": false,
+        "params": []
+      },
+      {
+        "id": "disable-all-nodes",
+        "scriptName": "DisableAllNodes",
+        "highlight": false,
+        "params": []
+      },
+      {
         "id": "enable-wireframe",
         "scriptName": "EnableWireframe",
         "highlight": false,

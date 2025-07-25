@@ -81,6 +81,7 @@
       this.cameraVector = [0, 1, 0]
       this.cameraPosition = [0, 0, 0]
       this.animationOffset = 0
+      this.allNodesDisabled = false
 
       if (properties) {
         this.scale = properties[0]
@@ -385,7 +386,7 @@
         wi.SetOriginX(0.5)
         wi.SetOriginY(0.5)
         this._setZHeight(100 * this.bboxScale)
-        if (this.debug)
+        if (this.debug && !this.allNodesDisabled)
           console.warn("No min/max found in GLTF accessors. Bounding box dimensions set to default 100,100,100 values.")
       }
     }
