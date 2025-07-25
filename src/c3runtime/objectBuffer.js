@@ -174,13 +174,13 @@ class ObjectBufferTop {
     gl.bindBuffer(gl.ARRAY_BUFFER, tB)
     gl.vertexAttribPointer(locATex, 2, gl.FLOAT, false, 0, 0)
     gl.enableVertexAttribArray(locATex)
-    if (cB != null && locAColor != -1) {
+    // Store whether this object has vertex colors for use in draw()
+    this.hasVertexColors = (cB != null && locAColor != -1)
+    
+    if (this.hasVertexColors) {
       gl.bindBuffer(gl.ARRAY_BUFFER, cB)
       gl.vertexAttribPointer(locAColor, 3, gl.FLOAT, false, 0, 0)
       gl.enableVertexAttribArray(locAColor)
-      gl.uniform1f(this.locHasVertexColors, 1.0)
-    } else {
-      gl.uniform1f(this.locHasVertexColors, 0.0)
     }
     if (nB != null && locANormal != -1) {
       gl.bindBuffer(gl.ARRAY_BUFFER, nB)
@@ -371,6 +371,11 @@ class ObjectBufferTop {
         gl.uniform1f(this.locUseUniformColor, 1.0);
       }
       
+      // Set whether this object has vertex colors
+      if (this.locHasVertexColors !== null) {
+        gl.uniform1f(this.locHasVertexColors, this.hasVertexColors ? 1.0 : 0.0);
+      }
+      
       // Set instance color if provided
       if (this.locObjectColor !== null) {
         if (instanceColor && instanceColor.length >= 4) {
@@ -384,6 +389,7 @@ class ObjectBufferTop {
       console.warn("[3DObject] Error setting color uniforms:", e);
     }
   }
+
 
   createDefaultTexcoordData(length) {
     const texcoordData = new Float32Array(length)

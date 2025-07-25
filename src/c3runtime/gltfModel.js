@@ -173,9 +173,11 @@ class GltfModelTop {
     // Reset color uniforms for subsequent non-3D objects
     const locUseUniformColor = globalThis.uniformCache.getLocation(gl, shaderProgram, "uUseUniformColor")
     const locObjectColor = globalThis.uniformCache.getLocation(gl, shaderProgram, "uObjectColor")
+    const locHasVertexColors = globalThis.uniformCache.getLocation(gl, shaderProgram, "uHasVertexColors")
     
     if (locUseUniformColor) gl.uniform1f(locUseUniformColor, 0.0)
     if (locObjectColor) gl.uniform4f(locObjectColor, 1.0, 1.0, 1.0, 1.0)
+    if (locHasVertexColors) gl.uniform1f(locHasVertexColors, 1.0) // Reset to C3 default (use vertex colors)
   }
 
   render(renderer, x, y, z, tempQuad, whiteTexture, instanceC3Color, textures, instanceTexture, opacity) {

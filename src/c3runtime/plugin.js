@@ -171,11 +171,8 @@
             `        }`,
             `    } else {`,
             `        // Standard C3 mode: use vertex buffer colors`,
-            `        if (uHasVertexColors > 0.5) {`,
-            `            vColor = aColor;`,
-            `        } else {`,
-            `            vColor = vec4(1.0, 1.0, 1.0, 1.0);`,
-            `        }`,
+            `        // Default to using vertex colors, only disable when explicitly set to 0`,
+            `        vColor = aColor;  // Always use vertex colors in standard C3 mode`,
             `    }`,
             `}`,
           ].join("\n")
