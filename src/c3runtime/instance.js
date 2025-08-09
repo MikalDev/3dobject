@@ -283,18 +283,35 @@
 
       const tempQuad = C3.New(C3.Quad)
       if (this.loaded && this.gltfPath != "path") {
-        this.gltf.render(
-          renderer,
-          x,
-          y,
-          z,
-          tempQuad,
-          whiteTextureOwner.whiteTexture,
-          wi.GetPremultipliedColor(),
-          textures,
-          this.instanceTexture,
-          wi.GetOpacity()
-        )
+        // Ensure dedicated 3D shader program is ready; if not, kick off creation and skip this frame
+        if (!globalThis.cached3DObjectShader) {
+          if (globalThis.get3DObjectShaderProgram && !globalThis.cached3DObjectShaderPromise) {
+            try {
+              globalThis.cached3DObjectShaderPromise = globalThis.get3DObjectShaderProgram(renderer)
+            } catch (e) {}
+          }
+          // Try again next frame
+          this.runtime.UpdateRender()
+          return
+        }
+        const originalProgram = renderer.GetProgram()
+        renderer.SetProgram(globalThis.cached3DObjectShader)
+        try {
+          this.gltf.render(
+            renderer,
+            x,
+            y,
+            z,
+            tempQuad,
+            whiteTextureOwner.whiteTexture,
+            wi.GetPremultipliedColor(),
+            textures,
+            this.instanceTexture,
+            wi.GetOpacity()
+          )
+        } finally {
+          if (originalProgram) renderer.SetProgram(originalProgram)
+        }
 
         if (this.updateBbox) {
           if (this.cpuXform) {
@@ -751,14 +768,18 @@
 
     getNodePointPosition(nodeName, pointIndex) {
       const vec3 = globalThis.glMatrix3D.vec3
-      let rotatedPoint = [0,0,0]
+      let rotatedPoint = [0, 0, 0]
       let mapThis = map.get(this)
-      if (!mapThis?.gltf?.gltfData) return  rotatedPoint;
-      if (!mapThis?.gltf?.meshNames?.has(nodeName)) return  rotatedPoint;
-      if (!mapThis?.gltf?.modelRotate) return rotatedPoint;
+      if (!mapThis?.gltf?.gltfData) return rotatedPoint
+      if (!mapThis?.gltf?.meshNames?.has(nodeName)) return rotatedPoint
+      if (!mapThis?.gltf?.modelRotate) return rotatedPoint
       const drawVerts = mapThis.gltf.drawMeshes[mapThis.gltf.meshNames.get(nodeName)].drawVerts[0]
-      if (!drawVerts) return rotatedPoint;
-      const point = vec3.fromValues(drawVerts[pointIndex*3], drawVerts[pointIndex*3+1], drawVerts[pointIndex*3+2])
+      if (!drawVerts) return rotatedPoint
+      const point = vec3.fromValues(
+        drawVerts[pointIndex * 3],
+        drawVerts[pointIndex * 3 + 1],
+        drawVerts[pointIndex * 3 + 2]
+      )
       vec3.transformMat4(rotatedPoint, point, mapThis.gltf.modelRotate)
       return rotatedPoint
     }
