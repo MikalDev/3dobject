@@ -42,6 +42,17 @@
             gl.bindBufferBase(gl.UNIFORM_BUFFER, globalThis.bonesBindingPoint, globalThis.dummyBonesUboBuffer)
             console.info("[3DObject] Dummy UBO for bones created and bound.")
           }
+
+          // Proactively start creating the shader once the renderer is available
+          // so the first draw will likely have it ready
+          try {
+            // Fire-and-forget; store promise so draws can check readiness
+            globalThis.cached3DObjectShaderPromise = globalThis.get3DObjectShaderProgram(
+              runtime.GetCanvasManager().GetRenderer()
+            )
+          } catch (e) {
+            // ignore
+          }
         })
 
         function GetDefaultVertexShaderSource_WebGL2(useHighP) {
@@ -207,17 +218,6 @@
         globalThis.cleanup3DObjectShader = function () {
           globalThis.cached3DObjectShader = null
           globalThis.cached3DObjectShaderPromise = null
-        }
-
-        // Proactively start creating the shader once the renderer is available
-        // so the first draw will likely have it ready
-        try {
-          // Fire-and-forget; store promise so draws can check readiness
-          globalThis.cached3DObjectShaderPromise = globalThis.get3DObjectShaderProgram(
-            runtime.GetCanvasManager().GetRenderer()
-          )
-        } catch (e) {
-          // ignore
         }
       }
     }
