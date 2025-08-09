@@ -8,8 +8,8 @@
       console.log("opts", opts)
       const C3 = self.C3
       const runtime = opts.runtime
-      const MAX_BONES = 256;
-      const _DUMMY_UBO_SIZE = MAX_BONES * 16 * 4;
+      const MAX_BONES = 256
+      const _DUMMY_UBO_SIZE = MAX_BONES * 16 * 4
 
       if (!globalThis.vertexShaderGPUSkinningEnabledXYZ) {
         globalThis.vertexShaderGPUSkinningEnabledXYZ = true
@@ -23,29 +23,25 @@
         // the "afterfirstlayoutstart" event to get the runtime and renderer.
         runtime._iRuntime.addEventListener("afterprojectstart", () => {
           const renderer = runtime.GetCanvasManager().GetRenderer()
-            const gl = renderer._gl
+          const gl = renderer._gl
 
-            if (gl && !globalThis.dummyBonesUboBuffer) {
-              // Create a dummy UBO buffer once and bind it.
-              // This buffer will be used by default for any shader program
-              // that has the "Bones" uniform block.
-              const dummyData = new Float32Array(_DUMMY_UBO_SIZE) // A single mat4 is enough.
-              const uboBuffer = gl.createBuffer()
-              gl.bindBuffer(gl.UNIFORM_BUFFER, uboBuffer)
-              gl.bufferData(gl.UNIFORM_BUFFER, dummyData, gl.STATIC_DRAW)
-              gl.bindBuffer(gl.UNIFORM_BUFFER, null)
+          if (gl && !globalThis.dummyBonesUboBuffer) {
+            // Create a dummy UBO buffer once and bind it.
+            // This buffer will be used by default for any shader program
+            // that has the "Bones" uniform block.
+            const dummyData = new Float32Array(_DUMMY_UBO_SIZE) // A single mat4 is enough.
+            const uboBuffer = gl.createBuffer()
+            gl.bindBuffer(gl.UNIFORM_BUFFER, uboBuffer)
+            gl.bufferData(gl.UNIFORM_BUFFER, dummyData, gl.STATIC_DRAW)
+            gl.bindBuffer(gl.UNIFORM_BUFFER, null)
 
-              globalThis.dummyBonesUboBuffer = uboBuffer
+            globalThis.dummyBonesUboBuffer = uboBuffer
 
-              // Bind the dummy buffer to the chosen binding point.
-              // This binding will persist until another buffer is bound to this point.
-              gl.bindBufferBase(
-                gl.UNIFORM_BUFFER,
-                globalThis.bonesBindingPoint,
-                globalThis.dummyBonesUboBuffer
-              )
-              console.info("[3DObject] Dummy UBO for bones created and bound.")
-            }
+            // Bind the dummy buffer to the chosen binding point.
+            // This binding will persist until another buffer is bound to this point.
+            gl.bindBufferBase(gl.UNIFORM_BUFFER, globalThis.bonesBindingPoint, globalThis.dummyBonesUboBuffer)
+            console.info("[3DObject] Dummy UBO for bones created and bound.")
+          }
         })
 
         function GetDefaultVertexShaderSource_WebGL2(useHighP) {
@@ -178,29 +174,59 @@
           ].join("\n")
         }
         console.info("[3DObject] allow gpu skinning")
-        // Monkeypatch webgl_2 vertex shader
-        C3.Gfx.WebGLShaderProgram.GetDefaultVertexShaderSource_WebGL2 = GetDefaultVertexShaderSource_WebGL2
-        // Temp monkeypatch user shader during runtime for pos support (does not work in editor)
-        const shader = globalThis["C3_Shaders"]["mikal_frag_light-8"]
-        if (shader) {
-          shader.glslWebGL2 = shader.glslWebGL2.replace(
-            "in mediump vec2 vTex;",
-            "in highp float vNPW;\nin mediump vec2 vTex;\nin highp vec3 pos;\nin lowp vec4 vColor;\nin highp vec3 vNormal;\nuniform highp float uPhongEnable;\nin highp vec2 vNPTex;"
+        // Do NOT monkeypatch global shader - create a dedicated shader program for 3DObject
+        // Keep a reference to the original in case other systems need it
+        globalThis.original_GetDefaultVertexShaderSource_WebGL2 =
+          C3.Gfx.WebGLShaderProgram.GetDefaultVertexShaderSource_WebGL2
+        globalThis.get3DObjectShaderSource = GetDefaultVertexShaderSource_WebGL2
+
+        // Create or return a cached dedicated shader program for 3DObject
+        globalThis.get3DObjectShaderProgram = async function (renderer) {
+          if (!globalThis.cached3DObjectShader) {
+            const shaderData = {
+              src: `#version 300 es\n
+                precision mediump float;\n
+                in mediump vec2 vTex;\n
+                in lowp vec4 vColor;\n
+                out lowp vec4 outColor;\n
+                uniform lowp sampler2D samplerFront;\n
+                void main(void) {\n
+                    outColor = texture(samplerFront, vTex) * vColor;\n
+                }`,
+              vertexSrc: GetDefaultVertexShaderSource_WebGL2(true),
+              name: "3DObject-GPU-Skinning",
+            }
+            globalThis.cached3DObjectShaderPromise = renderer.CreateShaderProgram(shaderData)
+            globalThis.cached3DObjectShader = await globalThis.cached3DObjectShaderPromise
+            console.log("[3DObject] Created dedicated 3D shader program")
+          }
+          return globalThis.cached3DObjectShader
+        }
+
+        // Cleanup helper
+        globalThis.cleanup3DObjectShader = function () {
+          globalThis.cached3DObjectShader = null
+          globalThis.cached3DObjectShaderPromise = null
+        }
+
+        // Proactively start creating the shader once the renderer is available
+        // so the first draw will likely have it ready
+        try {
+          // Fire-and-forget; store promise so draws can check readiness
+          globalThis.cached3DObjectShaderPromise = globalThis.get3DObjectShaderProgram(
+            runtime.GetCanvasManager().GetRenderer()
           )
-          shader.glslWebGL2 = shader.glslWebGL2.replace("highp vec3 pos = vec3(0.0, 0.0, 0.0);", "")
-          shader.glslWebGL2 = shader.glslWebGL2.replace("lowp vec4 vColor = vec4(0.0, 0.0, 0.0, 1.0);", "")
-          shader.glslWebGL2 = shader.glslWebGL2.replace("highp vec3 vNormal = vec3(0.0, 0.0, 0.0);", "")
-          shader.glslWebGL2 = shader.glslWebGL2.replace("highp float uPhongEnable = 0.0;", "")
-          shader.glslWebGL2 = shader.glslWebGL2.replace("highp vec2 vNPTex = vec2(0.0, 0.0);", "")
-          shader.glslWebGL2 = shader.glslWebGL2.replace("highp float vNPW = 0.0;", "")
-        } else {
-          console.warn("[3DObject] shader mikal_frag_light-8 not found")
+        } catch (e) {
+          // ignore
         }
       }
     }
 
     Release() {
       super.Release()
+      if (globalThis.cleanup3DObjectShader) {
+        globalThis.cleanup3DObjectShader()
+      }
     }
   }
 }
