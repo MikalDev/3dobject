@@ -133,11 +133,11 @@ class GltfModelTop {
     const gl = renderer._gl
     const batchState = renderer._batchState
     const shaderProgram = batchState.currentShader._shaderProgram
-    
+
     this.locUModelRotate = globalThis.uniformCache.getLocation(gl, shaderProgram, "uModelRotate")
     this.locUModelRotateEnable = globalThis.uniformCache.getLocation(gl, shaderProgram, "uModelRotateEnable")
     this.locUPhongEnable = globalThis.uniformCache.getLocation(gl, shaderProgram, "uPhongEnable")
-    
+
     gl.uniformMatrix4fv(this.locUModelRotate, false, modelRotate)
     gl.uniform1f(this.locUModelRotateEnable, 1)
     gl.uniform1f(this.locUPhongEnable, this.inst.fragLightPhong ? 1 : 0)
@@ -147,10 +147,10 @@ class GltfModelTop {
     const gl = renderer._gl
     const batchState = renderer._batchState
     const shaderProgram = batchState.currentShader._shaderProgram
-    
+
     this.locUModelRotateEnable = globalThis.uniformCache.getLocation(gl, shaderProgram, "uModelRotateEnable")
     this.locUPhongEnable = globalThis.uniformCache.getLocation(gl, shaderProgram, "uPhongEnable")
-    
+
     gl.uniform1f(this.locUModelRotateEnable, 0)
     gl.uniform1f(this.locUPhongEnable, 0)
   }
@@ -158,10 +158,10 @@ class GltfModelTop {
   _disableGPUSkinning(renderer) {
     const gl = renderer._gl
     const shaderProgram = renderer._batchState.currentShader._shaderProgram
-    
+
     this.locUSkinEnable = globalThis.uniformCache.getLocation(gl, shaderProgram, "uSkinEnable")
     this.locUNodeXformEnable = globalThis.uniformCache.getLocation(gl, shaderProgram, "uNodeXformEnable")
-    
+
     gl.uniform1f(this.locUSkinEnable, 0.0)
     gl.uniform1f(this.locUNodeXformEnable, 0.0)
   }
@@ -169,12 +169,12 @@ class GltfModelTop {
   _resetColorUniforms(renderer) {
     const gl = renderer._gl
     const shaderProgram = renderer._batchState.currentShader._shaderProgram
-    
+
     // Reset color uniforms for subsequent non-3D objects
     const locUseUniformColor = globalThis.uniformCache.getLocation(gl, shaderProgram, "uUseUniformColor")
     const locObjectColor = globalThis.uniformCache.getLocation(gl, shaderProgram, "uObjectColor")
     const locHasVertexColors = globalThis.uniformCache.getLocation(gl, shaderProgram, "uHasVertexColors")
-    
+
     if (locUseUniformColor) gl.uniform1f(locUseUniformColor, 0.0)
     if (locObjectColor) gl.uniform4f(locObjectColor, 1.0, 1.0, 1.0, 1.0)
     if (locHasVertexColors) gl.uniform1f(locHasVertexColors, 1.0) // Reset to C3 default (use vertex colors)
@@ -298,13 +298,13 @@ class GltfModelTop {
       const imageInfo = !this.inst.instanceTexture
         ? null
         : this.inst.isEditor
-        ? null
-        : this.inst._objectClass.GetImageInfo()
+          ? null
+          : this.inst._objectClass.GetImageInfo()
       const textureRect = !this.inst.instanceTexture
         ? null
         : this.inst.isEditor
-        ? this.inst.GetTexRect()
-        : imageInfo.GetTexRect()
+          ? this.inst.GetTexRect()
+          : imageInfo.GetTexRect()
       if (this.inst.instanceTexture) {
         rWidth = textureRect.width()
         rHeight = textureRect.height()
@@ -390,7 +390,7 @@ class GltfModelTop {
         for (let i = 0; i < objectBuffers.length; i++) {
           instanceBoneBuffer = this.drawMeshes[j]?.boneBuffer
           this.setVertexShaderModelRotate(renderer, this.modelRotate)
-          
+
           objectBuffers[i].draw(
             renderer,
             instanceBoneBuffer,
@@ -653,10 +653,10 @@ class GltfModelTop {
     renderer._texcoordData = rendererTexcoordData
 
     if (!this.inst.isEditor) {
+      renderer.EndBatch()
       this.disableVertexShaderModelRotate(renderer)
       this._disableGPUSkinning(renderer)
       this._resetColorUniforms(renderer)
-      renderer.EndBatch()
     }
 
     // Restore attrib
@@ -676,41 +676,41 @@ class GltfModelTop {
       renderer._vertexPtr = 0
       renderer._texPtr = 0
     }
-    
+
     // --- Final Dummy UBO Bind (Cleanup) ---
     // After rendering all meshes, bind the dummy UBO in case subsequent C3 rendering
     // uses a shader that expects the 'Bones' block.
     // @ts-ignore
     if (!this.inst.isEditor && globalThis.BoneBuffer) {
-        const gl = renderer._gl;
-        const currentShader = renderer._batchState?.currentShader?._shaderProgram;
-        if (currentShader) {
-            // Assume the shader requires the 'Bones' block. Directly get and bind dummy UBO.
-            // const blockIndex = gl.getUniformBlockIndex(currentShader, "Bones");
-            // if (blockIndex !== gl.INVALID_INDEX && blockIndex !== -1) { // Assume always true
-                // @ts-ignore
-                const dummyUBO = globalThis.BoneBuffer._getOrCreateDummyUBO(gl);
-                if (dummyUBO) {
-                    // Ensure block binding point association (idempotent)
-                    // We still need the block index for uniformBlockBinding.
-                    const blockIndex = globalThis.uniformCache.getUniformBlockIndex(gl, currentShader, "Bones");
-                    if (blockIndex !== gl.INVALID_INDEX && blockIndex !== -1) {
-                        // @ts-ignore
-                        gl.uniformBlockBinding(currentShader, blockIndex, globalThis.BoneBuffer.BONE_UBO_BINDING_POINT);
-                    } else {
-                         console.warn("[GltfModel Cleanup] 'Bones' block not found for uniformBlockBinding.");
-                    }
-                    // Bind the dummy UBO
-                    // @ts-ignore
-                    gl.bindBufferBase(gl.UNIFORM_BUFFER, globalThis.BoneBuffer.BONE_UBO_BINDING_POINT, dummyUBO);
-                    // console.log("[GltfModel Cleanup] Bound dummy UBO for subsequent rendering.");
-                } else {
-                    console.error("[GltfModel Cleanup] Shader expects 'Bones' UBO, but dummy UBO is unavailable.");
-                }
-            // } // else: Shader doesn't expect 'Bones', no cleanup bind needed.
+      const gl = renderer._gl;
+      const currentShader = renderer._batchState?.currentShader?._shaderProgram;
+      if (currentShader) {
+        // Assume the shader requires the 'Bones' block. Directly get and bind dummy UBO.
+        // const blockIndex = gl.getUniformBlockIndex(currentShader, "Bones");
+        // if (blockIndex !== gl.INVALID_INDEX && blockIndex !== -1) { // Assume always true
+        // @ts-ignore
+        const dummyUBO = globalThis.BoneBuffer._getOrCreateDummyUBO(gl);
+        if (dummyUBO) {
+          // Ensure block binding point association (idempotent)
+          // We still need the block index for uniformBlockBinding.
+          const blockIndex = globalThis.uniformCache.getUniformBlockIndex(gl, currentShader, "Bones");
+          if (blockIndex !== gl.INVALID_INDEX && blockIndex !== -1) {
+            // @ts-ignore
+            gl.uniformBlockBinding(currentShader, blockIndex, globalThis.BoneBuffer.BONE_UBO_BINDING_POINT);
+          } else {
+            console.warn("[GltfModel Cleanup] 'Bones' block not found for uniformBlockBinding.");
+          }
+          // Bind the dummy UBO
+          // @ts-ignore
+          gl.bindBufferBase(gl.UNIFORM_BUFFER, globalThis.BoneBuffer.BONE_UBO_BINDING_POINT, dummyUBO);
+          // console.log("[GltfModel Cleanup] Bound dummy UBO for subsequent rendering.");
         } else {
-            console.warn("[GltfModel Cleanup] Could not get current shader program to perform dummy UBO cleanup bind.");
+          console.error("[GltfModel Cleanup] Shader expects 'Bones' UBO, but dummy UBO is unavailable.");
         }
+        // } // else: Shader doesn't expect 'Bones', no cleanup bind needed.
+      } else {
+        console.warn("[GltfModel Cleanup] Could not get current shader program to perform dummy UBO cleanup bind.");
+      }
     }
     // --- End Final Dummy UBO Bind ---
   }
@@ -750,8 +750,7 @@ class GltfModelTop {
     // unskinned meshes
     if (node.mesh != undefined && node.skin == undefined) {
       if (gpuSkinning) {
-        if (!staticGeometry)
-        {
+        if (!staticGeometry) {
           if (!node.hasOwnProperty("boneBuffer")) {
             // Use the constant directly from BoneBuffer if available
             // @ts-ignore - Linter doesn't know globalThis structure
