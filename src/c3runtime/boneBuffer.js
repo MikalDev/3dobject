@@ -109,19 +109,19 @@ class BoneBufferTop {
     const gl = this.gl;
 
     if (this.locURotateMatrix === null || true) {
-      this.locURotateMatrix = gl.getUniformLocation(shaderProgram, "uUVRotate");
-      this.locURotateCenter = gl.getUniformLocation(shaderProgram, "uUVRotateCenter");
-      this.locUOffsetUV = gl.getUniformLocation(shaderProgram, "uUVOffset");
-      this.locUVXformEnable = gl.getUniformLocation(shaderProgram, "uUVXformEnable");
+      this.locURotateMatrix = globalThis.uniformCache.getLocation(gl, shaderProgram, "uUVRotate");
+      this.locURotateCenter = globalThis.uniformCache.getLocation(gl, shaderProgram, "uUVRotateCenter");
+      this.locUOffsetUV = globalThis.uniformCache.getLocation(gl, shaderProgram, "uUVOffset");
+      this.locUVXformEnable = globalThis.uniformCache.getLocation(gl, shaderProgram, "uUVXformEnable");
     }
 
-    this.locUSkinEnable = gl.getUniformLocation(shaderProgram, "uSkinEnable");
-    this.locARootNodeXform = gl.getUniformLocation(shaderProgram, "uRootNodeXform");
-    this.locUNodeXformEnable = gl.getUniformLocation(shaderProgram, "uNodeXformEnable");
-    this.locANodeXform = gl.getUniformLocation(shaderProgram, "uNodeXform");
-    this.locUPhongEnable = gl.getUniformLocation(shaderProgram, "uPhongEnable");
+    this.locUSkinEnable = globalThis.uniformCache.getLocation(gl, shaderProgram, "uSkinEnable");
+    this.locARootNodeXform = globalThis.uniformCache.getLocation(gl, shaderProgram, "uRootNodeXform");
+    this.locUNodeXformEnable = globalThis.uniformCache.getLocation(gl, shaderProgram, "uNodeXformEnable");
+    this.locANodeXform = globalThis.uniformCache.getLocation(gl, shaderProgram, "uNodeXform");
+    this.locUPhongEnable = globalThis.uniformCache.getLocation(gl, shaderProgram, "uPhongEnable");
 
-    this.blockIndex = gl.getUniformBlockIndex(shaderProgram, "Bones");
+    this.blockIndex = globalThis.uniformCache.getUniformBlockIndex(gl, shaderProgram, "Bones");
     if (this.blockIndex === gl.INVALID_INDEX) {
         this.blockIndex = -1;
     } else {
@@ -180,10 +180,10 @@ class BoneBufferTop {
     this._updateShader(shaderProgram);
 
     if (this.locURotateMatrix === null || true) {
-      this.locURotateMatrix = gl.getUniformLocation(shaderProgram, "uUVRotate");
-      this.locURotateCenter = gl.getUniformLocation(shaderProgram, "uUVRotateCenter");
-      this.locUOffsetUV = gl.getUniformLocation(shaderProgram, "uUVOffset");
-      this.locUVXformEnable = gl.getUniformLocation(shaderProgram, "uUVXformEnable");
+      this.locURotateMatrix = globalThis.uniformCache.getLocation(gl, shaderProgram, "uUVRotate");
+      this.locURotateCenter = globalThis.uniformCache.getLocation(gl, shaderProgram, "uUVRotateCenter");
+      this.locUOffsetUV = globalThis.uniformCache.getLocation(gl, shaderProgram, "uUVOffset");
+      this.locUVXformEnable = globalThis.uniformCache.getLocation(gl, shaderProgram, "uUVXformEnable");
     }
 
     if (this.locURotateMatrix) gl.uniformMatrix2fv(this.locURotateMatrix, false, rotateMatrix);
@@ -208,7 +208,7 @@ class BoneBufferTop {
 
     // Get and cache block index if shader program changed
     if (this.blockIndex === -1) {
-        this.blockIndex = gl.getUniformBlockIndex(shaderProgram, "Bones");
+        this.blockIndex = globalThis.uniformCache.getUniformBlockIndex(gl, shaderProgram, "Bones");
         if (this.blockIndex === gl.INVALID_INDEX) {
             console.warn("BoneBuffer: Could not find 'Bones' uniform block in shader. Skinning may not work.");
         } else if (this.blockIndex !== null) {
@@ -241,9 +241,9 @@ class BoneBufferTop {
 
     // --- Other Uniforms (Instance Specific) ---
     if (this.locUSkinEnable === null || true) {
-      this.locUSkinEnable = gl.getUniformLocation(shaderProgram, "uSkinEnable");
-      this.locARootNodeXform = gl.getUniformLocation(shaderProgram, "uRootNodeXform");
-      this.locUPhongEnable = gl.getUniformLocation(shaderProgram, "uPhongEnable");
+      this.locUSkinEnable = globalThis.uniformCache.getLocation(gl, shaderProgram, "uSkinEnable");
+      this.locARootNodeXform = globalThis.uniformCache.getLocation(gl, shaderProgram, "uRootNodeXform");
+      this.locUPhongEnable = globalThis.uniformCache.getLocation(gl, shaderProgram, "uPhongEnable");
     }
     
     if (this.locUSkinEnable) gl.uniform1f(this.locUSkinEnable, 1.0); // Enable skinning
@@ -252,7 +252,7 @@ class BoneBufferTop {
     if (uvXform.enable) { 
         this.uploadUVXformUniforms(this.rendererForShaderAccess, uvXform);
     } else {
-        if (this.locUVXformEnable === null || true) this.locUVXformEnable = gl.getUniformLocation(shaderProgram, "uUVXformEnable");
+        if (this.locUVXformEnable === null || true) this.locUVXformEnable = globalThis.uniformCache.getLocation(gl, shaderProgram, "uUVXformEnable");
         if (this.locUVXformEnable) gl.uniform1f(this.locUVXformEnable, 0.0);
     }
     
@@ -265,7 +265,7 @@ class BoneBufferTop {
 
     // --- Bind Dummy UBO if shader expects 'Bones' block --- //
     if (this.blockIndex === -1) { // Check/update block index cache
-        this.blockIndex = gl.getUniformBlockIndex(shaderProgram, "Bones");
+        this.blockIndex = globalThis.uniformCache.getUniformBlockIndex(gl, shaderProgram, "Bones");
         if (this.blockIndex !== gl.INVALID_INDEX && this.blockIndex !== null) {
              // Associate the shader's uniform block with the binding point if it exists.
             gl.uniformBlockBinding(shaderProgram, this.blockIndex, BoneBufferTop.BONE_UBO_BINDING_POINT);
@@ -286,10 +286,10 @@ class BoneBufferTop {
 
     // --- Other Uniforms for Non-Skinned Path ---
     if (this.locUSkinEnable === null || true) {
-      this.locUSkinEnable = gl.getUniformLocation(shaderProgram, "uSkinEnable");
-      this.locUNodeXformEnable = gl.getUniformLocation(shaderProgram, "uNodeXformEnable");
-      this.locANodeXform = gl.getUniformLocation(shaderProgram, "uNodeXform");
-      this.locUPhongEnable = gl.getUniformLocation(shaderProgram, "uPhongEnable");
+      this.locUSkinEnable = globalThis.uniformCache.getLocation(gl, shaderProgram, "uSkinEnable");
+      this.locUNodeXformEnable = globalThis.uniformCache.getLocation(gl, shaderProgram, "uNodeXformEnable");
+      this.locANodeXform = globalThis.uniformCache.getLocation(gl, shaderProgram, "uNodeXform");
+      this.locUPhongEnable = globalThis.uniformCache.getLocation(gl, shaderProgram, "uPhongEnable");
     }
 
     if (this.locUSkinEnable) gl.uniform1f(this.locUSkinEnable, 0.0); // Disable skinning
@@ -299,7 +299,7 @@ class BoneBufferTop {
     if (uvXform.enable) { 
         this.uploadUVXformUniforms(renderer, uvXform); // Pass renderer
     } else {
-        if (this.locUVXformEnable === null || true) this.locUVXformEnable = gl.getUniformLocation(shaderProgram, "uUVXformEnable");
+        if (this.locUVXformEnable === null || true) this.locUVXformEnable = globalThis.uniformCache.getLocation(gl, shaderProgram, "uUVXformEnable");
         if (this.locUVXformEnable) gl.uniform1f(this.locUVXformEnable, 0.0);
     }
 
@@ -309,7 +309,7 @@ class BoneBufferTop {
   disable(renderer) {
        const gl = renderer._gl;
        const shaderProgram = renderer._batchState.currentShader._shaderProgram;
-       if (this.locUVXformEnable === null || true) this.locUVXformEnable = gl.getUniformLocation(shaderProgram, "uUVXformEnable");
+       if (this.locUVXformEnable === null || true) this.locUVXformEnable = globalThis.uniformCache.getLocation(gl, shaderProgram, "uUVXformEnable");
        if (this.locUVXformEnable) gl.uniform1f(this.locUVXformEnable, 0.0);
        // Potentially disable other things if this method is still used broadly.
        // If skinning was active and this instance is being disabled, ensure skinning uniform is off.

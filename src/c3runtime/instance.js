@@ -104,6 +104,7 @@
         this.wireframe = properties[14]
         this.workerAnimation = properties[15]
         this.backFaceCull = properties[16]
+        this.disableLoad = properties[17]
       }
 
       this.localCenter = [0, 0, 0]
@@ -111,14 +112,14 @@
       // Initialization, once per group of instances unless model data specified per instance
       if (this.instanceModel) {
         this.gltfData = new globalThis.GltfData(this.runtime, this)
-        if (this.gltfPath != "path" && this.gltfPath != "") {
+        if (this.gltfPath != "path" && this.gltfPath != "" && !this.disableLoad) {
           this.gltfData.load(this.gltfPath, true, this.debug)
         }
       } else {
         let sdkType = this.sdkType
         if (sdkType.initOwner == -1) {
           sdkType.initOwner = this.uid
-          if (this.gltfPath != "path" && this.gltfPath != "") {
+          if (this.gltfPath != "path" && this.gltfPath != "" && !this.disableLoad) {
             sdkType.gltfData.load(this.gltfPath, true, this.debug)
           }
         }
@@ -183,7 +184,7 @@
     Tick() {
       const onScreen = this.IsOnScreen()
 
-      if (!this.loaded) {
+      if (!this.loaded && !this.disableLoad) {
         if ((!this.instanceModel && this.sdkType.dataLoaded) || (this.instanceModel && this.dataLoaded)) {
           if (!this.doingInit) {
             this.doingInit = true
@@ -668,6 +669,11 @@
       this.updateBbox = true
     }
 
+    _setGltfPath(path) {
+      this.gltfPath = path
+      this.runtime.UpdateRender()
+    }
+
     _setXScale(scale) {
       this.xScale = scale
       this.runtime.UpdateRender()
@@ -824,6 +830,14 @@
     }
     get animationBlend() {
       return map.get(this).animationBlend
+    }
+
+    get gltfPath() {
+      return map.get(this).gltfPath
+    }
+
+    set gltfPath(path) {
+      map.get(this)._setGltfPath(path)
     }
   }
 }

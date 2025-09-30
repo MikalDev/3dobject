@@ -717,6 +717,14 @@
             "initialValue": ""
           }
         ]
+      },
+      {
+        "id": "gltf-path",
+        "scriptName": "GltfPath",
+        "expressionName": "GltfPath",
+        "returnType": "string",
+        "highlight": false,
+        "params": []
       }
     ]
   },

@@ -3,7 +3,7 @@
   const SDK = self.SDK
 
   const PLUGIN_ID = "Mikal_3DObject"
-  const PLUGIN_VERSION = "2.78.1"
+  const PLUGIN_VERSION = "2.79.0"
   const PLUGIN_CATEGORY = "3d"
 
   const PLUGIN_CLASS = (SDK.Plugins.Mikal_3DObject = class Object3DPlugin extends SDK.IPluginBase {
@@ -102,6 +102,9 @@
           interpolatable: false,
         }),
         new SDK.PluginProperty("check", "cpu-xform", false, {
+          interpolatable: false,
+        }),
+        new SDK.PluginProperty("check", "disable-load", false, {
           interpolatable: false,
         }),
       ])

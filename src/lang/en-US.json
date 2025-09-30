@@ -96,6 +96,10 @@
           "cpu-xform": {
             "name": "Worker BFC",
             "desc": "Whether back face culling should be done by a worker."
+          },
+          "disable-load": {
+            "name": "Disable Load",
+            "desc": "Disable loading the 3D model on instance creation."
           }
         },
         "aceCategories": {
@@ -1254,6 +1258,11 @@
                 "desc": "Node name."
               }
             }
+          },
+          "gltf-path": {
+            "description": "Get the current gltf/glb file path.",
+            "translated-name": "GltfPath",
+            "params": {}
           }
         }
       }

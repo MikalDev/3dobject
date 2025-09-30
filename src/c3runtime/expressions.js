@@ -223,6 +223,9 @@
                 vec3.transformMat4(boundingBoxMax, boundingBoxMax, this.gltf.modelRotate);
                 vec3.transformMat4(boundingBoxMin, boundingBoxMin, this.gltf.modelRotate);
                 return JSON.stringify([boundingBoxMax[0], boundingBoxMax[1], boundingBoxMax[2], boundingBoxMin[0], boundingBoxMin[1], boundingBoxMin[2]])
+            },
+            GltfPath() {
+                return this.gltfPath;
             }
         };
 }
