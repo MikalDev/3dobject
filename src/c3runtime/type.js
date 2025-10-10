@@ -31,6 +31,11 @@
             if (gltfData.dynamicTexturesLoaded === true || gltfData.dynamicTexturesLoaded === null) return;
             gltfData.dynamicTexturesLoaded = null;
 
+            // Check if whiteImageBitmap exists
+            if (!gltfData.whiteImageBitmap) {
+                gltfData.dynamicTexturesLoaded = false;
+                return;
+            }
 
             // White texture for solid color
             const width = gltfData.whiteImageBitmap.width;

@@ -11,6 +11,7 @@
       this.isWebGPU = this.renderer.IsWebGPU()
       this.uid = this.GetInstance().GetUID()
       this.loaded = false
+      this.texturesLoading = false
       this.animationTime = 0
       this.drawVerts = []
       this.drawUVs = []
@@ -127,6 +128,12 @@
 
       this._StartTicking()
       const wi = this.GetWorldInfo()
+
+      // Set initial size so object is visible while loading
+      wi.SetSize(100, 100)
+      wi.SetOriginX(0.5)
+      wi.SetOriginY(0.5)
+      wi.SetBboxChanged()  // Ensure bounding box is updated with initial size
     }
 
     async doInit() {
@@ -151,8 +158,13 @@
       let whiteTextureOwner = this.instanceModel ? this : this.sdkType
       let gltfData = this.instanceModel ? this.gltfData : this.sdkType.gltfData
       let renderer = this.renderer
-      if (gltfData.dynamicTexturesLoaded !== true) {
-        this.sdkType.LoadDynamicTextures(renderer, gltfData, textures, whiteTextureOwner, this.instanceModel)
+      if (gltfData.dynamicTexturesLoaded !== true && !this.texturesLoading) {
+        this.texturesLoading = true
+        try {
+          await this.sdkType.LoadDynamicTextures(renderer, gltfData, textures, whiteTextureOwner, this.instanceModel)
+        } finally {
+          this.texturesLoading = false
+        }
       }
 
       this.loaded = true
@@ -165,42 +177,68 @@
         this.animationName = this.gltf.getAnimationNames()[0]
       }
       this.gltf.updateModelRotate(wi.GetX(), wi.GetY(), wi.GetTotalZElevation())
+
+      // Generate polygons first to populate minBB/maxBB
+      this.gltf.getPolygons(this.staticGeometry || this.gpuSkinning)
       this._updateBoundingBox(wi.GetX(), wi.GetY(), 0, this.gpuSkinning)
+
+      // Ensure bounding box is marked as changed
+      wi.SetBboxChanged()
+
+      // Force an immediate render update after polygon generation
+      this.runtime.UpdateRender()
+
       this.Trigger(C3.Plugins.Mikal_3DObject.Cnds.OnLoaded)
     }
 
     IsOnScreen() {
       const wi = this.GetWorldInfo()
+
+      // Early return true during initialization to allow first render
+      if (this.loaded && this.renderOnce) {
+        return true
+      }
+
       const layer = wi.GetLayer()
+
       if (layer.Has3DCamera()) return wi.IsInViewport3D(layer._GetViewFrustum())
-      else
+      else {
+        const viewport = layer.GetViewport()
         return wi.IsInViewport(
-          layer.GetViewport(),
+          viewport,
           wi.GetLayout().HasVanishingPointOutsideViewport(),
           wi.GetLayout().IsOrthographicProjection()
         )
+      }
     }
 
     Tick() {
       const onScreen = this.IsOnScreen()
 
       if (!this.loaded && !this.disableLoad) {
-        if ((!this.instanceModel && this.sdkType.dataLoaded) || (this.instanceModel && this.dataLoaded)) {
+        const dataReady = (!this.instanceModel && this.sdkType.dataLoaded) || (this.instanceModel && this.dataLoaded)
+        if (dataReady) {
           if (!this.doingInit) {
             this.doingInit = true
-            this.doInit()
+            this.doInit().catch(err => {
+              console.error("Error in doInit:", err)
+              this.doingInit = false
+            })
           }
         }
       }
 
       // Animate gltf model
       if (this.loaded) {
+        // Force initial update for both animated and static models
+        const needsInitialUpdate = this.renderOnce
+
         if (this.animationPlay && this.gltf.gltfData.hasOwnProperty("animations")) {
           this.animationTime +=
             this._runtime.GetDt() * this.animationSpeed +
             (Math.random() * (1 / this.animationRate) - 1 / this.animationRate / 2) * 0.1
           const deltaTime = this.animationTime - this.animationLastTime
-          if (deltaTime >= 1 / this.animationRate) {
+          if (deltaTime >= 1 / this.animationRate || needsInitialUpdate) {
             this.animationLastTime = this.animationTime
             this.drawVerts = []
             this.drawUVs = []
@@ -208,14 +246,16 @@
             this.gltf.updateAnimationPolygons(
               this.animationIndex,
               this.animationTime,
-              onScreen,
+              onScreen || needsInitialUpdate,  // Allow off-screen update for initial frame
               deltaTime,
               this.staticGeometry,
               this.gpuSkinning
             )
+            // Only reset renderOnce after successful update
+            if (needsInitialUpdate) {
+              this.renderOnce = false
+            }
           }
-          this.renderOnce = false
-          // } else if (this.renderOnce || (this.workerAnimation))
         } else if (this.renderOnce || this.lightEnable) {
           this.renderOnce = false
           this.drawVerts = []
@@ -255,8 +295,21 @@
       const imageInfo = this._objectClass.GetImageInfo()
       const texture = imageInfo.GetTexture()
 
-      if (!texture) return // dynamic texture load which hasn't completed yet; can't draw anything
-      if (!this.loaded) return
+      // Allow first render even if off-screen to properly initialize bounding box
+      const forceInitialRender = this.loaded && this.renderOnce
+      const onScreen = this.IsOnScreen()
+
+      if (!texture) {
+        return // dynamic texture load which hasn't completed yet; can't draw anything
+      }
+      if (!this.loaded) {
+        return
+      }
+
+      // Skip draw if off-screen UNLESS it's the initial render
+      if (!onScreen && !forceInitialRender) {
+        return
+      }
 
       const wi = this.GetWorldInfo()
       const x = wi.GetX()
@@ -274,9 +327,8 @@
         return
       }
 
-      if (gltfData.dynamicTexturesLoaded !== true) {
-        this.sdkType.LoadDynamicTextures(renderer, gltfData, textures, whiteTextureOwner, this.instanceModel)
-      }
+      // If textures are needed but not loaded, they should be loaded in doInit()
+      // We'll allow rendering to proceed even if textures aren't ready yet
 
       if (textures.length === 0 || this.instanceTexture) {
         renderer.SetTexture(texture)
@@ -284,6 +336,7 @@
 
       const tempQuad = C3.New(C3.Quad)
       if (this.loaded && this.gltfPath != "path") {
+        const opacity = wi.GetOpacity()
         this.gltf.render(
           renderer,
           x,
@@ -294,18 +347,24 @@
           wi.GetPremultipliedColor(),
           textures,
           this.instanceTexture,
-          wi.GetOpacity()
+          opacity
         )
 
-        if (this.updateBbox) {
-          if (this.cpuXform) {
-            this._updateBoundingBoxCPU(x, y, z)
-          } else {
-            this._updateBoundingBox(x, y, z, this.gpuSkinning)
-          }
+        // Force bounding box update every frame to test centering fix
+        // if (this.updateBbox) {
+        if (this.cpuXform) {
+          this._updateBoundingBoxCPU(x, y, z)
+        } else {
+          this._updateBoundingBox(x, y, z, this.gpuSkinning)
+        }
 
-          wi.SetBboxChanged()
-          this.updateBbox = false
+        wi.SetBboxChanged()
+        // this.updateBbox = false
+        // }
+
+        // Reset renderOnce after successful initial render
+        if (forceInitialRender) {
+          this.renderOnce = false
         }
       }
     }
@@ -316,9 +375,17 @@
       let height = this.maxBB[1] - this.minBB[1]
       height = height == 0 ? 1 : height
       width = width == 0 ? 1 : width
+
+      // Calculate center of bounding box
+      const centerX = (this.minBB[0] + this.maxBB[0]) / 2
+      const centerY = (this.minBB[1] + this.maxBB[1]) / 2
+
       wi.SetSize(width, height)
-      wi.SetOriginX(-(this.minBB[0] - x) / width)
-      wi.SetOriginY(-(this.minBB[1] - y) / height)
+      // Set origin so bounding box is centered on object position
+      // Using no X offset (halfway between - and + which cancel out)
+      wi.SetOriginX(0.5)
+      // Y-axis is inverted in the model transform, so invert the offset
+      wi.SetOriginY(0.5 + (centerY - y) / height)
     }
 
     initBoundingBox() {
@@ -335,9 +402,37 @@
     _updateBoundingBox(x, y, z, gpuSkinning) {
       let maxBB = this.maxBB
       let minBB = this.minBB
+
       if (gpuSkinning) {
         maxBB = this.gltf.gltfData.boundingBox.max
         minBB = this.gltf.gltfData.boundingBox.min
+
+        // Expand bounds when animating to account for limb movement
+        if (this.animationPlay) {
+          const expansionFactor = 0.5 // 50% expansion
+          const center = [
+            (maxBB[0] + minBB[0]) / 2,
+            (maxBB[1] + minBB[1]) / 2,
+            (maxBB[2] + minBB[2]) / 2
+          ]
+          const halfSize = [
+            (maxBB[0] - minBB[0]) / 2,
+            (maxBB[1] - minBB[1]) / 2,
+            (maxBB[2] - minBB[2]) / 2
+          ]
+
+          // Expand bounds from center
+          maxBB = [
+            center[0] + halfSize[0] * (1 + expansionFactor),
+            center[1] + halfSize[1] * (1 + expansionFactor),
+            center[2] + halfSize[2] * (1 + expansionFactor)
+          ]
+          minBB = [
+            center[0] - halfSize[0] * (1 + expansionFactor),
+            center[1] - halfSize[1] * (1 + expansionFactor),
+            center[2] - halfSize[2] * (1 + expansionFactor)
+          ]
+        }
       }
       const cube = [
         [minBB[0], minBB[1], minBB[2]],
@@ -350,7 +445,16 @@
         [minBB[0], maxBB[1], maxBB[2]],
       ]
       const modelRotate = this.gltf.modelRotate
-      if (!modelRotate) return
+      if (!modelRotate) {
+        // Set a default size if modelRotate isn't ready yet
+        const wi = this.GetWorldInfo()
+        wi.SetSize(100 * this.bboxScale, 100 * this.bboxScale)
+        wi.SetOriginX(0.5)
+        wi.SetOriginY(0.5)
+        this._setZHeight(100 * this.bboxScale)
+        wi.SetBboxChanged()
+        return
+      }
 
       this.xMinBB = [Infinity, Infinity, Infinity]
       this.xMaxBB = [-Infinity, -Infinity, -Infinity]
@@ -377,10 +481,19 @@
         let height = xMaxBB[1] - xMinBB[1]
         height = height == 0 ? 1 : height
         width = width == 0 ? 1 : width
+
+        // Calculate center of bounding box
+        const centerX = (xMinBB[0] + xMaxBB[0]) / 2
+        const centerY = (xMinBB[1] + xMaxBB[1]) / 2
+
         wi.SetSize(width * this.bboxScale, height * this.bboxScale)
-        wi.SetOriginX(-(xMinBB[0] - x) / width)
-        wi.SetOriginY(-(xMinBB[1] - y) / height)
+        // Set origin so bounding box is centered on object position
+        // Using no X offset (halfway between - and + which cancel out)
+        wi.SetOriginX(0.5)
+        // Y-axis is inverted in the model transform, so invert the offset
+        wi.SetOriginY(0.5 + (centerY - y) / height)
         this._setZHeight((xMaxBB[2] - xMinBB[2]) * this.bboxScale)
+        wi.SetBboxChanged()
       } else {
         const wi = this.GetWorldInfo()
         wi.SetSize(100 * this.bboxScale, 100 * this.bboxScale)
@@ -460,6 +573,7 @@
       this.renderer = null
       this.uid = null
       this.loaded = null
+      this.texturesLoading = null
       this.animationTime = null
       this.drawVerts = null
       this.drawUVs = null
@@ -757,14 +871,14 @@
 
     getNodePointPosition(nodeName, pointIndex) {
       const vec3 = globalThis.glMatrix3D.vec3
-      let rotatedPoint = [0,0,0]
+      let rotatedPoint = [0, 0, 0]
       let mapThis = map.get(this)
-      if (!mapThis?.gltf?.gltfData) return  rotatedPoint;
-      if (!mapThis?.gltf?.meshNames?.has(nodeName)) return  rotatedPoint;
+      if (!mapThis?.gltf?.gltfData) return rotatedPoint;
+      if (!mapThis?.gltf?.meshNames?.has(nodeName)) return rotatedPoint;
       if (!mapThis?.gltf?.modelRotate) return rotatedPoint;
       const drawVerts = mapThis.gltf.drawMeshes[mapThis.gltf.meshNames.get(nodeName)].drawVerts[0]
       if (!drawVerts) return rotatedPoint;
-      const point = vec3.fromValues(drawVerts[pointIndex*3], drawVerts[pointIndex*3+1], drawVerts[pointIndex*3+2])
+      const point = vec3.fromValues(drawVerts[pointIndex * 3], drawVerts[pointIndex * 3 + 1], drawVerts[pointIndex * 3 + 2])
       vec3.transformMat4(rotatedPoint, point, mapThis.gltf.modelRotate)
       return rotatedPoint
     }
