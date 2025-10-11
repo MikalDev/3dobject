@@ -532,6 +532,9 @@
     EnableFragLight(enable, enablePhong) {
       this._enableFragLight(enable, enablePhong)
     },
+    SetVertexLightingMode(enable) {
+      // Empty implementation as requested
+    },
     SetStaticGeometry(enable) {
       this.staticGeometry = enable
       if (enable) {

@@ -2,20 +2,16 @@
 {
     const C3 = self.C3;
 
-    C3.Plugins.Mikal_3DObject.Type = class Object3DType extends C3.SDKTypeBase
-    {
-        constructor(objectClass)
-        {
+    C3.Plugins.Mikal_3DObject.Type = class Object3DType extends C3.SDKTypeBase {
+        constructor(objectClass) {
             super(objectClass);
         }
 
-        Release()
-        {
+        Release() {
             super.Release();
         }
 
-        OnCreate()
-        {
+        OnCreate() {
             this.GetImageInfo().LoadAsset(this._runtime);
             this.initOwner = -1;
             this.dataLoaded = false;
@@ -24,8 +20,7 @@
             this.texture = {};
         }
 
-        async LoadDynamicTextures(renderer, gltfData, textures, whiteTextureOwner, instanceModel)
-        {
+        async LoadDynamicTextures(renderer, gltfData, textures, whiteTextureOwner, instanceModel) {
             const gltf = gltfData.gltf;
 
             if (gltfData.dynamicTexturesLoaded === true || gltfData.dynamicTexturesLoaded === null) return;
@@ -53,31 +48,32 @@
                 const width = gltfData.imageBitmap[imageName].width;
                 const height = gltfData.imageBitmap[imageName].height;
                 const sampling = this._runtime.GetSampling();
-                let options =  { sampling: sampling,
+                let options = {
+                    sampling: sampling,
                     wrapX: gltfData.imageBitmap[imageName].wrapS,
                     wrapY: gltfData.imageBitmap[imageName].wrapT,
                 };
-    
+
                 textures[imageName] = renderer.CreateDynamicTexture(width, height, options);
                 await renderer.UpdateTexture(gltfData.imageBitmap[imageName], textures[imageName]);
                 if (typeof gltfData.imageBitmap[imageName].close === "function") gltfData.imageBitmap[imageName].close();
+                console.log(`Loaded dynamic texture: ${imageName}`);
             }
 
             gltfData.dynamicTexturesLoaded = true;
             if (instanceModel) {
                 gltfData = null
             }
+            console.log("All dynamic textures loaded");
         }
 
-        LoadTextures(renderer)
-        {
+        LoadTextures(renderer) {
             return this.GetImageInfo().LoadStaticTexture(renderer, {
                 sampling: this._runtime.GetSampling()
             });
         }
 
-        ReleaseTextures()
-        {
+        ReleaseTextures() {
             this.GetImageInfo().ReleaseTexture();
         }
     };

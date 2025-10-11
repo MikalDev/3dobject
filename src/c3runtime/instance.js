@@ -5,6 +5,7 @@
   C3.Plugins.Mikal_3DObject.Instance = class Object3DInstance extends C3.SDKWorldInstanceBase {
     constructor(inst, properties) {
       super(inst)
+      this.count = 0;
       this.sdkType = this.GetSdkType()
       this.runtime = inst.GetRuntime()
       this.renderer = this.runtime.GetCanvasManager().GetRenderer()
@@ -132,7 +133,7 @@
       // Set initial size so object is visible while loading
       wi.SetSize(100, 100)
       wi.SetOriginX(0.5)
-      wi.SetOriginY(0.5)
+      wi.SetOriginY(0. + 0.5)
       wi.SetBboxChanged()  // Ensure bounding box is updated with initial size
     }
 
@@ -292,6 +293,12 @@
     }
 
     Draw(renderer) {
+      if (this.count < 500) {
+        this.count++;
+        console.log(this.count);
+        return
+      }
+
       const imageInfo = this._objectClass.GetImageInfo()
       const texture = imageInfo.GetTexture()
 
@@ -450,7 +457,7 @@
         const wi = this.GetWorldInfo()
         wi.SetSize(100 * this.bboxScale, 100 * this.bboxScale)
         wi.SetOriginX(0.5)
-        wi.SetOriginY(0.5)
+        wi.SetOriginY(0.5 + 0.25)
         this._setZHeight(100 * this.bboxScale)
         wi.SetBboxChanged()
         return
@@ -498,7 +505,7 @@
         const wi = this.GetWorldInfo()
         wi.SetSize(100 * this.bboxScale, 100 * this.bboxScale)
         wi.SetOriginX(0.5)
-        wi.SetOriginY(0.5)
+        wi.SetOriginY(0.5 + 0.25)
         this._setZHeight(100 * this.bboxScale)
         if (this.debug && !this.allNodesDisabled)
           console.warn("No min/max found in GLTF accessors. Bounding box dimensions set to default 100,100,100 values.")
