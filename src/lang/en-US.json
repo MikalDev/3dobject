@@ -963,17 +963,6 @@
               }
             }
           },
-          "set-vertex-lighting-mode": {
-            "list-name": "Set vertex lighting mode",
-            "display-text": "Set vertex lighting mode: [b]{0}[/b]",
-            "description": "Set vertex lighting mode.",
-            "params": {
-              "enable": {
-                "name": "Enable",
-                "desc": "Enable vertex lighting mode."
-              }
-            }
-          },
           "set-target-to-position": {
             "list-name": "Set target to position",
             "display-text": "Set target to position [i]({0}, {1}, {2})[/i], up [i]({3}, {4}, {5})[/i]",

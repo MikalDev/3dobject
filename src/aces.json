@@ -1191,18 +1191,6 @@
             "initialValue": 32
           }
         ]
-      },
-      {
-        "id": "set-vertex-lighting-mode",
-        "scriptName": "SetVertexLightingMode",
-        "highlight": false,
-        "params": [
-          {
-            "id": "enable",
-            "type": "boolean",
-            "initialValue": "false"
-          }
-        ]
       }
     ],
     "expressions": [

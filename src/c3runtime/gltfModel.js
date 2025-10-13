@@ -31,7 +31,6 @@ class GltfModelTop {
     this.meshNames = new Map()
     this.viewPos = [0, 0, 0]
     this.boundProgram = null
-    this.count = 0
   }
 
   _smoothstep(min, max, value) {
@@ -185,15 +184,6 @@ class GltfModelTop {
       return
     }
     if (!this.inst.isEditor) renderer.EndBatch()
-
-
-
-    if (this.count < 100) {
-      this.count++;
-      return
-    }
-
-
 
     let totalTriangles = 0
     let currentColor = [-1, -1, -1, -1]
