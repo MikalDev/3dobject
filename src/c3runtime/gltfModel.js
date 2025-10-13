@@ -40,6 +40,7 @@ class GltfModelTop {
 
   async init() {
     this.gltfData = this.copyGltfData(this._sdkType.gltfData.gltf)
+    await new Promise(resolve => setTimeout(resolve, 66));  // Allow time for texture initialization
     if ("buffers" in this.gltfData) {
       this.gltfData.buffers = null
     }
@@ -180,9 +181,7 @@ class GltfModelTop {
   }
 
   render(renderer, x, y, z, tempQuad, whiteTexture, instanceC3Color, textures, instanceTexture, opacity) {
-    if (opacity === 0) {
-      return
-    }
+    if (opacity === 0) return
     if (!this.inst.isEditor) renderer.EndBatch()
 
     let totalTriangles = 0
