@@ -92,8 +92,12 @@
               const locAWeights = gl.getAttribLocation(program, "aWeights")
               const locAJoints = gl.getAttribLocation(program, "aJoints")
 
-              // If custom attributes exist, set up dummy bindings
-              if (locAWeights !== -1 || locAJoints !== -1) {
+              // Check for custom uniform block
+              const blockIndex = gl.getUniformBlockIndex(program, "Bones")
+
+              // Set up dummy bindings if any custom attributes or uniform blocks exist
+              if (locAWeights !== -1 || locAJoints !== -1 || blockIndex !== gl.INVALID_INDEX) {
+                // Bind dummy vertex attribute buffers
                 if (locAWeights !== -1) {
                   gl.bindBuffer(gl.ARRAY_BUFFER, dummyWeightsBuffer)
                   gl.vertexAttribPointer(locAWeights, 4, gl.FLOAT, false, 0, 0)
@@ -109,11 +113,29 @@
                 // Unbind buffer
                 gl.bindBuffer(gl.ARRAY_BUFFER, null)
 
-                // Try to bind Bones uniform block if it exists
-                const blockIndex = gl.getUniformBlockIndex(program, "Bones")
+                // Bind Bones uniform block if it exists
                 if (blockIndex !== gl.INVALID_INDEX) {
                   gl.uniformBlockBinding(program, blockIndex, globalThis.bonesBindingPoint)
                 }
+
+                // Set default values for custom uniforms (both vertex and fragment shader)
+                const uniformDefaults = [
+                  { name: "uSkinEnable", value: 0.0 },
+                  { name: "uNodeXformEnable", value: 0.0 },
+                  { name: "uModelRotateEnable", value: 0.0 },
+                  { name: "uUVXformEnable", value: 0.0 },
+                  { name: "uPhongEnable", value: 0.0 },
+                  { name: "uNPUVEnable", value: 0.0 },
+                  { name: "uHasVertexColors", value: 0.0 },
+                  { name: "uUseUniformColor", value: 0.0 }
+                ]
+
+                uniformDefaults.forEach(({ name, value }) => {
+                  const loc = gl.getUniformLocation(program, name)
+                  if (loc !== null) {
+                    gl.uniform1f(loc, value)
+                  }
+                })
 
                 console.info("[3DObject] Set up dummy bindings for shader program")
               }
