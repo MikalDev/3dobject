@@ -48,6 +48,82 @@
           }
         })
 
+        // Monkeypatch useProgram to set up dummy bindings on first use
+        runtime._iRuntime.addEventListener("afterprojectstart", () => {
+          const renderer = runtime.GetCanvasManager().GetRenderer()
+          const gl = renderer._gl
+
+          if (gl && !gl._3DObjectUseProgramPatched) {
+            // Track which programs have been initialized
+            const initializedPrograms = new WeakSet()
+
+            // Create dummy buffers for custom attributes
+            const dummyWeightsBuffer = gl.createBuffer()
+            const dummyJointsBuffer = gl.createBuffer()
+
+            // Initialize with dummy data (4 components per vertex, 1 vertex)
+            const dummyWeights = new Float32Array([1.0, 0.0, 0.0, 0.0])
+            const dummyJoints = new Float32Array([0.0, 0.0, 0.0, 0.0])
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, dummyWeightsBuffer)
+            gl.bufferData(gl.ARRAY_BUFFER, dummyWeights, gl.STATIC_DRAW)
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, dummyJointsBuffer)
+            gl.bufferData(gl.ARRAY_BUFFER, dummyJoints, gl.STATIC_DRAW)
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, null)
+
+            // Store original useProgram
+            const originalUseProgram = gl.useProgram.bind(gl)
+
+            // Monkeypatch useProgram
+            gl.useProgram = function(program) {
+              // Call original useProgram first
+              originalUseProgram(program)
+
+              if (!program || initializedPrograms.has(program)) {
+                return
+              }
+
+              // Mark as initialized
+              initializedPrograms.add(program)
+
+              // Try to get custom attribute locations
+              const locAWeights = gl.getAttribLocation(program, "aWeights")
+              const locAJoints = gl.getAttribLocation(program, "aJoints")
+
+              // If custom attributes exist, set up dummy bindings
+              if (locAWeights !== -1 || locAJoints !== -1) {
+                if (locAWeights !== -1) {
+                  gl.bindBuffer(gl.ARRAY_BUFFER, dummyWeightsBuffer)
+                  gl.vertexAttribPointer(locAWeights, 4, gl.FLOAT, false, 0, 0)
+                  gl.enableVertexAttribArray(locAWeights)
+                }
+
+                if (locAJoints !== -1) {
+                  gl.bindBuffer(gl.ARRAY_BUFFER, dummyJointsBuffer)
+                  gl.vertexAttribPointer(locAJoints, 4, gl.FLOAT, false, 0, 0)
+                  gl.enableVertexAttribArray(locAJoints)
+                }
+
+                // Unbind buffer
+                gl.bindBuffer(gl.ARRAY_BUFFER, null)
+
+                // Try to bind Bones uniform block if it exists
+                const blockIndex = gl.getUniformBlockIndex(program, "Bones")
+                if (blockIndex !== gl.INVALID_INDEX) {
+                  gl.uniformBlockBinding(program, blockIndex, globalThis.bonesBindingPoint)
+                }
+
+                console.info("[3DObject] Set up dummy bindings for shader program")
+              }
+            }
+
+            gl._3DObjectUseProgramPatched = true
+            console.info("[3DObject] useProgram monkeypatched for dummy binding")
+          }
+        })
+
         function GetDefaultVertexShaderSource_WebGL2(useHighP) {
           const texPrecision = useHighP ? "highp" : "mediump"
           return [
