@@ -75,6 +75,10 @@
     SetAnimationSpeed(speed) {
       this.animationSpeed = speed
     },
+    SetAnimationTime(time) {
+      this.animationTime = time
+      this.animationLastTime = time
+    },
     StopAnimation() {
       this.animationPlay = false
     },

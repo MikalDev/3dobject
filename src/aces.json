@@ -1381,6 +1381,18 @@
             "initialValue": "1"
           }
         ]
+      },
+      {
+        "id": "set-animation-time",
+        "scriptName": "SetAnimationTime",
+        "highlight": false,
+        "params": [
+          {
+            "id": "time",
+            "type": "number",
+            "initialValue": "0"
+          }
+        ]
       }
     ],
     "expressions": [
