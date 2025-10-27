@@ -69,7 +69,7 @@
             `in vec4 aWeights;`,
             `in vec4 aJoints;`,
             `out highp vec3 pos;`,
-            `out highp vec3 norm;`,
+            `out highp vec3 vVertexLighting;`,
             `uniform highp mat4 uModelRotate;`,
             `uniform mat4 uRootNodeXform;`,
             `uniform mat4 uNodeXform;`,
@@ -86,7 +86,8 @@
             `uniform float uHasVertexColors;`,
             `uniform float uUseUniformColor;`,
             `uniform lowp vec4 uObjectColor;`,
-
+            `uniform highp float uVertexLightEnable;`,
+            `uniform highp float uVertexLightDebug;`,
             `// --- Uniform Block for Bone Matrices ---`,
             `layout(std140) uniform Bones {`,
             `    mat4 uBones[MAX_BONES];`,
@@ -174,6 +175,16 @@
             `        // Default to using vertex colors, only disable when explicitly set to 0`,
             `        vColor = aColor;  // Always use vertex colors in standard C3 mode`,
             `    }`,
+            ``,
+            `    // Initialize vertex lighting output`,
+            `    vVertexLighting = vec3(0.0, 0.0, 0.0);`,
+            ``,
+            `    // Debug mode: visualize normals as colors`,
+            `    if (uVertexLightDebug > 0.5) {`,
+            `        // Use the final transformed normal for visualization`,
+            `        // Map normal components from [-1,1] to [0,1] for RGB visualization`,
+            `        vVertexLighting = (vNormal + 1.0) * 0.5;`,
+            `    }`,
             `}`,
           ].join("\n")
         }
@@ -185,7 +196,7 @@
         if (shader) {
           shader.glslWebGL2 = shader.glslWebGL2.replace(
             "in mediump vec2 vTex;",
-            "in highp float vNPW;\nin mediump vec2 vTex;\nin highp vec3 pos;\nin lowp vec4 vColor;\nin highp vec3 vNormal;\nuniform highp float uPhongEnable;\nin highp vec2 vNPTex;"
+            "in highp float vNPW;\nin mediump vec2 vTex;\nin highp vec3 pos;\nin lowp vec4 vColor;\nin highp vec3 vNormal;\nuniform highp float uPhongEnable;\nin highp vec2 vNPTex;\nin highp vec3 vVertexLighting;"
           )
           shader.glslWebGL2 = shader.glslWebGL2.replace("highp vec3 pos = vec3(0.0, 0.0, 0.0);", "")
           shader.glslWebGL2 = shader.glslWebGL2.replace("lowp vec4 vColor = vec4(0.0, 0.0, 0.0, 1.0);", "")
@@ -193,6 +204,11 @@
           shader.glslWebGL2 = shader.glslWebGL2.replace("highp float uPhongEnable = 0.0;", "")
           shader.glslWebGL2 = shader.glslWebGL2.replace("highp vec2 vNPTex = vec2(0.0, 0.0);", "")
           shader.glslWebGL2 = shader.glslWebGL2.replace("highp float vNPW = 0.0;", "")
+          shader.glslWebGL2 = shader.glslWebGL2.replace("highp vec3 vVertexLighting = vec3(1.0, 1.0, 1.0);", "")
+
+          console.info("[3DObject] patched shader mikal_frag_light-8 for vertex lighting")
+          console.debug("vertex shader:\n", GetDefaultVertexShaderSource_WebGL2(true))
+          console.debug("fragment shader:\n", shader.glslWebGL2)
         } else {
           console.warn("[3DObject] shader mikal_frag_light-8 not found")
         }

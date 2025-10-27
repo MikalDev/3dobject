@@ -77,6 +77,8 @@
       this.spriteTextures = new Map()
       this.fragLight = false
       this.fragLightPhong = false
+      this.vertexLightEnable = false
+      this.vertexLightDebug = false
       this.staticGeometry = false
       this.gpuSkinning = false
       this.cameraVector = [0, 1, 0]

@@ -136,10 +136,16 @@ class GltfModelTop {
     this.locUModelRotate = globalThis.uniformCache.getLocation(gl, shaderProgram, "uModelRotate")
     this.locUModelRotateEnable = globalThis.uniformCache.getLocation(gl, shaderProgram, "uModelRotateEnable")
     this.locUPhongEnable = globalThis.uniformCache.getLocation(gl, shaderProgram, "uPhongEnable")
+    this.locUVertexLightEnable = globalThis.uniformCache.getLocation(gl, shaderProgram, "uVertexLightEnable")
+    this.locUVertexLightDebug = globalThis.uniformCache.getLocation(gl, shaderProgram, "uVertexLightDebug")
+    this.locUVertexLightingMode = globalThis.uniformCache.getLocation(gl, shaderProgram, "uVertexLightingMode")
 
     gl.uniformMatrix4fv(this.locUModelRotate, false, modelRotate)
     gl.uniform1f(this.locUModelRotateEnable, 1)
     gl.uniform1f(this.locUPhongEnable, this.inst.fragLightPhong ? 1 : 0)
+    gl.uniform1f(this.locUVertexLightEnable, this.inst.vertexLightEnable ? 1 : 0)
+    gl.uniform1f(this.locUVertexLightDebug, this.inst.vertexLightDebug ? 1 : 0)
+    gl.uniform1f(this.locUVertexLightingMode, this.inst.vertexLightEnable ? 1 : 0)
   }
 
   disableVertexShaderModelRotate(renderer) {
@@ -149,9 +155,15 @@ class GltfModelTop {
 
     this.locUModelRotateEnable = globalThis.uniformCache.getLocation(gl, shaderProgram, "uModelRotateEnable")
     this.locUPhongEnable = globalThis.uniformCache.getLocation(gl, shaderProgram, "uPhongEnable")
+    this.locUVertexLightEnable = globalThis.uniformCache.getLocation(gl, shaderProgram, "uVertexLightEnable")
+    this.locUVertexLightDebug = globalThis.uniformCache.getLocation(gl, shaderProgram, "uVertexLightDebug")
+    this.locUVertexLightingMode = globalThis.uniformCache.getLocation(gl, shaderProgram, "uVertexLightingMode")
 
     gl.uniform1f(this.locUModelRotateEnable, 0)
     gl.uniform1f(this.locUPhongEnable, 0)
+    gl.uniform1f(this.locUVertexLightEnable, 0)
+    gl.uniform1f(this.locUVertexLightDebug, 0)
+    gl.uniform1f(this.locUVertexLightingMode, 0)
   }
 
   _disableGPUSkinning(renderer) {

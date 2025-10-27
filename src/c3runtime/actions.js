@@ -522,6 +522,19 @@
       const color = [r, g, b, a]
       this.ambientColor = color
     },
+    // Deprecated - for backward compatibility
+    VertexLightingMode(enable) {
+      // Redirect to the new action
+      this.VertexLightEnable(enable)
+    },
+    VertexLightEnable(enable) {
+      this.vertexLightEnable = (enable === 1)
+      this._runtime.UpdateRender()
+    },
+    VertexLightDebug(enable) {
+      this.vertexLightDebug = (enable === 1)
+      this._runtime.UpdateRender()
+    },
     SetVertexRounding(round) {
       this.vertexScale = round == 0 ? 0 : 1 / round
     },

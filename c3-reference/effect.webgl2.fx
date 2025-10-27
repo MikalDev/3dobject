@@ -2,13 +2,14 @@
 precision highp float;
 #define NUM_LIGHTS 8
 
+in highp float vNPW;
 in mediump vec2 vTex;
-in highp vec2 vNPTex;
 in highp vec3 pos;
 in lowp vec4 vColor;
 in highp vec3 vNormal;
-in highp float vNPW;
-in highp vec3 vVertexLighting; // Pre-calculated lighting from vertex shader
+uniform highp float uPhongEnable;
+in highp vec2 vNPTex;
+in highp vec3 vVertexLighting;
 out lowp vec4 outColor;
 uniform lowp vec4 color;
 uniform lowp sampler2D samplerFront;
@@ -169,8 +170,9 @@ uniform highp float uViewPositionX;
 uniform highp float uViewPositionY;
 uniform highp float uViewPositionZ;
 uniform highp float uNoPerspectiveUVEnable;
+uniform highp float uVertexLightEnable;
+uniform highp float uVertexLightDebug;
 uniform highp float uVertexLightingMode;
-uniform highp float uPhongEnable;
 
 uniform highp vec2 srcOriginStart;
 uniform highp vec2 srcOriginEnd;
@@ -283,7 +285,6 @@ float specular(vec3 pos, vec3 viewDir, vec3 lightDir, vec3 normal, float shinine
 }
 
 void main(void) {
-	// Variables now come from vertex shader as inputs
 	lowp float enableL[NUM_LIGHTS];
 	highp vec3 posL[NUM_LIGHTS];
 	highp vec4 rgbaL[NUM_LIGHTS];
@@ -316,21 +317,12 @@ void main(void) {
     if (uNoPerspectiveUVEnable > 0.0) {
         uv = vNPTex / vNPW;
     }
-
+	
     lowp vec2 tiledUV = uTileEnable > 0.0 ? tiled(uv) : uv;
 	lowp vec4 tex = texture(samplerFront, tiledUV);
     tex.rgb = tex.rgb * uDiffuseColor;
 	highp vec3 sumColor = vec3(0.,0.,0.);
 
-	// Check if vertex lighting mode is enabled
-	if (uVertexLightingMode > 0.5) {
-		// Use pre-calculated vertex lighting
-		sumColor = vVertexLighting;
-		// Vertex lighting typically doesn't include specular in the vertex shader
-		// but you can still calculate specular per-pixel if needed
-		specularColor = vec3(0.0);
-	} else {
-		// Calculate per-pixel lighting
 	if (uEnable0 != 0.0) {
 		highp vec3 lightPos = vec3(uPosX0, uPosY0, uPosZ0);
 		highp vec3 spotDir = vec3(uSpotDirX0, uSpotDirY0, uSpotDirZ0);
@@ -509,7 +501,6 @@ void main(void) {
             specularColor += specular(pos, viewDir, lightDir, worldSpaceNormal, uShininess, uSpecularIntensity);
         }
 	}
-	} // End of per-pixel lighting block
 	sumColor = max(ambientColorL, sumColor);
     sumColor += specularColor * uSpecularColor;
 	sumColor = min(vec3(1.0), sumColor);
@@ -530,9 +521,14 @@ void main(void) {
     }
     // if (uVertexColorEnable > 0.0 && (vColor.r > 0.0 || vColor.g > 0.0 || vColor.b > 0.0)) {
     if (uVertexColorEnable > 0.0) {
-        outColor.xyz = outColor.xyz * vColor.rgb;  // Use .rgb since vColor is now vec4
+        outColor.xyz = outColor.xyz * vColor.rgb;
         // outColor.xyz = outColor.xyz * vec3(1.0);
-        // outColor.xyz = vColor.rgb/65535.0;
+        // outColor.xyz = vColor/65535.0;
+    }
+    if (uVertexLightEnable > 0.5) {
+        // outColor.xyz = outColor.xyz * vColor.rgb;
+        // outColor.xyz = vVertexLighting.xyz * tex.xyz;
+        outColor.xyz = vVertexLighting.xyz * tex.xyz;
     }
 	gl_FragDepth = (noDepth ? 1.0 : gl_FragCoord.z);
 }
