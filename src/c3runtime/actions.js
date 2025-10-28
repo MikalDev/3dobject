@@ -529,6 +529,10 @@
     },
     VertexLightEnable(enable) {
       this.vertexLightEnable = (enable === 1)
+      // When vertex lighting is enabled, also enable Phong lighting for proper normal calculations
+      if (this.vertexLightEnable) {
+        this.fragLightPhong = true
+      }
       this._runtime.UpdateRender()
     },
     VertexLightDebug(enable) {
