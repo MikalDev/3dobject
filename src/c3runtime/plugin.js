@@ -83,6 +83,8 @@
             `uniform float uPhongEnable;`,
             `uniform float uNPUVEnable;`,
             `uniform highp mat4 uNormalMatrix;`,
+            `uniform highp mat4 uNormalMatrixSkinned;`,
+            `uniform highp mat4 uNormalMatrixNode;`,
             `uniform float uHasVertexColors;`,
             `uniform float uUseUniformColor;`,
             `uniform lowp vec4 uObjectColor;`,
@@ -116,9 +118,8 @@
             `        pos = (uModelRotate * uRootNodeXform * skinVertex).xyz;`,
             `        gl_Position = position;`,
             `        if (uPhongEnable > 0.5) {`,
-            `            mat3 modelRotate = mat3(uModelRotate);`,
-            `            mat3 rootNodeXform = mat3(uRootNodeXform);`,
-            `            vNormal = mat3(transpose(inverse(uModelRotate * uRootNodeXform))) * skinnedNormal;`, // Use skinned normal
+            `            // Use pre-computed normal matrix for better performance`,
+            `            vNormal = mat3(uNormalMatrixSkinned) * skinnedNormal;`, // Use skinned normal
             `            vNormal.x = -vNormal.x;`,
             `        }`,
             `    } else if (uNodeXformEnable > 0.5) {`,
@@ -126,9 +127,8 @@
             `        pos = (uModelRotate * uNodeXform * vec4(aPos, 1.0)).xyz;`,
             `        gl_Position = matP * matMV * uNodeXform * vec4(aPos, 1.0);`,
             `        if (uPhongEnable > 0.5) {`,
-            `            mat3 modelRotate = mat3(uModelRotate);`,
-            `            mat3 nodeXform = mat3(uNodeXform);`,
-            `            vNormal = mat3(transpose(inverse(modelRotate * nodeXform))) * aNormal;`, // Adjust normal for node transform
+            `            // Use pre-computed normal matrix for better performance`,
+            `            vNormal = mat3(uNormalMatrixNode) * aNormal;`, // Adjust normal for node transform
             `            vNormal.x = -vNormal.x;`,
             `        }`,
             `    } else if (uModelRotateEnable > 0.5) {`,

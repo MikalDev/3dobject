@@ -27,7 +27,11 @@ class GltfModelTop {
     this.nodeMeshMap = {}
     this.modelRotate = mat4.create()
     this.normalMatrix = mat4.create()
+    this.normalMatrixSkinned = mat4.create()
+    this.normalMatrixNode = mat4.create()
     this.locANormalMatrix = null
+    this.locANormalMatrixSkinned = null
+    this.locANormalMatrixNode = null
     this.meshNames = new Map()
     this.viewPos = [0, 0, 0]
     this.boundProgram = null
@@ -88,6 +92,8 @@ class GltfModelTop {
     this.nodeMeshMap = null
     this.modelRotate = null
     this.normalMatrix = null
+    this.normalMatrixSkinned = null
+    this.normalMatrixNode = null
     // @ts-ignore
     this.meshNames = null
     // @ts-ignore
@@ -403,6 +409,54 @@ class GltfModelTop {
         for (let i = 0; i < objectBuffers.length; i++) {
           instanceBoneBuffer = this.drawMeshes[j]?.boneBuffer
           this.setVertexShaderModelRotate(renderer, this.modelRotate)
+
+          // Calculate and set normal matrices for skinned and node paths when phong lighting is enabled
+          if (this.inst.fragLightPhong) {
+            const gl = renderer._gl
+            const shaderProgram = renderer._batchState.currentShader._shaderProgram
+
+            if (instanceBoneBuffer) {
+              // For skinned path
+              if (instanceBoneBuffer.skinAnimation && instanceBoneBuffer.rootNodeXform) {
+                // Calculate normal matrix for skinned path: transpose(inverse(uModelRotate * uRootNodeXform))
+                const tempMatrix = mat4.create()
+                mat4.multiply(tempMatrix, this.modelRotate, instanceBoneBuffer.rootNodeXform)
+                mat4.invert(this.normalMatrixSkinned, tempMatrix)
+                mat4.transpose(this.normalMatrixSkinned, this.normalMatrixSkinned)
+
+                this.locANormalMatrixSkinned = globalThis.uniformCache.getLocation(gl, shaderProgram, "uNormalMatrixSkinned")
+                if (this.locANormalMatrixSkinned) {
+                  gl.uniformMatrix4fv(this.locANormalMatrixSkinned, false, this.normalMatrixSkinned)
+                }
+              }
+
+              // For node transform path (non-skinned animation) with boneBuffer
+              if (!instanceBoneBuffer.skinAnimation && instanceBoneBuffer.nodeXform) {
+                // Calculate normal matrix for node path: transpose(inverse(uModelRotate * uNodeXform))
+                const tempMatrix = mat4.create()
+                mat4.multiply(tempMatrix, this.modelRotate, instanceBoneBuffer.nodeXform)
+                mat4.invert(this.normalMatrixNode, tempMatrix)
+                mat4.transpose(this.normalMatrixNode, this.normalMatrixNode)
+
+                this.locANormalMatrixNode = globalThis.uniformCache.getLocation(gl, shaderProgram, "uNormalMatrixNode")
+                if (this.locANormalMatrixNode) {
+                  gl.uniformMatrix4fv(this.locANormalMatrixNode, false, this.normalMatrixNode)
+                }
+              }
+            } else if (objectBuffers[i].gpuSkinning && objectBuffers[i].nodeXform) {
+              // For node transform path (non-skinned animation) without boneBuffer
+              // Calculate normal matrix for node path: transpose(inverse(uModelRotate * uNodeXform))
+              const tempMatrix = mat4.create()
+              mat4.multiply(tempMatrix, this.modelRotate, objectBuffers[i].nodeXform)
+              mat4.invert(this.normalMatrixNode, tempMatrix)
+              mat4.transpose(this.normalMatrixNode, this.normalMatrixNode)
+
+              this.locANormalMatrixNode = globalThis.uniformCache.getLocation(gl, shaderProgram, "uNormalMatrixNode")
+              if (this.locANormalMatrixNode) {
+                gl.uniformMatrix4fv(this.locANormalMatrixNode, false, this.normalMatrixNode)
+              }
+            }
+          }
 
           objectBuffers[i].draw(
             renderer,
