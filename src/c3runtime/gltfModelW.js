@@ -48,6 +48,9 @@ class GltfModelWTop {
     this.locUSkinEnable = null
     this.locUNodeXformEnable = null
     this.locUNormalMatrix = null
+    this.locUVertexLightEnable = null
+    this.locUVertexLightDebug = null
+    this.locUVertexLightingMode = null
   }
 
   release() {
@@ -160,6 +163,12 @@ class GltfModelWTop {
     this.locUNodeXformEnable = null
     // @ts-ignore
     this.locUNormalMatrix = null
+    // @ts-ignore
+    this.locUVertexLightEnable = null
+    // @ts-ignore
+    this.locUVertexLightDebug = null
+    // @ts-ignore
+    this.locUVertexLightingMode = null
   }
 
   createBoneBufferViews() {
@@ -468,26 +477,38 @@ class GltfModelWTop {
     const gl = renderer._gl
     const batchState = renderer._batchState
     const shaderProgram = batchState.currentShader._shaderProgram
-    
+
     this.locUModelRotate = globalThis.uniformCache.getLocation(gl, shaderProgram, "uModelRotate")
     this.locUModelRotateEnable = globalThis.uniformCache.getLocation(gl, shaderProgram, "uModelRotateEnable")
     this.locUPhongEnable = globalThis.uniformCache.getLocation(gl, shaderProgram, "uPhongEnable")
-    
+    this.locUVertexLightEnable = globalThis.uniformCache.getLocation(gl, shaderProgram, "uVertexLightEnable")
+    this.locUVertexLightDebug = globalThis.uniformCache.getLocation(gl, shaderProgram, "uVertexLightDebug")
+    this.locUVertexLightingMode = globalThis.uniformCache.getLocation(gl, shaderProgram, "uVertexLightingMode")
+
     gl.uniformMatrix4fv(this.locUModelRotate, false, modelRotate)
     gl.uniform1f(this.locUModelRotateEnable, 1)
     gl.uniform1f(this.locUPhongEnable, this.inst.fragLightPhong ? 1 : 0)
+    gl.uniform1f(this.locUVertexLightEnable, this.inst.vertexLightEnable ? 1 : 0)
+    gl.uniform1f(this.locUVertexLightDebug, this.inst.vertexLightDebug ? 1 : 0)
+    gl.uniform1f(this.locUVertexLightingMode, this.inst.vertexLightEnable ? 1 : 0)
   }
 
   disableVertexShaderModelRotate(renderer) {
     const gl = renderer._gl
     const batchState = renderer._batchState
     const shaderProgram = batchState.currentShader._shaderProgram
-    
+
     this.locUModelRotateEnable = globalThis.uniformCache.getLocation(gl, shaderProgram, "uModelRotateEnable")
     this.locUPhongEnable = globalThis.uniformCache.getLocation(gl, shaderProgram, "uPhongEnable")
-    
+    this.locUVertexLightEnable = globalThis.uniformCache.getLocation(gl, shaderProgram, "uVertexLightEnable")
+    this.locUVertexLightDebug = globalThis.uniformCache.getLocation(gl, shaderProgram, "uVertexLightDebug")
+    this.locUVertexLightingMode = globalThis.uniformCache.getLocation(gl, shaderProgram, "uVertexLightingMode")
+
     gl.uniform1f(this.locUModelRotateEnable, 0)
     gl.uniform1f(this.locUPhongEnable, 0)
+    gl.uniform1f(this.locUVertexLightEnable, 0)
+    gl.uniform1f(this.locUVertexLightDebug, 0)
+    gl.uniform1f(this.locUVertexLightingMode, 0)
   }
 
   _disableGPUSkinning(renderer) {
@@ -690,8 +711,12 @@ class GltfModelWTop {
       if (this.inst.staticGeometry || this.inst.gpuSkinning) {
         const objectBuffers = this.drawMeshes[j].objectBuffers
         // Draw
-        const boneBuffer = this.drawMeshes[j]?.node?.boneBuffer;
+        // Match gltfModel.js access pattern - use boneBuffer directly if available
+        const boneBuffer = this.drawMeshes[j]?.boneBuffer || this.drawMeshes[j]?.node?.boneBuffer;
         for (let i = 0; i < objectBuffers.length; i++) {
+          // Set vertex shader uniforms for each object buffer (critical for correct uniform state)
+          this.setVertexShaderModelRotate(renderer, this.modelRotate)
+
           const nodeXform = boneBuffer?.nodeXform
           if (nodeXform) {
             objectBuffers[i].setNodeXform(nodeXform)
