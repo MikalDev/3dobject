@@ -164,12 +164,15 @@ class GltfModelTop {
     this.locUVertexLightEnable = globalThis.uniformCache.getLocation(gl, shaderProgram, "uVertexLightEnable")
     this.locUVertexLightDebug = globalThis.uniformCache.getLocation(gl, shaderProgram, "uVertexLightDebug")
     this.locUVertexLightingMode = globalThis.uniformCache.getLocation(gl, shaderProgram, "uVertexLightingMode")
+    this.locUUVXformEnable = globalThis.uniformCache.getLocation(gl, shaderProgram, "uUVXformEnable")
 
     gl.uniform1f(this.locUModelRotateEnable, 0)
     gl.uniform1f(this.locUPhongEnable, 0)
     gl.uniform1f(this.locUVertexLightEnable, 0)
     gl.uniform1f(this.locUVertexLightDebug, 0)
     gl.uniform1f(this.locUVertexLightingMode, 0)
+    // Disable UV transform to ensure clean state for next render
+    if (this.locUUVXformEnable) gl.uniform1f(this.locUUVXformEnable, 0)
   }
 
   _disableGPUSkinning(renderer) {
@@ -178,9 +181,12 @@ class GltfModelTop {
 
     this.locUSkinEnable = globalThis.uniformCache.getLocation(gl, shaderProgram, "uSkinEnable")
     this.locUNodeXformEnable = globalThis.uniformCache.getLocation(gl, shaderProgram, "uNodeXformEnable")
+    this.locUUVXformEnable = globalThis.uniformCache.getLocation(gl, shaderProgram, "uUVXformEnable")
 
     gl.uniform1f(this.locUSkinEnable, 0.0)
     gl.uniform1f(this.locUNodeXformEnable, 0.0)
+    // Also disable UV transform when disabling GPU skinning
+    if (this.locUUVXformEnable) gl.uniform1f(this.locUUVXformEnable, 0.0)
   }
 
   _resetColorUniforms(renderer) {
