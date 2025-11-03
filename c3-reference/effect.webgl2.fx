@@ -2,14 +2,12 @@
 precision highp float;
 #define NUM_LIGHTS 8
 
-in highp float vNPW;
 in mediump vec2 vTex;
-in highp vec3 pos;
-in lowp vec4 vColor;
-in highp vec3 vNormal;
-uniform highp float uPhongEnable;
-in highp vec2 vNPTex;
-in highp vec3 vVertexLighting;
+// in mediump vec2 vNPTex;
+// in highp vec3 pos;
+in highp vec3 vColor;
+// in highp vec3 vNormal;
+// in highp vec4 vVertexLighting;
 out lowp vec4 outColor;
 uniform lowp vec4 color;
 uniform lowp sampler2D samplerFront;
@@ -22,157 +20,7 @@ highp vec2 random2D( highp vec2 p )
     p3 += dot(p3, p3.yzx+19.19);
     return fract((p3.xx+p3.yz)*p3.zy);
 }
-uniform lowp vec3 uDiffuseColor;
-uniform lowp float uOpacity;
-uniform lowp vec3 uAmbientColor;
-uniform lowp float uTextureNormal;
-uniform lowp float uEnable0;
-uniform lowp vec3 uColor0;
-uniform highp float uBrightness0;
-uniform highp float uPosX0;
-uniform highp float uPosY0;
-uniform highp float uPosZ0;
-uniform highp float uSpotAngle0;
-uniform highp float uSpotEdge0;
-uniform highp float uSpotDirX0;
-uniform highp float uSpotDirY0;
-uniform highp float uSpotDirZ0;
-uniform highp float uAttenConstant0;
-uniform highp float uAttenLinear0;
-uniform highp float uAttenQuadratic0;
-uniform lowp float uEnable1;
-uniform lowp vec3 uColor1;
-uniform highp float uBrightness1;
-uniform highp float uPosX1;
-uniform highp float uPosY1;
-uniform highp float uPosZ1;
-uniform highp float uSpotAngle1;
-uniform highp float uSpotEdge1;
-uniform highp float uSpotDirX1;
-uniform highp float uSpotDirY1;
-uniform highp float uSpotDirZ1;
-uniform highp float uAttenConstant1;
-uniform highp float uAttenLinear1;
-uniform highp float uAttenQuadratic1;
-uniform lowp float uEnable2;
-uniform lowp vec3 uColor2;
-uniform highp float uBrightness2;
-uniform highp float uPosX2;
-uniform highp float uPosY2;
-uniform highp float uPosZ2;
-uniform highp float uSpotAngle2;
-uniform highp float uSpotEdge2;
-uniform highp float uSpotDirX2;
-uniform highp float uSpotDirY2;
-uniform highp float uSpotDirZ2;
-uniform highp float uAttenConstant2;
-uniform highp float uAttenLinear2;
-uniform highp float uAttenQuadratic2;
-uniform lowp float uEnable3;
-uniform lowp vec3 uColor3;
-uniform highp float uBrightness3;
-uniform highp float uPosX3;
-uniform highp float uPosY3;
-uniform highp float uPosZ3;
-uniform highp float uSpotAngle3;
-uniform highp float uSpotEdge3;
-uniform highp float uSpotDirX3;
-uniform highp float uSpotDirY3;
-uniform highp float uSpotDirZ3;
-uniform highp float uAttenConstant3;
-uniform highp float uAttenLinear3;
-uniform highp float uAttenQuadratic3;
-uniform lowp float uEnable4;
-uniform lowp vec3 uColor4;
-uniform highp float uBrightness4;
-uniform highp float uPosX4;
-uniform highp float uPosY4;
-uniform highp float uPosZ4;
-uniform highp float uSpotAngle4;
-uniform highp float uSpotEdge4;
-uniform highp float uSpotDirX4;
-uniform highp float uSpotDirY4;
-uniform highp float uSpotDirZ4;
-uniform highp float uAttenConstant4;
-uniform highp float uAttenLinear4;
-uniform highp float uAttenQuadratic4;
-uniform lowp float uEnable5;
-uniform lowp vec3 uColor5;
-uniform highp float uBrightness5;
-uniform highp float uPosX5;
-uniform highp float uPosY5;
-uniform highp float uPosZ5;
-uniform highp float uSpotAngle5;
-uniform highp float uSpotEdge5;
-uniform highp float uSpotDirX5;
-uniform highp float uSpotDirY5;
-uniform highp float uSpotDirZ5;
-uniform highp float uAttenConstant5;
-uniform highp float uAttenLinear5;
-uniform highp float uAttenQuadratic5;
-uniform lowp float uEnable6;
-uniform lowp vec3 uColor6;
-uniform highp float uBrightness6;
-uniform highp float uPosX6;
-uniform highp float uPosY6;
-uniform highp float uPosZ6;
-uniform highp float uSpotAngle6;
-uniform highp float uSpotEdge6;
-uniform highp float uSpotDirX6;
-uniform highp float uSpotDirY6;
-uniform highp float uSpotDirZ6;
-uniform highp float uAttenConstant6;
-uniform highp float uAttenLinear6;
-uniform highp float uAttenQuadratic6;
-uniform lowp float uEnable7;
-uniform lowp vec3 uColor7;
-uniform highp float uBrightness7;
-uniform highp float uPosX7;
-uniform highp float uPosY7;
-uniform highp float uPosZ7;
-uniform highp float uSpotAngle7;
-uniform highp float uSpotEdge7;
-uniform highp float uSpotDirX7;
-uniform highp float uSpotDirY7;
-uniform highp float uSpotDirZ7;
-uniform highp float uAttenConstant7;
-uniform highp float uAttenLinear7;
-uniform highp float uAttenQuadratic7;
-uniform highp float uDirectionalEnable;
-uniform highp vec3 uDirectionalColor;
-uniform highp float uDirectionalBrightness;
-uniform highp float uDirectionalDirX;
-uniform highp float uDirectionalDirY;
-uniform highp float uDirectionalDirZ;
-uniform highp float uFogEnable;
-uniform highp vec3 uFogColor;
-uniform highp float uFogDensity;
-uniform highp float uFogCameraPosX;
-uniform highp float uFogCameraPosY;
-uniform highp float uFogCameraPosZ;
-uniform highp float uFogStart;
-uniform highp float uFogEnd;
-uniform highp float uFogHeightStart;
-uniform highp float uFogHeightEnd;
-uniform highp float uScreendoorEnable;
-uniform highp float uTileEnable;
-uniform highp float uTileOffsetX;
-uniform highp float uTileOffsetY;
-uniform highp float uTileScaleX;
-uniform highp float uTileScaleY;
-uniform highp float uTileRandomScale;
-uniform highp float uVertexColorEnable;
-uniform highp float uSpecularEnable;
-uniform highp vec3 uSpecularColor;
-uniform highp float uShininess;
-uniform highp float uSpecularIntensity;
-uniform highp float uViewPositionX;
-uniform highp float uViewPositionY;
-uniform highp float uViewPositionZ;
-uniform highp float uNoPerspectiveUVEnable;
-uniform highp float uVertexLightEnable;
-uniform highp float uVertexLightDebug;
-uniform highp float uVertexLightingMode;
+//<-- UNIFORMS -->
 
 uniform highp vec2 srcOriginStart;
 uniform highp vec2 srcOriginEnd;
@@ -284,7 +132,46 @@ float specular(vec3 pos, vec3 viewDir, vec3 lightDir, vec3 normal, float shinine
     return specularIntensity * spec;
 }
 
+vec3 overlay(vec3 base, vec3 blend) {
+    return mix(
+        2.0 * base * blend,                           // Multiply (dark)
+        1.0 - 2.0 * (1.0 - base) * (1.0 - blend),    // Screen (bright)
+        step(0.5, base)                               // Threshold at 0.5
+    ) * blend;
+}
+
+vec3 softLight(vec3 base, vec3 blend) {
+    vec3 result;
+    for(int i = 0; i < 3; i++) {
+        if(blend[i] < 0.5) {
+            result[i] = 2.0 * base[i] * blend[i] + base[i] * base[i] * (1.0 - 2.0 * blend[i]);
+        } else {
+            result[i] = 2.0 * base[i] * (1.0 - blend[i]) + sqrt(base[i]) * (2.0 * blend[i] - 1.0);
+        }
+    }
+    return result;
+}
+
+vec3 applyHybridLighting(vec3 baseColor, vec3 lighting, float shadowLift, float contrast) {
+    // Standard multiply for physical accuracy
+    vec3 result = baseColor * lighting;
+    
+    // Lift shadows slightly to preserve detail
+    result = mix(result, baseColor * shadowLift, 1.0 - lighting);
+    
+    // Add contrast in mid-tones
+    result = pow(result, vec3(contrast));
+    
+    return result;
+}
+
 void main(void) {
+	highp vec3 pos = vec3(0.0, 0.0, 0.0);
+    highp vec3 vNormal = vec3(0.0, 0.0, 0.0);
+    highp vec2 vNPTex = vec2(0.0, 0.0);
+    highp vec3 vVertexLighting = vec3(1.0, 1.0, 1.0);
+    highp float vNPW = 0.0;
+    highp float uPhongEnable = 0.0;
 	lowp float enableL[NUM_LIGHTS];
 	highp vec3 posL[NUM_LIGHTS];
 	highp vec4 rgbaL[NUM_LIGHTS];
@@ -322,7 +209,7 @@ void main(void) {
 	lowp vec4 tex = texture(samplerFront, tiledUV);
     tex.rgb = tex.rgb * uDiffuseColor;
 	highp vec3 sumColor = vec3(0.,0.,0.);
-
+    if (uVertexLightEnable < 0.5) {
 	if (uEnable0 != 0.0) {
 		highp vec3 lightPos = vec3(uPosX0, uPosY0, uPosZ0);
 		highp vec3 spotDir = vec3(uSpotDirX0, uSpotDirY0, uSpotDirZ0);
@@ -330,7 +217,7 @@ void main(void) {
 		highp float lightDist = length(lightDir);
 		lightDir = normalize(lightDir);
 		spotDir = normalize(spotDir);
-		highp float light = dot(worldSpaceNormal,lightDir) * 0.5 + 0.5;
+		highp float light = dot(worldSpaceNormal,lightDir) * 0.8 + 0.2;
 		light = light*light;
 		highp float cutoff = uSpotAngle0;
 		highp float edge = uSpotEdge0;
@@ -340,7 +227,8 @@ void main(void) {
 		light = light / ((1.0 + uAttenConstant0) + lightDist * uAttenLinear0 + lightDist * lightDist * uAttenQuadratic0);
 		sumColor = sumColor + light * uColor0*uBrightness0;
         if (uSpecularEnable > 0.5) {
-            specularColor += specular(pos, viewDir, lightDir, worldSpaceNormal, uShininess, uSpecularIntensity);
+            float attenuation = 1.0 / ((1.0 + uAttenConstant0) + lightDist * uAttenLinear0 + lightDist * lightDist * uAttenQuadratic0);
+            specularColor += specular(pos, viewDir, lightDir, worldSpaceNormal, uShininess, uSpecularIntensity) * spot * attenuation;
         }
 	}
 
@@ -351,7 +239,7 @@ void main(void) {
 		highp float lightDist = length(lightDir);
 		lightDir = normalize(lightDir);
 		spotDir = normalize(spotDir);
-		highp float light = dot(worldSpaceNormal,lightDir) * 0.5 + 0.5;
+		highp float light = dot(worldSpaceNormal,lightDir) * 0.8 + 0.2;
 		light = light*light;
 		highp float cutoff = uSpotAngle1;
 		highp float edge = uSpotEdge1;
@@ -361,7 +249,8 @@ void main(void) {
 		light = light / ((1.0 + uAttenConstant1) + lightDist * uAttenLinear1 + lightDist * lightDist * uAttenQuadratic1);
 		sumColor = sumColor + light * uColor1*uBrightness1;
         if (uSpecularEnable > 0.5) {
-            specularColor += specular(pos, viewDir, lightDir, worldSpaceNormal, uShininess, uSpecularIntensity);
+            float attenuation = 1.0 / ((1.0 + uAttenConstant1) + lightDist * uAttenLinear1 + lightDist * lightDist * uAttenQuadratic1);
+            specularColor += specular(pos, viewDir, lightDir, worldSpaceNormal, uShininess, uSpecularIntensity) * spot * attenuation;
         }
 	}
 
@@ -372,7 +261,7 @@ void main(void) {
 		highp float lightDist = length(lightDir);
 		lightDir = normalize(lightDir);
 		spotDir = normalize(spotDir);
-		highp float light = dot(worldSpaceNormal,lightDir) * 0.5 + 0.5;
+		highp float light = dot(worldSpaceNormal,lightDir) * 0.8 + 0.2;
 		light = light*light;
 		highp float cutoff = uSpotAngle2;
 		highp float edge = uSpotEdge2;
@@ -393,7 +282,7 @@ void main(void) {
 		highp float lightDist = length(lightDir);
 		lightDir = normalize(lightDir);
 		spotDir = normalize(spotDir);
-		highp float light = dot(worldSpaceNormal,lightDir) * 0.5 + 0.5;
+		highp float light = dot(worldSpaceNormal,lightDir) * 0.8 + 0.2;
 		light = light*light;
 		highp float cutoff = uSpotAngle3;
 		highp float edge = uSpotEdge3;
@@ -414,7 +303,7 @@ void main(void) {
 		highp float lightDist = length(lightDir);
 		lightDir = normalize(lightDir);
 		spotDir = normalize(spotDir);
-		highp float light = dot(worldSpaceNormal,lightDir) * 0.5 + 0.5;
+		highp float light = dot(worldSpaceNormal,lightDir) * 0.8 + 0.2;
 		light = light*light;
 		highp float cutoff = uSpotAngle4;
 		highp float edge = uSpotEdge4;
@@ -435,7 +324,7 @@ void main(void) {
 		highp float lightDist = length(lightDir);
 		lightDir = normalize(lightDir);
 		spotDir = normalize(spotDir);
-		highp float light = dot(worldSpaceNormal,lightDir) * 0.5 + 0.5;
+		highp float light = dot(worldSpaceNormal,lightDir) * 0.8 + 0.2;
 		light = light*light;
 		highp float cutoff = uSpotAngle5;
 		highp float edge = uSpotEdge5;
@@ -456,7 +345,7 @@ void main(void) {
 		highp float lightDist = length(lightDir);
 		lightDir = normalize(lightDir);
 		spotDir = normalize(spotDir);
-		highp float light = dot(worldSpaceNormal,lightDir) * 0.5 + 0.5;
+		highp float light = dot(worldSpaceNormal,lightDir) * 0.8 + 0.2;
 		light = light*light;
 		highp float cutoff = uSpotAngle6;
 		highp float edge = uSpotEdge6;
@@ -477,7 +366,7 @@ void main(void) {
 		highp float lightDist = length(lightDir);
 		lightDir = normalize(lightDir);
 		spotDir = normalize(spotDir);
-		highp float light = dot(worldSpaceNormal,lightDir) * 0.5 + 0.5;
+		highp float light = dot(worldSpaceNormal,lightDir) * 0.8 + 0.2;
 		light = light*light;
 		highp float cutoff = uSpotAngle7;
 		highp float edge = uSpotEdge7;
@@ -490,11 +379,12 @@ void main(void) {
             specularColor += specular(pos, viewDir, lightDir, worldSpaceNormal, uShininess, uSpecularIntensity);
         }
 	}
+    }
 
 	if (uDirectionalEnable != 0.0) {
 		highp vec3 lightDir = vec3(uDirectionalDirX, uDirectionalDirY, uDirectionalDirZ);
 		lightDir = normalize(lightDir);
-		highp float light = dot(worldSpaceNormal,lightDir) * 0.5 + 0.5;
+		highp float light = dot(worldSpaceNormal,lightDir) * 0.8 + 0.2;
 		light = light*light;
 		sumColor = sumColor + light * uDirectionalColor*uDirectionalBrightness;
         if (uSpecularEnable > 0.5) {
@@ -521,14 +411,15 @@ void main(void) {
     }
     // if (uVertexColorEnable > 0.0 && (vColor.r > 0.0 || vColor.g > 0.0 || vColor.b > 0.0)) {
     if (uVertexColorEnable > 0.0) {
-        outColor.xyz = outColor.xyz * vColor.rgb;
+        outColor.xyz = outColor.xyz * vColor;
         // outColor.xyz = outColor.xyz * vec3(1.0);
         // outColor.xyz = vColor/65535.0;
     }
     if (uVertexLightEnable > 0.5) {
-        // outColor.xyz = outColor.xyz * vColor.rgb;
-        // outColor.xyz = vVertexLighting.xyz * tex.xyz;
-        outColor.xyz = vVertexLighting.xyz * tex.xyz;
+        // outColor.xyz = overlay(tex.rgb, vVertexLighting);
+        outColor.xyz = overlay(tex.rgb, vVertexLighting);
+        outColor.a = tex.a;
+
     }
 	gl_FragDepth = (noDepth ? 1.0 : gl_FragCoord.z);
 }
