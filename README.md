@@ -1,13 +1,61 @@
 # 3dobject
 3dObject plugin for Construct 3
 
+## Download
+
+Download the latest release of the 3DObject addon from the [Releases page](https://github.com/MikalDev/3dobject/releases).
+
 For details on usage and examples, see:
 https://kindeyegames.itch.io/c3-3dobject-alpha
+
+## Development
 
 If you fork this project and expect to distribute the new version, create a new addon id, so that it won't conflict with the original addon.
 See: https://www.construct.net/en/make-games/manuals/addon-sdk/guide/configuring-plugins for more info.
 
-To create a 'release' (zipped version), on mac or linux you can use the release script: ./release.sh 2-58-1
+### Building from Source
+
+To create a build locally:
+
+1. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+2. **Build the addon:**
+   ```bash
+   npm run build
+   # or manually:
+   ./release-minified.sh 2-82-0
+   ```
+
+### Creating a New Release
+
+Releases are automatically created when you push a version tag to GitHub:
+
+1. **Update version number** (updates all version files):
+   ```bash
+   npm run version:bump 2.83.0
+   ```
+
+2. **Commit the version change:**
+   ```bash
+   git add -A
+   git commit -m "chore: bump version to 2.83.0"
+   ```
+
+3. **Create and push a tag:**
+   ```bash
+   git tag v2.83.0
+   git push && git push origin v2.83.0
+   ```
+
+4. **GitHub Actions will automatically:**
+   - Build the minified addon
+   - Create a new GitHub Release
+   - Upload the .c3addon file as a release asset
+
+The release will be available at: https://github.com/MikalDev/3dobject/releases
 
 PRs are welcome, especially examples, docs, notes on usage, etc. please add under docs
 

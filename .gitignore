@@ -89,6 +89,8 @@ temp/
 
 # Build directories
 build/
+dist/
+*.c3addon
 
 # Logs
 logs

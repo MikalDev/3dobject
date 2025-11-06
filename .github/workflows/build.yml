@@ -1,0 +1,148 @@
+name: Build Validation
+
+on:
+  pull_request:
+    branches: [ main, master, develop, vertex-lighting-phase1 ]
+  push:
+    branches: [ main, master, develop, vertex-lighting-phase1 ]
+    paths-ignore:
+      - '**.md'
+      - 'examples/**'
+      - 'docs/**'
+      - '.gitignore'
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: |
+          npm install
+          # Install zip if not available
+          which zip || sudo apt-get update && sudo apt-get install -y zip
+
+      - name: Check version consistency
+        run: |
+          # Get versions from all three files
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          ADDON_VERSION=$(node -p "require('./src/addon.json').version")
+          PLUGIN_VERSION=$(grep 'const PLUGIN_VERSION' src/plugin.js | cut -d'"' -f2)
+
+          echo "package.json version: $PKG_VERSION"
+          echo "addon.json version: $ADDON_VERSION"
+          echo "plugin.js version: $PLUGIN_VERSION"
+
+          # Check if all versions match
+          if [ "$PKG_VERSION" != "$ADDON_VERSION" ] || [ "$PKG_VERSION" != "$PLUGIN_VERSION" ]; then
+            echo "❌ Version mismatch detected!"
+            echo "All version files must have the same version number."
+            echo "Run: npm run version:bump <version> to sync all versions"
+            exit 1
+          fi
+
+          echo "✓ Version consistency check passed: $PKG_VERSION"
+
+      - name: Test standard build
+        run: |
+          # Get version from package.json
+          VERSION=$(node -p "require('./package.json').release")
+          echo "Building version: $VERSION"
+
+          # Run standard build
+          bash release.sh "$VERSION"
+
+          # Check if file was created
+          if [ ! -f "dist/3DObject-$VERSION.c3addon" ]; then
+            echo "❌ Standard build failed - file not found"
+            ls -la dist/ 2>/dev/null || echo "dist/ directory not found"
+            exit 1
+          fi
+
+          echo "✓ Standard build successful"
+          echo "File size: $(du -h "dist/3DObject-$VERSION.c3addon" | cut -f1)"
+
+      - name: Test minified build
+        run: |
+          # Get version from package.json
+          VERSION=$(node -p "require('./package.json').release")
+          echo "Building minified version: $VERSION"
+
+          # Run minified build
+          bash release-minified.sh "$VERSION"
+
+          # Check if file was created
+          if [ ! -f "dist/3DObject-$VERSION.c3addon" ]; then
+            echo "❌ Minified build failed - file not found"
+            ls -la dist/ 2>/dev/null || echo "dist/ directory not found"
+            exit 1
+          fi
+
+          echo "✓ Minified build successful"
+          echo "File size: $(du -h "dist/3DObject-$VERSION.c3addon" | cut -f1)"
+
+      - name: Validate addon structure
+        run: |
+          VERSION=$(node -p "require('./package.json').release")
+          ADDON_FILE="dist/3DObject-$VERSION.c3addon"
+
+          # Create temp directory for extraction
+          mkdir -p temp_extract
+
+          # Extract and check structure (c3addon is a zip file)
+          unzip -q "$ADDON_FILE" -d temp_extract
+
+          # Check for required files
+          REQUIRED_FILES=(
+            "addon.json"
+            "plugin.js"
+            "instance.js"
+            "c3runtime/plugin.js"
+            "c3runtime/instance.js"
+          )
+
+          echo "Checking addon structure..."
+          for FILE in "${REQUIRED_FILES[@]}"; do
+            if [ ! -f "temp_extract/$FILE" ]; then
+              echo "❌ Missing required file: $FILE"
+              ls -la temp_extract/
+              exit 1
+            fi
+            echo "✓ Found: $FILE"
+          done
+
+          echo "✓ Addon structure validation passed"
+
+          # Cleanup
+          rm -rf temp_extract
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: build-artifacts
+          path: dist/*.c3addon
+          retention-days: 7
+
+      - name: Summary
+        run: |
+          VERSION=$(node -p "require('./package.json').release")
+          ADDON_FILE="dist/3DObject-$VERSION.c3addon"
+
+          echo "## Build Validation Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ **All checks passed!**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- Version: $(node -p "require('./package.json').version")" >> $GITHUB_STEP_SUMMARY
+          echo "- Standard build: ✓" >> $GITHUB_STEP_SUMMARY
+          echo "- Minified build: ✓" >> $GITHUB_STEP_SUMMARY
+          echo "- Structure validation: ✓" >> $GITHUB_STEP_SUMMARY
+          echo "- Artifact size: $(du -h "$ADDON_FILE" | cut -f1)" >> $GITHUB_STEP_SUMMARY

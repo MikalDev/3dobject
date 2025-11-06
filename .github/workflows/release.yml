@@ -1,0 +1,123 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write  # Required for creating releases
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: |
+          npm install
+          # Install zip if not available (it should be on Ubuntu)
+          which zip || sudo apt-get update && sudo apt-get install -y zip
+
+      - name: Extract version from tag
+        id: get_version
+        run: |
+          # Extract version from tag (remove 'v' prefix)
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          # Convert to dash format for build script
+          DASH_VERSION=$(echo $VERSION | tr '.' '-')
+          echo "DASH_VERSION=$DASH_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Validate version consistency
+        run: |
+          VERSION="${{ steps.get_version.outputs.VERSION }}"
+
+          # Check package.json
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          if [ "$PKG_VERSION" != "$VERSION" ]; then
+            echo "Error: package.json version ($PKG_VERSION) doesn't match tag ($VERSION)"
+            echo "Please run: npm run version:bump $VERSION"
+            exit 1
+          fi
+
+          # Check addon.json
+          ADDON_VERSION=$(node -p "require('./src/addon.json').version")
+          if [ "$ADDON_VERSION" != "$VERSION" ]; then
+            echo "Error: addon.json version ($ADDON_VERSION) doesn't match tag ($VERSION)"
+            echo "Please run: npm run version:bump $VERSION"
+            exit 1
+          fi
+
+          # Check plugin.js
+          PLUGIN_VERSION=$(grep 'const PLUGIN_VERSION' src/plugin.js | cut -d'"' -f2)
+          if [ "$PLUGIN_VERSION" != "$VERSION" ]; then
+            echo "Error: plugin.js version ($PLUGIN_VERSION) doesn't match tag ($VERSION)"
+            echo "Please run: npm run version:bump $VERSION"
+            exit 1
+          fi
+
+          echo "✓ All version numbers match: $VERSION"
+
+      - name: Build addon (minified)
+        run: |
+          # Use the dash version format for the build script
+          bash release-minified.sh "${{ steps.get_version.outputs.DASH_VERSION }}"
+
+      - name: Verify build output
+        run: |
+          ADDON_FILE="dist/3DObject-${{ steps.get_version.outputs.DASH_VERSION }}.c3addon"
+          if [ ! -f "$ADDON_FILE" ]; then
+            echo "Error: Expected file not found: $ADDON_FILE"
+            ls -la dist/
+            exit 1
+          fi
+          echo "✓ Build successful: $ADDON_FILE"
+          echo "File size: $(du -h "$ADDON_FILE" | cut -f1)"
+
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          # Get the previous tag
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+
+          if [ -z "$PREV_TAG" ]; then
+            echo "This is the first release!" > release_notes.md
+          else
+            echo "## What's Changed" > release_notes.md
+            echo "" >> release_notes.md
+
+            # Get commit messages since last tag
+            git log ${PREV_TAG}..HEAD --pretty=format:"- %s" >> release_notes.md
+
+            echo "" >> release_notes.md
+            echo "" >> release_notes.md
+            echo "**Full Changelog**: https://github.com/${{ github.repository }}/compare/${PREV_TAG}...v${{ steps.get_version.outputs.VERSION }}" >> release_notes.md
+          fi
+
+          cat release_notes.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Release v${{ steps.get_version.outputs.VERSION }}
+          body_path: release_notes.md
+          draft: false
+          prerelease: ${{ contains(steps.get_version.outputs.VERSION, '-beta') || contains(steps.get_version.outputs.VERSION, '-alpha') }}
+          files: dist/3DObject-${{ steps.get_version.outputs.DASH_VERSION }}.c3addon
+
+      - name: Summary
+        run: |
+          echo "## 🎉 Release Published!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version**: v${{ steps.get_version.outputs.VERSION }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **File**: 3DObject-${{ steps.get_version.outputs.DASH_VERSION }}.c3addon" >> $GITHUB_STEP_SUMMARY
+          echo "- **Download**: [Release Page](https://github.com/${{ github.repository }}/releases/tag/v${{ steps.get_version.outputs.VERSION }})" >> $GITHUB_STEP_SUMMARY

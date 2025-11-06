@@ -10,25 +10,59 @@ This is a Construct 3 plugin that enables loading and displaying 3D models (glTF
 
 ### Building the Plugin
 ```bash
-# Create a minified production build with version number
-./release-minified.sh 2-76-3
+# Build using npm (recommended - uses minified release)
+npm run build
+
+# Create a minified production build manually
+./release-minified.sh 2-82-0
 
 # Standard release (non-minified)
-./release.sh 2-76-3
+./release.sh 2-82-0
 
 # Windows PowerShell build
-./release.ps1 2-76-3
+./release.ps1 2-82-0
+```
 
-# NPM build command (uses minified release)
-npm run build
+### Version Management
+```bash
+# Update version across all files (package.json, addon.json, plugin.js)
+npm run version:bump 2.83.0
 ```
 
 ### Development Workflow
 1. Edit source files in `src/` directory
-2. Build using one of the release scripts above
+2. Build locally using `npm run build` for testing
 3. The `.c3addon` file will be created in `dist/`
 4. Import the addon into Construct 3 for testing
 5. Use example projects in `examples/` for testing specific features
+
+### Release Workflow (GitHub Actions)
+**Note: Releases are now automated via GitHub Actions when you push a version tag.**
+
+1. **Update version:**
+   ```bash
+   npm run version:bump 2.83.0
+   ```
+
+2. **Commit and tag:**
+   ```bash
+   git add -A
+   git commit -m "chore: bump version to 2.83.0"
+   git tag v2.83.0
+   git push && git push origin v2.83.0
+   ```
+
+3. **Automated Process:**
+   - GitHub Actions builds the minified addon
+   - Creates a GitHub Release with the tag
+   - Uploads the .c3addon file as a release asset
+   - Available at: https://github.com/MikalDev/3dobject/releases
+
+### Important Notes
+- The `dist/` directory is now in `.gitignore` - built files are no longer committed
+- Version numbers must be synchronized across `package.json`, `src/addon.json`, and `src/plugin.js`
+- Use the `npm run version:bump` script to ensure consistency
+- GitHub Actions validates version consistency on every build
 
 ## High-Level Architecture
 
